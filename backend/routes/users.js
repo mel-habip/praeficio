@@ -2,40 +2,89 @@ import express from 'express';
 const Router = express.Router();
 const log = console.log;
 
-import authenticateToken from '../jobs/authenticateToken.js'
-import fetchPermission from '../jobs/fetchPermission.js'
+import authenticateToken from '../jobs/authenticateToken.js';
+import fetchPermission from '../jobs/fetchPermission.js';
+import fetchWorkspaceIDs from '../jobs/fetchWorkspaceID.js';
+import {defaultPermissions} from '../constants/defaultPermissions.js';
+import isAvailableUsername from '../jobs/isAvailableUsername.js'
 
 Router.get('/', authenticateToken, (req, res) => {
     let sql = `SELECT * FROM Users`;
     let results = con.query(sql, function (err, result) {
         if (err) throw err;
-        log("here you go", result);
-        if (fetchPermission(req.user.id) === 'total') {
+        let permission = fetchPermission(req.user.id);
+        if (defaultPermissions.access.view_all_user_profiles.includes[permission]) {
             return res.json(results);
+        } else if (defaultPermissions.access.view_other_users_bulk.includes[permission]) {
+            let logged_in_user_workspace_ids = fetchWorkspaceIDs(req.user.id);
+            return res.json(results.filter(user => user.id === req.user.id || logged_in_user_workspace_ids.some(id=> user.workspace_ids.includes(id))));
         } else {
             return res.json(results.filter(user => user.id === req.user.id));
-        } // or the people to whom you have access
+        }
     });
 });
 
 Router.post('/create_new_user', async (req, res) => {
     log('received: ', req.body || {});
 
-    let sql = `SELECT * FROM Users WHERE Username = '${req.body.username}'`;
-    con.query(sql, function (err, result) {
-        if (err) throw err;
-        log('result', result);
-        if (result?. [0]) {
-            log(`Username ${req.body.username} already in use`);
-            return res.status(401).json(`Username ${req.body.username} already in use`);
-        };
-    });
+    if (!req.body.username) {
+        return res.status(401).json(`Username required.`);
+    }
+    if (!req.body.password) {
+        return res.status(401).json(`Password required.`);
+    }
+
+    if (!await isAvailableUsername(req.body.username)) {
+        return res.status(401).json(`Username ${req.body.username} already in use`);
+    }
     try {
         //hashed = encrypted
         //encryption uses a "Salt" that is generated uniquely for each password. The salt is prepended to the hashed password and functions as the key to decrypt it later on.
         const hashedPassword = await bcyprt.hash(req.body.password, 10); //default strength for salt creation is 10
 
-        let sql = `INSERT INTO Users (Username, Password, FirstName, LastName, Permissions) VALUES ('${req.body.username}', '${hashedPassword}','${req.body.FirstName}','${req.body.LastName}', 'basic_user')`;
+        let sql = `INSERT INTO Users (Username, Password, FirstName, LastName, Permissions) VALUES ('${req.body.username}', '${hashedPassword}','${req.body.FirstName}','${req.body.LastName}', 'basic_client')`;
+        con.query(sql, function (err, result) {
+            if (err) throw err;
+            log("1 record inserted", result);
+            //Do we want to then create a table specifically for that user and their data?
+            return res.status(201).send({
+                id: result.UserID,
+                message: 'Successfully created'
+            });
+        });
+    } catch (err) {
+        res.status(422).send(err)
+    }
+});
+
+Router.post('/pre_signed_create_new_user', authenticateToken, async (req, res) => {
+    let permission = fetchPermission(req.user.id);
+
+    if (!defaultPermissions.can_create_new_user.includes(permission)) {
+        return res.status(403).send('Forbidden:You do not have access to this.');
+    }
+
+    if (!defaultPermissions.permission_access_framework.includes(req.body.permission)) {
+        return res.status(403).send(`Forbidden: As a ${permission} you do not have access creating ${req.body.permission}.'`);
+    }
+
+
+    log('received: ', req.body || {});
+
+    if (!req.body.username) {
+        return res.status(401).json(`Username required.`);
+    }
+
+    if (!await isAvailableUsername(req.body.username)) {
+        return res.status(401).json(`Username ${req.body.username} already in use`);
+    }
+    try {
+        //if you are creating a user for someone else, you can't set their password, system should email them with temp_password;
+
+        let temp_password = generateTemporaryPassword(); //send an email now with this to the provided email... there is no email 😳😳😳
+        const hashedPassword = await bcyprt.hash(temp_password, 10);
+
+        let sql = `INSERT INTO Users (Username, Password, FirstName, LastName, Permissions) VALUES ('${req.body.username}', '${hashedPassword}','${req.body.FirstName}','${req.body.LastName}', '${req.body.permission}')`;
         con.query(sql, function (err, result) {
             if (err) throw err;
             log("1 record inserted", result);
@@ -84,37 +133,27 @@ Router.post('/login', (req, res) => {
             });
         }
     });
-
-
-
-
-
-    // log('received: ', req.body || {});
-
-    let user_details = {};
-
-
-    const user = {
-        username: req.body?.username,
-        id: user_details.id
-    };
-
-    const access_token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET_KEY);
-
-    res.json({
-        access_token
-    });
 });
 
 Router.delete('/:user_id', authenticateToken, (req, res) => {
-    if (fetchPermission(req.user.id) !== 'total') {
-        return res.status(403).send('You do not have access to this.');
-    };
+    let permission = fetchPermission(req.user.id);
+
+    if (!defaultPermissions.actions.delete_other_user.includes[permission] && req.user.id !== parseInt(req.params.user_id)) {
+        // action;
+        return;
+    }
+    
+    if (!defaultPermissions.actions.delete_self_user.includes[permission] && req.user.id === parseInt(req.params.user_id)) {
+        return res.status(403).send('Forbidden: You do not have access to this.');
+    }
 
     //TODO: soft-delete the user
 });
 
 Router.get('/:user_id', authenticateToken, async (req, res) => {
+
+
+
     if (req.user.id === req.params.user_id || await fetchPermission(req.user.id) === 'total') {
         let sql = `SELECT * FROM Users WHERE UserID = '${req.params.user_id}'`;
         con.query(sql, function (err, result) {
@@ -123,11 +162,54 @@ Router.get('/:user_id', authenticateToken, async (req, res) => {
             res.json(result);
         });
     } else {
-        return res.status(403).send('You do not have access to this.');
+        return res.status(403).send('Forbidden: You do not have access to this.');
     }
 });
 
 Router.put('/:user_id', authenticateToken, async (req, res) => {
+
+    let permission = fetchPermission(req.user.id);
+
+    let current_user_details = await fetchUserDetails(req.params.user_id);
+
+    let changes = {};
+
+    Object.entries(current_user_details).forEach(([key, og_value]) => {
+        let changed_value = req.body.changes[key]
+        if (changed_value && changed_value !== og_value) {
+            changes[key] = changed_value;
+        }
+    })
+
+    if (req.user.id === parseInt(req.params.user_id)) { //self-edit pathway, anyone can do it
+
+        let props_allowed_to_be_changed = defaultPermissions.actions.edit_user_details_framework[permission];
+
+        for (const key of Object.keys(changes)) {
+            if (!props_allowed_to_be_changed.includes(key)) {
+                return res.status(403).send(`Forbidden: ${permission} cannot edit ${key}.`);
+            }
+        };
+
+        if (changes.username) {
+            //check if available
+        }
+
+        if (changes.permission) {
+            if (!defaultPermissions.permission_access_framework[permission].includes(changes.permission)) {
+                return res.status(403).send(`Forbidden: ${permission} cannot change permission level to ${changes.permission}.`);
+            }
+        }
+
+        //continue with operation
+    } else {
+       if (!defaultPermissions.actions.edit_others_details.includes[permission]) {
+           return res.status(403).send('Forbidden: You do not have access to this.');
+       };
+
+
+    }
+
     const allowed_changes =['first_name', 'last_name', 'username', 'updated_on', 'permissions'];
     delete res.body.created_at; //uneditable
     //TODO: update user details except CreatedOn, 
