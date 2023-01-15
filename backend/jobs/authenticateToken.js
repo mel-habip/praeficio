@@ -18,7 +18,7 @@ export default function authenticateToken(req, res, next) { //this is middleware
     }
 
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET_KEY, ((err, user) => {
-        if (err) res.status(403).send('Unauthenticated: Invalid Token');;
+        if (err) res.status(403).send('Unauthenticated: Invalid Token');
         req.user = user;
         next();
     }));

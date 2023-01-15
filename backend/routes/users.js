@@ -1,5 +1,5 @@
 import express from 'express';
-const Router = express.Router();
+const userRouter = express.Router();
 const log = console.log;
 
 import authenticateToken from '../jobs/authenticateToken.js';
@@ -8,7 +8,12 @@ import fetchWorkspaceIDs from '../jobs/fetchWorkspaceID.js';
 import {defaultPermissions} from '../constants/defaultPermissions.js';
 import isAvailableUsername from '../jobs/isAvailableUsername.js'
 
-Router.get('/', authenticateToken, (req, res) => {
+userRouter.get('/', authenticateToken, (req, res) => {
+
+    const include_deactivated = Boolean(req.query.include_deactivated)
+
+
+
     let sql = `SELECT * FROM Users`;
     let results = con.query(sql, function (err, result) {
         if (err) throw err;
@@ -24,7 +29,7 @@ Router.get('/', authenticateToken, (req, res) => {
     });
 });
 
-Router.post('/create_new_user', async (req, res) => {
+userRouter.post('/create_new_user', async (req, res) => {
     log('received: ', req.body || {});
 
     if (!req.body.username) {
@@ -57,7 +62,7 @@ Router.post('/create_new_user', async (req, res) => {
     }
 });
 
-Router.post('/pre_signed_create_new_user', authenticateToken, async (req, res) => {
+userRouter.post('/pre_signed_create_new_user', authenticateToken, async (req, res) => {
     let permission = fetchPermission(req.user.id);
 
     if (!defaultPermissions.can_create_new_user.includes(permission)) {
@@ -99,7 +104,7 @@ Router.post('/pre_signed_create_new_user', authenticateToken, async (req, res) =
     }
 });
 
-Router.post('/login', (req, res) => {
+userRouter.post('/login', (req, res) => {
     let sql = `SELECT * FROM Users WHERE Username = '${req.body.username}'`;
     return connection.query(sql, async (err, result) => {
         if (err) throw err;
@@ -135,7 +140,7 @@ Router.post('/login', (req, res) => {
     });
 });
 
-Router.delete('/:user_id', authenticateToken, (req, res) => {
+userRouter.delete('/:user_id', authenticateToken, (req, res) => {
     let permission = fetchPermission(req.user.id);
 
     if (!defaultPermissions.actions.delete_other_user.includes[permission] && req.user.id !== parseInt(req.params.user_id)) {
@@ -150,7 +155,7 @@ Router.delete('/:user_id', authenticateToken, (req, res) => {
     //TODO: soft-delete the user
 });
 
-Router.get('/:user_id', authenticateToken, async (req, res) => {
+userRouter.get('/:user_id', authenticateToken, async (req, res) => {
 
 
 
@@ -166,7 +171,7 @@ Router.get('/:user_id', authenticateToken, async (req, res) => {
     }
 });
 
-Router.put('/:user_id', authenticateToken, async (req, res) => {
+userRouter.put('/:user_id', authenticateToken, async (req, res) => {
 
     let permission = fetchPermission(req.user.id);
 
@@ -214,3 +219,10 @@ Router.put('/:user_id', authenticateToken, async (req, res) => {
     delete res.body.created_at; //uneditable
     //TODO: update user details except CreatedOn, 
 });
+
+
+userRouter.get('/:user_id/positions', authenticateToken, async (req, res) => {
+    //GET positions belonging to said user, based on perms
+});
+
+export default userRouter;
