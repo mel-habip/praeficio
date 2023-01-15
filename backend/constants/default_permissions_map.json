@@ -1,0 +1,87 @@
+{
+    "actions": {
+        "edit_self_details": [
+            "ALL"
+        ],
+        "edit_others_details": [
+            "total",
+            "workspace_admin",
+            "dev_lead"
+        ],
+        "delete_self_user": [
+            "workspace_admin",
+            "workspace_supervisor",
+            "workspace_employee",
+            "dev_lead",
+            "dev_senior",
+            "dev_junior",
+            "basic_client"
+        ],
+        "delete_other_user": [
+            "total",
+            "workspace_admin",
+            "dev_lead"
+        ],
+        "add_position_to_self": [
+            "ALL"
+        ],
+        "edit_positions_of_other_user": [
+            "total",
+            "dev_lead",
+            "workspace_admin",
+            "workspace_supervisor",
+            "workspace_employee"
+        ],
+        "import_position_data": [
+            "total",
+            "dev_lead",
+            "workspace_admin",
+            "workspace_supervisor",
+            "workspace_employee",
+            "pro_client"
+        ],
+        "edit_self_alerts": [
+            "ALL"
+        ],
+        "edit_other_alerts": [
+            "total",
+            "dev_lead",
+            "workspace_admin",
+            "workspace_supervisor",
+            "workspace_employee"
+        ]
+    },
+    "access": {
+        "view_all_user_profiles": [
+            "total",
+            "dev_junior",
+            "dev_senior",
+            "dev_lead"
+        ],
+        "view_other_single_user": [
+            "total",
+            "workspace_admin",
+            "workspace_supervisor",
+            "workspace_employee"
+        ],
+        "view_other_users_bulk": [
+            "total",
+            "workspace_admin",
+            "workspace_supervisor",
+            "workspace_employee"
+        ],
+        "view_self_details": [
+            "ALL"
+        ],
+        "extract_position_data": [
+            "total",
+            "workspace_admin",
+            "workspace_supervisor",
+            "workspace_employee",
+            "pro_client",
+            "dev_lead",
+            "dev_senior",
+            "dev_junior"
+        ]
+    }
+}

@@ -1,0 +1,12 @@
+[
+    "total",
+    "workspace_admin",
+    "workspace_supervisor",
+    "workspace_employee",
+    "dev_lead",
+    "dev_senior",
+    "dev_junior",
+    "basic_client",
+    "pro_client",
+    "spectator?"
+]
