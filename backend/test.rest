@@ -1,0 +1,11 @@
+POST http://localhost:8000/login HTTP/1.1
+Content-Type: application/json
+
+{
+    "username": "Kyle"
+}
+
+###
+GET http://localhost:8000/posts HTTP/1.1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Ikt5bGUiLCJwZXJtaXNzaW9ucyI6InRvdGFsIiwiaWF0IjoxNjczMTk4NTI3fQ.yeeADzB6YwPGookD_4VDCmv2Vj-ydORRENIpzKSCJr0
+
