@@ -3,11 +3,13 @@ const positionRouter = express.Router();
 const log = console.log;
 
 import authenticateToken from '../jobs/authenticateToken.js';
+import authenticateUser from '../jobs/authenticateUser.js';
 import {
     defaultPermissions
 } from '../constants/defaultPermissions.js';
 
 positionRouter.use(authenticateToken);
+positionRouter.use(authenticateUser);
 
 
 
@@ -39,3 +41,4 @@ positionRouter.post('/export', (req, res) => {
 });
 
 
+export default positionRouter;
