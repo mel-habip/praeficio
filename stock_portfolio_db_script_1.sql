@@ -5,9 +5,11 @@ CREATE TABLE Users (
   Username varchar(255),
   LastName varchar(255),
   FirstName varchar(255),
+  Email varchar(255),
   Permissions VARCHAR(100) DEFAULT 'client',
   Active TINYINT DEFAULT '1',
   CreatedOn DATETIME DEFAULT NOW(),
+  UpdatedOn DATETIME DEFAULT NULL ON UPDATE NOW(),
 );
 CREATE TABLE Positions (
 	PositionID int auto_increment primary key,
