@@ -12,6 +12,7 @@ import env_dir from './utils/env_dir.js';
 import connection from './utils/db_connection.js';
 import userRouter from './routes/users.js';
 import positionRouter from './routes/positions.js';
+import workspacesRouter from './routes/workspaces.js';
 
 dotenv.config({
     path: env_dir
@@ -26,6 +27,7 @@ APP.use(express.json());
 APP.listen(PORT, 'localhost', () => console.log(`Server Running on PORT ${PORT}`));
 APP.use('/users', userRouter);
 APP.use('/positions', positionRouter);
+APP.use('/workspaces', workspacesRouter);
 
 
 const posts = [{
