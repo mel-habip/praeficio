@@ -1,4 +1,4 @@
-export const defaultPermissions = {
+const defaultPermissions = {
     "actions": {
         "edit_self_details": [
             "ALL"
@@ -184,4 +184,7 @@ export const defaultPermissions = {
             "dev_junior"
         ]
     }
-}
+};
+
+
+export default defaultPermissions;

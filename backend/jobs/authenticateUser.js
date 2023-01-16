@@ -6,7 +6,7 @@ import connection from '../utils/db_connection.js';
  * @returns {null} adds details to `req.user`
  */
 export default function authenticateUser(req, res, next) { //this is middleware
-    let sql = `SELECT * FROM Users WHERE UserID = '${req.user.id}'`;
+    let sql = `SELECT ${req.user.id} FROM Users`;
     connection.query(sql, (err, result) => {
         if (err) throw err;
         if (!result || !result?.[0]) {

@@ -7,6 +7,7 @@ import fetchPermission from '../jobs/fetchPermission.js';
 import fetchWorkspaceIDs from '../jobs/fetchWorkspaceID.js';
 import {defaultPermissions} from '../constants/defaultPermissions.js';
 import isAvailableUsername from '../jobs/isAvailableUsername.js'
+import connection from '../utils/db_connection.js';
 
 userRouter.get('/', authenticateToken, (req, res) => {
 
@@ -15,7 +16,7 @@ userRouter.get('/', authenticateToken, (req, res) => {
 
 
     let sql = `SELECT * FROM Users`;
-    let results = con.query(sql, function (err, result) {
+    let results = connection.query(sql, function (err, result) {
         if (err) throw err;
         let permission = fetchPermission(req.user.id);
         if (defaultPermissions.access.view_all_user_profiles.includes[permission]) {
@@ -48,7 +49,7 @@ userRouter.post('/create_new_user', async (req, res) => {
         const hashedPassword = await bcyprt.hash(req.body.password, 10); //default strength for salt creation is 10
 
         let sql = `INSERT INTO Users (Username, Password, FirstName, LastName, Permissions) VALUES ('${req.body.username}', '${hashedPassword}','${req.body.FirstName}','${req.body.LastName}', 'basic_client')`;
-        con.query(sql, function (err, result) {
+        connection.query(sql, function (err, result) {
             if (err) throw err;
             log("1 record inserted", result);
             //Do we want to then create a table specifically for that user and their data?
@@ -90,7 +91,7 @@ userRouter.post('/pre_signed_create_new_user', authenticateToken, async (req, re
         const hashedPassword = await bcyprt.hash(temp_password, 10);
 
         let sql = `INSERT INTO Users (Username, Password, FirstName, LastName, Permissions) VALUES ('${req.body.username}', '${hashedPassword}','${req.body.FirstName}','${req.body.LastName}', '${req.body.permission}')`;
-        con.query(sql, function (err, result) {
+        connection.query(sql, function (err, result) {
             if (err) throw err;
             log("1 record inserted", result);
             //Do we want to then create a table specifically for that user and their data?
@@ -156,12 +157,9 @@ userRouter.delete('/:user_id', authenticateToken, (req, res) => {
 });
 
 userRouter.get('/:user_id', authenticateToken, async (req, res) => {
-
-
-
     if (req.user.id === req.params.user_id || await fetchPermission(req.user.id) === 'total') {
         let sql = `SELECT * FROM Users WHERE UserID = '${req.params.user_id}'`;
-        con.query(sql, function (err, result) {
+        connection.query(sql, function (err, result) {
             if (err) throw err;
             delete result.password;
             res.json(result);
@@ -222,6 +220,7 @@ userRouter.put('/:user_id', authenticateToken, async (req, res) => {
 
 
 userRouter.get('/:user_id/positions', authenticateToken, async (req, res) => {
+    let sql = `SELECT * FROM Position WHERE UserID = '${req.params.user_id}' OR SecondaryUserID = '' OR TertiaryUserID = ''`; //TODO: handle joint_confirmed prop
     //GET positions belonging to said user, based on perms
 });
 
