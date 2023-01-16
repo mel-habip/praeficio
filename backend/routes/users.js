@@ -13,8 +13,6 @@ userRouter.get('/', authenticateToken, (req, res) => {
 
     const include_deactivated = Boolean(req.query.include_deactivated)
 
-
-
     let sql = `SELECT * FROM Users`;
     let results = connection.query(sql, function (err, result) {
         if (err) throw err;
