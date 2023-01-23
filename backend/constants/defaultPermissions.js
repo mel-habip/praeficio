@@ -10,43 +10,55 @@ const defaultPermissions = {
         ],
         "edit_user_details_framework": {
             "total": [
-                "first_name",
-                "last_name",
-                "username",
-                "password",
-                "created_at",
-                "updated_at",
-                "workspaces",
+                "FirstName",
+                "LastName",
+                "Username",
+                "CreatedOn",
+                "UpdatedOn",
+                "Email",
+                "Active"
             ],
             "workspace_admin": [
-                "first_name",
-                "last_name",
-                "username"
+                "FirstName",
+                "LastName",
+                "Username",
+                "Email",
+                "Active"
             ],
             "workspace_supervisor": [
-                "first_name",
-                "last_name",
-                "username"
+                "FirstName",
+                "LastName",
+                "Username",
+                "Email",
+                "Active"
             ],
             "workspace_employee": [
-                "first_name",
-                "last_name",
-                "username"
+                "FirstName",
+                "LastName",
+                "Username",
+                "Email",
+                "Active"
             ],
             "dev_lead": [
-                "first_name",
-                "last_name",
-                "username"
+                "FirstName",
+                "LastName",
+                "Username",
+                "Email",
+                "Active"
             ],
             "dev_senior": [
-                "first_name",
-                "last_name",
-                "username"
+                "FirstName",
+                "LastName",
+                "Username",
+                "Email",
+                "Active"
             ],
             "dev_junior": [
-                "first_name",
-                "last_name",
-                "username"
+                "FirstName",
+                "LastName",
+                "Username",
+                "Email",
+                "Active"
             ]
         },
         "delete_self_user": [

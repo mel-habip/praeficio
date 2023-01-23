@@ -1,12 +1,8 @@
-import connection from '../utils/db_connection.js';
+import query from '../utils/db_connection.js';
 
 export default async function fetchUserDetails(id) {
-    let sql = `SELECT ${id} FROM Users`;
-    return connection.query(sql, (err, result) => {
-        if (err) throw err;
-        if (!result) {
-            throw Error(`User ${id} not found.`);
-        };
-        return result;
-    });
+    let sql = `SELECT UserID, Username, LastName, FirstName, Email, Permissions, Active, CreatedOn, UpdatedOn FROM Users WHERE UserID = ${id}`;
+
+    let res = await query(sql);
+    return res?. [0];
 };

@@ -1,11 +1,42 @@
-POST http://localhost:8000/login HTTP/1.1
-Content-Type: application/json
+###
+GET http://localhost:8000/
+
+###
+POST http://localhost:8000/users/create_new_user/
+content-type: application/json
 
 {
-    "username": "Kyle"
+    "username": "test_user_name3",
+    "password": "test_user_password"
 }
 
 ###
-GET http://localhost:8000/posts HTTP/1.1
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Ikt5bGUiLCJwZXJtaXNzaW9ucyI6InRvdGFsIiwiaWF0IjoxNjczMTk4NTI3fQ.yeeADzB6YwPGookD_4VDCmv2Vj-ydORRENIpzKSCJr0
+POST http://localhost:8000/users/login/
+content-type: application/json
 
+{
+    "username": "test_user_name3",
+    "password": "test_user_password"
+}
+
+###
+GET http://localhost:8000/users/?include_deactivated=true
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjc0MzU4NDQxfQ.CdPEsG15G5rWJjirTtuUb6V63Ve6lF33bV1OvQ5VYQU
+
+
+###
+GET http://localhost:8000/users/3
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjc0MzU4NDQxfQ.CdPEsG15G5rWJjirTtuUb6V63Ve6lF33bV1OvQ5VYQU
+
+###
+PUT http://localhost:8000/users/1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjc0MzU4NDQxfQ.CdPEsG15G5rWJjirTtuUb6V63Ve6lF33bV1OvQ5VYQU
+content-type: application/json
+
+{
+    "Email": "hello@example.com",
+    "FirstName": "John",
+    "LastName": "Doe",
+    "Active": 1,
+    "Permissions": "total"
+}

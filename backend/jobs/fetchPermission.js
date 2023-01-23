@@ -1,13 +1,15 @@
-import connection from '../utils/db_connection.js';
+import query from '../utils/db_connection.js';
+const log = console.log;
 
 export default async function fetchPermission(id) {
-
-    let sql = `SELECT ${id} FROM Users`;
-    return connection.query(sql, (err, result) => {
-        if (err) throw err;
-        if (!result?.Permission) {
-            throw Error(`User ${id} not found.`);
+    let sql = `SELECT Permissions FROM Users WHERE UserID = ${id}`;
+    let res;
+    await query(sql).then(([response]) => {
+        if (!response || !response?.Permissions) {
+            log(`User ${id} not found.`, response);
+            return;
         };
-        return result.Permission;
+        res = response.Permissions;
     });
+    return res;
 };
