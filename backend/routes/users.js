@@ -234,8 +234,8 @@ userRouter.put('/:user_id', authenticateToken, async (req, res) => {
     });
 
     if (changes.Username) {
-        if (!await isAvailableUsername(req.body.username)) {
-            return res.status(401).json(`Username ${req.body.username} already in use`);
+        if (!await isAvailableUsername(req.body.Username)) {
+            return res.status(401).json(`Username ${req.body.Username} already in use`);
         }
     }
 
