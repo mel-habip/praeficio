@@ -27,6 +27,15 @@ connection.connect(function (err) {
 const query_promise = util.promisify(connection.query).bind(connection);
 
 export default async function query(sql) {
+
+
+/**
+ * @function query - executes a query to the DB
+ * @param {String} sql - SQL query to be executed, with `?` or `??` where values would go
+ * @param {Array|String|Null} values - as many values as needs to be templated
+ * @returns {Promise<Hash[]|Undefined>} result from DB
+ * @note values should be passes as `values` to prevent injection
+ */
     let result;
 
     try {

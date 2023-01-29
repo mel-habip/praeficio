@@ -13,4 +13,10 @@ export default async function fetchPermission(id) {
         let res = JSON.parse(result.workspace_ids);
         
     });
+/**
+ * @async_function fetchWorkspaces - checks DB for Workspaces to which this user is related
+ * @param {String|Number} id - ID of the user to check
+ * @param {Array<String|Number>} only_display - filters the result down to exclude IDs not in this array, if provided
+ * @returns {Promise<Array<Number>>} array of WorkspaceIDs
+ */
 };

@@ -1,7 +1,7 @@
 /**
  * @function generateTemporaryPassword - generates a random temporary password
  * @param {Number} passwordLength - length of the password to be generated
- * @returns {String} - returns password of length @param length
+ * @return {String} returns password of length param `passwordLength`
  */
 export default function generateTemporaryPassword(passwordLength = 14) {
     const chars = "0123456789abcdefghijklmnopqrstuvwxyz!@#$%^&*()ABCDEFGHIJKLMNOPQRSTUVWXYZ";
