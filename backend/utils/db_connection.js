@@ -26,7 +26,6 @@ connection.connect(function (err) {
 //node native promisify, turns the query async so that we can wait for data to come back
 const query_promise = util.promisify(connection.query).bind(connection);
 
-export default async function query(sql) {
 
 
 /**
@@ -36,6 +35,8 @@ export default async function query(sql) {
  * @returns {Promise<Hash[]|Undefined>} result from DB
  * @note values should be passes as `values` to prevent injection
  */
+export default async function query(sql, ...values) {
+    sql = mysql.format(sql, [...values].flat(Infinity));
     let result;
 
     try {
@@ -45,5 +46,20 @@ export default async function query(sql) {
         console.warn('Received: ', sql);
     }
 
-    return result;
+    return booleanize_db_data(result);
+}
+
+
+function booleanize_db_data(array=[]) {
+
+    if (!Array.isArray(array)) {
+        return array;
+    }
+
+    return array.map(hash => {
+        ['Active', 'Deleted'].forEach(property => {
+            if (hash[property] != null) hash[property] = Boolean(hash[property]);
+        });
+
+    })
 }

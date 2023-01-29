@@ -2,6 +2,7 @@
 import express from 'express';
 const userRouter = express.Router();
 const log = console.log;
+const list = (arr) => new Intl.ListFormat().format(arr.map(x => JSON.stringify(x)));
 
 import authenticateToken from '../jobs/authenticateToken.js';
 import fetchUserDetails from '../jobs/fetchUserDetails.js';
@@ -116,7 +117,7 @@ userRouter.post('/pre_signed_create_new_user', authenticateToken, async (req, re
             //Do we want to then create a table specifically for that user and their data?
 
             res.status(201).send({
-                ...result_2[0], 
+                ...result_2[0],
                 message: `Successfully created, User will receive email to activate account`
             });
         });
@@ -124,15 +125,22 @@ userRouter.post('/pre_signed_create_new_user', authenticateToken, async (req, re
 });
 
 userRouter.post('/login', async (req, res) => {
-    let sql = `SELECT * FROM Users WHERE Username = '${req.body.username}'`;
 
-    await query(sql).then(async result => {
+    if (!req?.body?.username) {
+        return res.status(401).json({
+            message: `Username required.`
+        });
+    }
+
+    let sql = `SELECT * FROM Users WHERE Username = ?`;
+
+    await query(sql, req.body.username).then(async result => {
         if (!result || !result?. [0]) {
             return res.status(401).json({
                 message: `Username not recognized`
             });
         };
-        if (!result[0].Active) {
+        if (!result[0].Active || result[0].Deleted) {
             return res.status(401).json({
                 message: `Cannot Login to Inactive Account. Must Activate first.`
             });
@@ -254,42 +262,40 @@ userRouter.put('/:user_id', authenticateToken, async (req, res) => {
                 return res.status(403).send(`Forbidden: ${req.user.Permissions} cannot edit ${key}.`);
             }
         };
-
-
     } else {
         if (!defaultPermissions.actions.edit_others_details.includes(req.user.Permissions)) {
             return res.status(403).send('Forbidden: You do not have access to this.');
         };
     }
 
-    let sql = `UPDATE Users SET `;
+    let sql = `UPDATE Users SET ${Object.keys(changes).map(key => `${key} = ?`).join(', ')} WHERE UserID = ? LIMIT 1;`;
 
-    let sql_changes_parts = [];
-
-    Object.entries(changes).forEach(([key, value]) => {
-        sql_changes_parts.push(`${key} = ${sql_wrap(value)}`);
-    });
-
-    sql += sql_changes_parts.join(', ');
-
-    sql += `WHERE UserID = ${req.params.user_id};`;
-
-    await query(sql).then(response => {
+    await query(sql, [...Object.values(changes), req.params.id]).then(response => {
         if (!response) {
             return res.status(422).json({
                 message: `Something went wrong`
             });
         };
         res.status(200).json({
-            message: `${Object.keys(changes).join(', ')} updated`
+            message: `${list(Object.keys(changes))} updated.`
         });
     });
 });
 
 
 userRouter.get('/:user_id/positions', authenticateToken, async (req, res) => {
-    let sql = `SELECT * FROM Position WHERE UserID = '${req.params.user_id}' OR SecondaryUserID = '' OR TertiaryUserID = ''`; //TODO: handle joint_confirmed prop
+    let sql = `SELECT * FROM Position WHERE UserID = ? OR SecondaryUserID = ? OR TertiaryUserID = ?`; //TODO: handle joint_confirmed prop
     //GET positions belonging to said user, based on perms
+
+    let results = await query(sql, Array(3).fill(req.params.user_id));
+
+    if (!results) {
+        return res.status(422).json({
+            message: `Something went wrong`
+        });
+    }
+
+    return res.status(422).json(results);
 });
 
 export default userRouter;
