@@ -4,7 +4,6 @@ const userRouter = express.Router();
 const log = console.log;
 
 import authenticateToken from '../jobs/authenticateToken.js';
-import fetchPermission from '../jobs/fetchPermission.js';
 import fetchUserDetails from '../jobs/fetchUserDetails.js';
 import fetchWorkspaceIDs from '../jobs/fetchWorkspaceIDs.js';
 import defaultPermissions from '../constants/defaultPermissions.js';
@@ -29,10 +28,9 @@ userRouter.get('/', authenticateToken, async (req, res) => {
             res.status(422).send('User Details Fetch Error');
             return;
         };
-        let permission = await fetchPermission(req.user.id);
-        if (defaultPermissions.access.view_all_user_profiles.includes(permission)) {
+        if (defaultPermissions.access.view_all_user_profiles.includes(req.user.Permissions)) {
             return res.json(response);
-        } else if (defaultPermissions.access.view_other_users_bulk.includes(permission)) {
+        } else if (defaultPermissions.access.view_other_users_bulk.includes(req.user.Permissions)) {
             let logged_in_user_workspace_ids = await fetchWorkspaceIDs(req.user.id);
             return res.json(response.filter(user => user.id === req.user.id || logged_in_user_workspace_ids.some(id => user.workspace_ids.includes(id))));
         } else {
@@ -82,14 +80,13 @@ userRouter.post('/create_new_user', async (req, res) => {
 });
 
 userRouter.post('/pre_signed_create_new_user', authenticateToken, async (req, res) => {
-    let permission = await fetchPermission(req.user.id);
 
-    if (!defaultPermissions.can_create_new_user.includes(permission)) {
+    if (!defaultPermissions.can_create_new_user.includes(req.user.Permissions)) {
         return res.status(403).send('Forbidden:You do not have access to this.');
     }
 
     if (!defaultPermissions.permission_access_framework.includes(req.body.Permissions)) {
-        return res.status(403).send(`Forbidden: As a ${permission} you do not have access creating ${req.body.Permissions}.'`);
+        return res.status(403).send(`Forbidden: As a ${req.user.Permissions} you do not have access creating ${req.body.Permissions}.'`);
     }
 
     const required_but_missing = ['Username', 'Email', 'Permissions'].filter(prop => !req.body[prop]);
@@ -174,13 +171,12 @@ userRouter.post('/login', async (req, res) => {
 });
 
 userRouter.delete('/:user_id', authenticateToken, async (req, res) => {
-    let permission = await fetchPermission(req.user.id);
 
-    if (!defaultPermissions.actions.delete_other_user.includes(permission) && req.user.id !== parseInt(req.params.user_id)) {
+    if (!defaultPermissions.actions.delete_other_user.includes(req.user.Permissions) && req.user.id !== parseInt(req.params.user_id)) {
         return res.status(403).send('Forbidden: You do not have access to this.');
     }
 
-    if (!defaultPermissions.actions.delete_self_user.includes(permission) && req.user.id === parseInt(req.params.user_id)) {
+    if (!defaultPermissions.actions.delete_self_user.includes(req.user.Permissions) && req.user.id === parseInt(req.params.user_id)) {
         return res.status(403).send('Forbidden: You do not have access to this.');
     }
 
@@ -192,8 +188,8 @@ userRouter.delete('/:user_id', authenticateToken, async (req, res) => {
 });
 
 userRouter.get('/:user_id', authenticateToken, async (req, res) => {
-    if (req.user.id === Number(req.params.user_id) || await fetchPermission(req.user.id) === 'total') {
-        let sql = `SELECT UserID, Username, LastName, FirstName, Email, Permissions, Active, CreatedOn, UpdatedOn FROM Users WHERE UserID = '${req.params.user_id}'`;
+    if (req.user.id === Number(req.params.user_id) || req.user.Permissions === 'total') {
+        let sql = `SELECT UserID, Username, LastName, FirstName, Email, Permissions, Active, CreatedOn, UpdatedOn FROM Users WHERE UserID = '${req.params.user_id}' LIMIT 1`;
         await query(sql).then(response => {
             if (!response) {
                 return res.status(422).json({
@@ -213,8 +209,6 @@ userRouter.get('/:user_id', authenticateToken, async (req, res) => {
 });
 
 userRouter.put('/:user_id', authenticateToken, async (req, res) => {
-
-    let permission = await fetchPermission(req.user.id);
 
     let selected_user_details = await fetchUserDetails(req.params.user_id);
 
@@ -240,8 +234,8 @@ userRouter.put('/:user_id', authenticateToken, async (req, res) => {
     }
 
     if (changes.Permissions) {
-        if (!defaultPermissions.permission_access_framework[permission].includes(changes.Permissions)) {
-            return res.status(403).send(`Forbidden: ${permission} cannot change permission level to ${changes.Permissions}.`);
+        if (!defaultPermissions.permission_access_framework[req.user.Permissions].includes(changes.Permissions)) {
+            return res.status(403).send(`Forbidden: ${req.user.Permissions} cannot change permission level to ${changes.Permissions}.`);
         }
     }
 
@@ -253,17 +247,17 @@ userRouter.put('/:user_id', authenticateToken, async (req, res) => {
 
     if (req.user.id === parseInt(req.params.user_id)) { //self-edit pathway, anyone can do it
 
-        let props_allowed_to_be_changed = defaultPermissions.actions.edit_user_details_framework[permission];
+        let props_allowed_to_be_changed = defaultPermissions.actions.edit_user_details_framework[req.user.Permissions];
 
         for (const key of Object.keys(changes)) {
             if (!props_allowed_to_be_changed.includes(key)) {
-                return res.status(403).send(`Forbidden: ${permission} cannot edit ${key}.`);
+                return res.status(403).send(`Forbidden: ${req.user.Permissions} cannot edit ${key}.`);
             }
         };
 
 
     } else {
-        if (!defaultPermissions.actions.edit_others_details.includes(permission)) {
+        if (!defaultPermissions.actions.edit_others_details.includes(req.user.Permissions)) {
             return res.status(403).send('Forbidden: You do not have access to this.');
         };
     }

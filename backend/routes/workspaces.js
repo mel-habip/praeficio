@@ -24,7 +24,7 @@ workspacesRouter.get('/', async (req, res) => {
 
 workspacesRouter.get('/:workspace_id', async (req, res) => {
 
-    if (req.user.id === req.params.workspace_id || await fetchPermission(req.user.id) === 'total') {
+    if (req.user.id === req.params.workspace_id || req.user.Permissions === 'total') {
         let sql = `SELECT ${req.params.workspace_id} FROM Workspaces`;
         connection.query(sql, function (err, result) {
             if (err) throw err;
