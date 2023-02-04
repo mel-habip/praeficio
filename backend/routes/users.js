@@ -14,6 +14,8 @@ import jwt from 'jsonwebtoken';
 import bcrypt from "bcryptjs";
 import query from '../utils/db_connection.js';
 import sql_wrap from '../utils/sql_wrap.js';
+import is_valid_email from '../utils/is_valid_email.js';
+import emailService from '../jobs/emailService.js';
 
 userRouter.get('/', authenticateToken, async (req, res) => {
 
@@ -26,8 +28,7 @@ userRouter.get('/', authenticateToken, async (req, res) => {
     await query(sql).then(async response => {
         if (!response) {
             log('User Details Fetch Error');
-            res.status(422).send('User Details Fetch Error');
-            return;
+            return res.status(422).send('User Details Fetch Error');
         };
         if (defaultPermissions.access.view_all_user_profiles.includes(req.user.Permissions)) {
             return res.json(response);
@@ -43,15 +44,21 @@ userRouter.get('/', authenticateToken, async (req, res) => {
 userRouter.post('/create_new_user', async (req, res) => {
     log('received: ', req.body || {});
 
-    if (!req.body.username) {
+    if (!req.body.Username) {
         return res.status(401).json(`Username required.`);
     }
     if (!req.body.password) {
         return res.status(401).json(`Password required.`);
     }
 
-    if (!await isAvailableUsername(req.body.username)) {
+    if (!await isAvailableUsername(req.body.Username)) {
         return res.status(401).json(`Username ${req.body.username} already in use`);
+    }
+
+    let is_secured = !!req.body.Email; //if email is provided, we will set the account as inactive and await activation
+
+    if (is_secured && !is_valid_email(req.body.Email)) {
+        return res.status(401).send(`Invalid email address.`);
     }
 
     //hashed = encrypted
@@ -59,24 +66,41 @@ userRouter.post('/create_new_user', async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(req.body.password, 10); //default strength for salt creation is 10
 
-    let sql = `INSERT INTO Users (Username, Password, FirstName, LastName, Permissions, Email) VALUES ('${req.body.username}', '${hashedPassword}', ${sql_wrap(req.body.FirstName)}, ${sql_wrap(req.body.LastName)}, 'basic_client', ${sql_wrap(req.body.Email)});`;
 
-    await query(sql).then(async result => {
-        if (!result) {
-            log('New User Creation Error');
-            res.status(422).send('New User Creation Error');
-            return;
+    let sql = `INSERT INTO Users (Username, Password, FirstName, LastName, Permissions, Email, Active) VALUES ('${req.body.Username}', '${hashedPassword}', ${sql_wrap(req.body.FirstName)}, ${sql_wrap(req.body.LastName)}, 'basic_client', ${sql_wrap(req.body.Email)}, ${!is_secured});`;
+
+
+    let creation = await query(sql);
+
+    if (!creation) {
+        return res.status(422).send('New User Creation Error');
+    };
+
+    sql = `SELECT ${db_keys.all_except_pass.join(', ')} FROM Users WHERE UserID = LAST_INSERT_ID();`
+
+
+    let [created_user_details] = await query(sql);
+
+    log("1 record inserted", created_user_details);
+
+    if (is_secured) {
+        const user = {
+            id: created_user_details.UserID
         };
-        sql = `SELECT ${db_keys.all_except_pass.join(', ')} FROM Users WHERE UserID = LAST_INSERT_ID();`
-        await query(sql).then(result_2 => {
-            log("1 record inserted", result_2);
-            //Do we want to then create a table specifically for that user and their data?
+        const ActivationToken = jwt.sign(user, process.env.ACTIVATION_TOKEN_SECRET_KEY); //any reason to use this over bcrypt? 
 
-            res.status(201).send({
-                ...result_2[0],
-                message: 'Successfully created'
-            });
+        await emailService({
+            to: req.body.Email,
+            message: `Welcome on board! \n\t Your activation token: ${ActivationToken}`
         });
+    }
+
+    //Do we want to then create a table specifically for that user and their data?
+
+    res.status(201).json({
+        ...created_user_details,
+        message: 'Successfully created',
+        is_secured
     });
 });
 
@@ -100,27 +124,43 @@ userRouter.post('/pre_signed_create_new_user', authenticateToken, async (req, re
         return res.status(401).json(`Username ${req.body.Username} already in use`);
     }
 
-    let temp_password = generateTemporaryPassword(); //send an email now with this to the provided email... there is no email 😳😳😳
+    if (!is_valid_email(req.body.Email)) {
+        return res.status(401).send(`Invalid email address.`);
+    }
+
+    const temp_password = generateTemporaryPassword(); //send an email now with this to the provided email
     const hashedPassword = await bcyprt.hash(temp_password, 10); //default strength for salt creation is 10
 
     let sql = `INSERT INTO Users (Username, Password, FirstName, LastName, Permissions, Email) VALUES ('${req.body.Username}', '${hashedPassword}', ${sql_wrap(req.body.FirstName)}, ${sql_wrap(req.body.LastName)}, '${req.body.Permissions}', ${sql_wrap(req.body.Email)});`;
 
-    await query(sql).then(async result => {
-        if (!result) {
-            log('New User Creation Error');
-            res.status(422).send('New User Creation Error');
-            return;
-        };
-        sql = `SELECT ${db_keys.all_except_pass.join(', ')} FROM Users where UserID = LAST_INSERT_ID();`;
-        await query(sql).then(result_2 => {
-            log("1 record inserted", result_2[0]);
-            //Do we want to then create a table specifically for that user and their data?
+    const user_creation = await query(sql);
 
-            res.status(201).send({
-                ...result_2[0],
-                message: `Successfully created, User will receive email to activate account`
-            });
-        });
+    if (!user_creation) {
+        log('New User Creation Error');
+        return res.status(422).send('New User Creation Error');
+    };
+
+    sql = `SELECT ${db_keys.all_except_pass.join(', ')} FROM Users WHERE UserID = LAST_INSERT_ID();`;
+
+    const [created_user_details] = await query(sql);
+
+    log("1 record inserted", created_user_details);
+
+    const user = {
+        id: created_user_details.UserID
+    };
+
+    const ActivationToken = jwt.sign(user, process.env.ACTIVATION_TOKEN_SECRET_KEY);
+
+    await emailService({
+        to: req.body.Email,
+        message: `Welcome onboard! \n\n\tYour temp password: ${temp_password}\n\n\t Your activation token: ${ActivationToken}`, //TODO: embed this into a button in HTML or at least a hyperlink
+    });
+    //Do we want to then create a table specifically for that user and their data?
+
+    return res.status(201).json({
+        ...created_user_details,
+        message: `Successfully created, User will receive email to activate account`,
     });
 });
 
@@ -150,7 +190,7 @@ userRouter.post('/login', async (req, res) => {
                 id: result[0].UserID
             };
             const access_token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET_KEY);
-            return res.status(200).send({
+            return res.status(200).json({
                 UserID: user.id,
                 FirstName: result[0].FirstName,
                 LastName: result[0].LastName,
@@ -178,6 +218,47 @@ userRouter.post('/login', async (req, res) => {
     });
 });
 
+userRouter.put('/activate/:user_id', async (req, res) => {
+
+    if (!req?.query?.activation_token) {
+        return res.status(401).json({
+            message: `Activation Token not received`
+        });
+    }
+    let decoded = jwt.decode(req.query.activation_token);
+
+    if (decoded.id !== req.params.user_id) {
+        return res.status(422).json({
+            message: `Invalid Activation Token.`
+        });
+    }
+
+    let current_status = await query(`SELECT Active FROM Users WHERE UserID = ? LIMIT 1;`, req.params.user_id);
+
+    if (!current_status) {
+        return res.status(422).json({
+            message: `Something went wrong`
+        });
+    };
+    if (!current_status.length) {
+        return res.status(404).json({
+            message: `Resource Does Not Exist`
+        });
+    };
+
+    if (!current_status[0]?.Active) {
+        return res.status(401).json({
+            message: `User already active`
+        });
+    };
+
+
+
+    let updated = await query(`UPDATE Users SET Active = TRUE WHERE UserID = ?;`, req.params.user_id);
+
+    return res.status(200).json(updated);
+})
+
 userRouter.delete('/:user_id', authenticateToken, async (req, res) => {
 
     if (!defaultPermissions.actions.delete_other_user.includes(req.user.Permissions) && req.user.id !== parseInt(req.params.user_id)) {
@@ -188,17 +269,17 @@ userRouter.delete('/:user_id', authenticateToken, async (req, res) => {
         return res.status(403).send('Forbidden: You do not have access to this.');
     }
 
-    let sql = `SELECT Active FROM Users WHERE UserID = ${req.params.user_id};`;
+    let sql = `UPDATE Users SET Deleted = TRUE WHERE UserID = ?`;
 
+    let result = await query(sql, req.params.user_id);
 
-
-    //TODO: soft-delete the user
+    return res.status(200).json(result);
 });
 
 userRouter.get('/:user_id', authenticateToken, async (req, res) => {
     if (req.user.id === Number(req.params.user_id) || req.user.Permissions === 'total') {
-        let sql = `SELECT UserID, Username, LastName, FirstName, Email, Permissions, Active, CreatedOn, UpdatedOn FROM Users WHERE UserID = '${req.params.user_id}' LIMIT 1`;
-        await query(sql).then(response => {
+        let sql = `SELECT UserID, Username, LastName, FirstName, Email, Permissions, Active, CreatedOn, UpdatedOn FROM Users WHERE UserID = ? LIMIT 1`;
+        await query(sql, req.params.user_id).then(response => {
             if (!response) {
                 return res.status(422).json({
                     message: `Something went wrong`
@@ -209,7 +290,7 @@ userRouter.get('/:user_id', authenticateToken, async (req, res) => {
                     message: `Resource Does Not Exist`
                 });
             };
-            return res.status(422).send(response);
+            return res.status(422).json(response);
         });
     } else {
         return res.status(403).send('Forbidden: You do not have access to this.');
@@ -237,8 +318,12 @@ userRouter.put('/:user_id', authenticateToken, async (req, res) => {
 
     if (changes.Username) {
         if (!await isAvailableUsername(req.body.Username)) {
-            return res.status(401).json(`Username ${req.body.Username} already in use`);
+            return res.status(401).send(`Username ${req.body.Username} already in use`);
         }
+    }
+
+    if (changes.Email && !is_valid_email(changes.Email)) {
+        return res.status(401).send(`Invalid email address.`);
     }
 
     if (changes.Permissions) {
@@ -268,7 +353,7 @@ userRouter.put('/:user_id', authenticateToken, async (req, res) => {
         };
     }
 
-    let sql = `UPDATE Users SET ${Object.keys(changes).map(key => `${key} = ?`).join(', ')} WHERE UserID = ? LIMIT 1;`;
+    let sql = `UPDATE Users SET ${Object.keys(changes).map(key => `${key} = ?`).join(', ')} WHERE UserID = ?;`;
 
     await query(sql, [...Object.values(changes), req.params.id]).then(response => {
         if (!response) {
@@ -284,8 +369,14 @@ userRouter.put('/:user_id', authenticateToken, async (req, res) => {
 
 
 userRouter.get('/:user_id/positions', authenticateToken, async (req, res) => {
-    let sql = `SELECT * FROM Position WHERE UserID = ? OR SecondaryUserID = ? OR TertiaryUserID = ?`; //TODO: handle joint_confirmed prop
+    let sql = `SELECT * FROM Positions WHERE UserID = ? OR SecondaryUserID = ? OR TertiaryUserID = ?`; //TODO: handle joint_confirmed prop
     //GET positions belonging to said user, based on perms
+
+    if (req.params.user_id === req.user.id) {} //everyone can see their own positions
+    else if (!defaultPermissions.access.view_other_users_positions.includes(req.user.Permissions)) {
+        return res.status(403).send('Forbidden: You do not have access to this.');
+    }
+
 
     let results = await query(sql, Array(3).fill(req.params.user_id));
 
