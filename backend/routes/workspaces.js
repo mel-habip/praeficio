@@ -2,12 +2,10 @@ import express from 'express';
 const workspacesRouter = express.Router();
 const log = console.log;
 import authenticateToken from '../jobs/authenticateToken.js';
-import authenticateUser from '../jobs/authenticateUser.js';
 import defaultPermissions from '../constants/defaultPermissions.js';
 import connection from '../utils/db_connection.js';
 
 workspacesRouter.use(authenticateToken);
-workspacesRouter.use(authenticateUser);
 
 workspacesRouter.get('/', async (req, res) => {
     if (true) { //TODO: add permissions

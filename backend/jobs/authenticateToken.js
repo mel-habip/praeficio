@@ -21,7 +21,7 @@ export default async function authenticateToken(req, res, next) { //this is midd
         if (err) return res.status(403).send('Unauthenticated: Invalid Token');
         req.user = user;
 
-        let active_status = await query(`SELECT Active, Permissions FROM Users WHERE UserID = ${user.id}`);
+        let active_status = await query(`SELECT Active, Permissions FROM Users WHERE UserID = ? LIMIT 1;`, user.id);
 
         if (!active_status?.[0]) {
             return res.status(403).send(`Unauthenticated: User ${user.id} not found.`);
