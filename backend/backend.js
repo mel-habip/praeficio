@@ -9,6 +9,9 @@ import positionRouter from './routes/positions.js';
 import workspacesRouter from './routes/workspaces.js';
 const log = console.log;
 
+import REGULAR_SCHEDULED_JOBS from './scheduled_jobs/regular_internal_jobs';
+
+
 
 const APP = express(); //creating and starting the server
 // APP.use(cors());
@@ -20,6 +23,7 @@ APP.use('/users', userRouter);
 APP.use('/positions', positionRouter);
 APP.use('/workspaces', workspacesRouter);
 
+Object.values(REGULAR_SCHEDULED_JOBS).forEach(job => job.start());
 
 /**
  * TODO LIST:
