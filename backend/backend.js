@@ -7,6 +7,8 @@ import cors from 'cors';
 import userRouter from './routes/users.js';
 import positionRouter from './routes/positions.js';
 import workspacesRouter from './routes/workspaces.js';
+import alertsRouter from './routes/alerts.js';
+
 const log = console.log;
 
 import REGULAR_SCHEDULED_JOBS from './scheduled_jobs/regular_internal_jobs';
