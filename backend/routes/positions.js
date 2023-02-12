@@ -1,19 +1,56 @@
+import Papa from 'papaparse';
+import fs from 'fs';
+import formidable from 'formidable';
+import path from 'path';
 import express from 'express';
 const positionRouter = express.Router();
 const log = console.log;
+var counter = 0; //used for additional randomization on temp files
+
+import {
+    fileURLToPath
+} from 'url';
+
+const __dirname = path.dirname(fileURLToPath(
+    import.meta.url));
 
 import authenticateToken from '../jobs/authenticateToken.js';
 import defaultPermissions from '../constants/defaultPermissions.js';
 import query from '../utils/db_connection.js';
+import emailService from '../jobs/emailService.js';
 
 positionRouter.use(authenticateToken);
 
+positionRouter.get('/user/:user_id', async (req, res) => {
+    let sql = `Select * FROM Positions LEFT JOIN workspace_position_associations ON Positions.PositionID = workspace_position_associations.PositionID WHERE Positions.UserID = ?;`;
 
+    let matches = await query(sql, req.params.user_id);
 
-positionRouter.get('/:position_id', (req, res) => {
-    let sql = `SELECT ${req.params.position_id} FROM Positions` //TODO: finish this, check a couple things:
+    if (!matches) return res.status(404).send(`Not found.`);
 
-    //check if query includes 'include-deactivated:true', else filter them out
+    if (parseInt(req.params.user_id) === req.user.id) return res.status(200).json(matches);
+
+    if (defaultPermissions.access.extract_position_data.includes(req.user.Permissions)) return res.status(200).json(matches);
+
+    if (req.user.Workspaces.includes(match.WorkspaceID))
+
+        return res.status(200).json(matches.filter(pos => req.user.Workspaces.includes(pos.WorkspaceID)));
+});
+
+positionRouter.get('/:position_id', async (req, res) => {
+    let sql = `Select * FROM Positions LEFT JOIN workspace_position_associations ON Positions.PositionID = workspace_position_associations.PositionID WHERE Positions.PositionID = ? LIMIT 1;`;
+
+    let [match] = await query(sql, req.params.position_id);
+
+    if (!match) return res.status(404).send(`Position not found.`);
+
+    if (match.UserID === req.user.id) return res.status(200).json(match);
+
+    if (defaultPermissions.access.extract_position_data.includes(req.user.Permissions)) return res.status(200).json(match);
+
+    if (req.user.Workspaces.includes(match.WorkspaceID)) return res.status(200).json(match);
+
+    return res.status(403).send(`Forbidden: ${req.user.Permissions} (Workspaces ${req.user.Workspaces}) cannot view this Position.`);
 
     /**
      * 1) who does the position belong to?
@@ -24,41 +61,93 @@ positionRouter.get('/:position_id', (req, res) => {
      */
 });
 
-positionRouter.post('/', (req, res) => {
+positionRouter.post('/', async (req, res) => {
 
     if (req.user.id !== req.body.user_id && !defaultPermissions.actions.create_positions_for_others.includes(req.user.Permissions)) {
-        res.status(403).send(`Forbidden: ${req.user.Permissions} cannot create Position for non-self.`)
+        return res.status(403).send(`Forbidden: ${req.user.Permissions} cannot create Position for non-self.`)
     }
 
-    let sql = `INSERT INTO Positions (UserID, Ticker, AcquiredOn, SoldOn) VALUES '${req.body.user_id}', '${req.body.ticker}', '${req.body.acquired_on}', '${req.body.sold_on}'`;
+    let sql = `INSERT INTO Positions (UserID, Ticker, AcquiredOn, SoldOn) VALUES ?, ?, ?, ?`;
 
+    let result = await query(sql, req.body.user_id, req.body.ticker, req.body.acquired_on, req.body.sold_on);
 
+    if (!result) return res.status(422).send(`Something went wrong while creating a new Position`);
 
-    //TODO: check user permissions to see if they are allowed to create positions for folk other than themselves
+    sql = `SELECT * FROM Positions WHERE PositionID = LAST_INSERT_ID();`;
+
+    result = await query(sql);
+
+    return res.status(200).json(result);
 });
 
 positionRouter.post('/import', (req, res) => {
 
-    //work the file provided some how
     const provided_data = []; //TODO: provide import modes as CSV, XML or JSON in prescribed formats
+
+    let form = new formidable.IncomingForm(); //TODO: test test test!
+
+    //Process the file upload in Node
+    form.parse(req, function (error, fields, file) {
+
+        if (error) return res.status(422).send(`Something went wrong while importing`);
+
+        let filepath = file.fileupload.filepath;
+        let newpath = '../temp_files/';
+        newpath += file.fileupload.originalFilename;
+
+        //Copy the uploaded file to a custom folder
+        fs.rename(filepath, newpath, function (err) {
+            if (err) return res.status(422).send(`Something went wrong while importing`);
+        });
+        //then, process the file
+
+        const csv = Papa.parse(newpath);
+        csv.forEach(e => provided_data.push(e));
+    });
+
+
 
     let sql = `INSERT INTO Positions (UserID, Ticker, AcquiredOn, SoldOn) ` + provided_data.map(row => `('${row.user_id}', '${row.ticker}', '${row.acquired_on}', '${row.sold_on}')`).join(', ') + ';';
 
-
 });
 
-positionRouter.post('/export', (req, res) => {
+positionRouter.post('/export', async (req, res) => {
 
     let sql = `SELECT * FROM Positions` //TODO: finish this, provide as a CSV... I know how to prepare but not sure about making the FE download;
 
-    let result = [];
+    let result = await query(sql);
 
     //implement Json logic from --> https://jsonlogic.com/ ? Or build your own? I don't like this one too much and can build a simplified version of it myself
     //consider a mechanism whereby we do the filter at the SQL level instead of JS. In theory this should reduce Server Memory usage? 
 
-    let filtered_result = result.filter(position => condition_evaluator(req.body.filter_rule, position));
+    // let filtered_result = result.filter(position => condition_evaluator(req.body.filter_rule, position));
 
-    res.status(200).json(filtered_result);
+    const csv = Papa.unparse(result);
+    counter++;
+    const temp_name = `${Date.now()}-${counter}.csv`;
+    const filePath = path.join(__dirname + '/temp_files', temp_name);
+
+    fs.writeFileSync(filePath, csv, (err) => {
+        if (err) throw err;
+    });
+
+    res.status(200).download(filePath, async (err) => {
+        let att = [{
+            filename: temp_name,
+            content: fs.createReadStream(filePath)
+        }];
+
+        let email = await emailService({
+            to: 'mel.habip@gmail.com',
+            subject: 'Export Demo',
+            text: 'export demo',
+            attachments: att
+        });
+
+        if (err) res.status(422).json(err);
+
+        if (req.query?.keep !== 'true') fs.unlinkSync(filePath);
+    });
 
 });
 

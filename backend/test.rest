@@ -6,8 +6,8 @@ POST http://localhost:8000/users/create_new_user/
 content-type: application/json
 
 {
-    "username": "test_user_name",
-    "password": "test_user_password"
+    "Username": "test_user_name",
+    "Password": "test_user_password"
 }
 
 ###
@@ -15,8 +15,8 @@ POST http://localhost:8000/users/login/
 content-type: application/json
 
 {
-    "username": "test_user_name",
-    "password": "test_user_password"
+    "Username": "test_user_name",
+    "Password": "test_user_password"
 }
 
 ###
@@ -40,3 +40,7 @@ content-type: application/json
     "Permissions": "total",
     "Username": "test_user_name3"
 }
+
+###
+POST http://localhost:8000/positions/export?keep=false
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywiaWF0IjoxNjc2MjM5NTQxfQ.BmpxHFnStp1Lk6oZxnbGRMOzU0PcQL-jsvwwTOkUGFw
