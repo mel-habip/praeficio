@@ -11,7 +11,7 @@ import alertsRouter from './routes/alerts.js';
 
 const log = console.log;
 
-import REGULAR_SCHEDULED_JOBS from './scheduled_jobs/regular_internal_jobs';
+import REGULAR_SCHEDULED_JOBS from './scheduled_jobs/regular_internal_jobs.js';
 
 
 

@@ -45,21 +45,19 @@ export default async function query(sql, ...values) {
         console.error('Error in Promise: ', err);
         console.warn('Received: ', sql);
     }
-
     return booleanize_db_data(result);
 }
 
 
 function booleanize_db_data(array=[]) {
-
     if (!Array.isArray(array)) {
         return array;
     }
 
     return array.map(hash => {
         ['Active', 'Deleted'].forEach(property => {
-            if (hash[property] != null) hash[property] = Boolean(hash[property]);
+            if (hash.hasOwnProperty(property)) hash[property] = Boolean(hash[property]);
         });
-
-    })
+        return hash;
+    });
 }

@@ -198,5 +198,4 @@ const defaultPermissions = {
     }
 };
 
-
 export default defaultPermissions;

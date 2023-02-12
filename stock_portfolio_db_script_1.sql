@@ -8,7 +8,7 @@ CREATE TABLE Users (
   FirstName varchar(255),
   Email varchar(255),
   Permissions VARCHAR(100) DEFAULT 'client',
-  Active BOOLEAN DEFAULT 0,
+  Active BOOLEAN DEFAULT FALSE,
   CreatedOn DATETIME DEFAULT NOW(),
   UpdatedOn DATETIME DEFAULT NULL ON UPDATE NOW()
 );
@@ -19,9 +19,10 @@ CREATE TABLE Positions (
 	TertiaryUserID Int,
   Ticker VARCHAR(10) NOT NULL,
   CreatedOn DATETIME DEFAULT NOW(),
-  AcquiredOn Date,
-  SoldOn Date,
-  Active TINYINT DEFAULT '1',
+  UpdatedOn DATETIME DEFAULT NULL ON UPDATE NOW(),
+  AcquiredOn Date DEFAULT NULL,
+  SoldOn Date DEFAULT NULL,
+  Active BOOLEAN DEFAULT TRUE,
   FOREIGN KEY (UserID) REFERENCES Users(UserID),
   FOREIGN KEY (SecondaryUserID) REFERENCES Users(UserID),
   FOREIGN KEY (TertiaryUserID) REFERENCES Users(UserID)
@@ -29,14 +30,23 @@ CREATE TABLE Positions (
 CREATE TABLE Workspaces (
 	WorkspaceID int auto_increment primary key,
 	Name VARCHAR(255) NOT NULL,
-	CreatedOn DATETIME DEFAULT NOW(),
-	FOREIGN KEY (UserID) REFERENCES Users(UserID)
+	CreatedOn DATETIME DEFAULT NOW()
 );
 CREATE TABLE Workspace_User_Associations (
   UserID Int NOT NULL,
   WorkspaceID Int NOT NULL,
   PRIMARY KEY(UserID, WorkspaceID),
   FOREIGN KEY (UserID) REFERENCES Users(UserID),
-  FOREIGN KEY (WorkspaceID) REFERENCES Workspaces(WorkspaceID)
+  FOREIGN KEY (WorkspaceID) REFERENCES Workspaces(WorkspaceID),
+  CreatedOn DATETIME DEFAULT NOW()
 );
--- CREATE TABLE User_User_Associations ()
+CREATE TABLE Workspace_Position_Associations (
+  PositionID Int NOT NULL,
+  WorkspaceID Int NOT NULL,
+  PRIMARY KEY(PositionID, WorkspaceID),
+  FOREIGN KEY (PositionID) REFERENCES Positions(PositionID),
+  FOREIGN KEY (WorkspaceID) REFERENCES Workspaces(WorkspaceID),
+  CreatedOn DATETIME DEFAULT NOW()
+);
+
+

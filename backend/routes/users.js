@@ -47,7 +47,7 @@ userRouter.post('/create_new_user', async (req, res) => {
     if (!req.body.Username) {
         return res.status(401).json(`Username required.`);
     }
-    if (!req.body.password) {
+    if (!req.body.Password) {
         return res.status(401).json(`Password required.`);
     }
 
@@ -64,7 +64,7 @@ userRouter.post('/create_new_user', async (req, res) => {
     //hashed = encrypted
     //encryption uses a "Salt" that is generated uniquely for each password. The salt is prepended to the hashed password and functions as the key to decrypt it later on.
 
-    const hashedPassword = await bcrypt.hash(req.body.password, 10); //default strength for salt creation is 10
+    const hashedPassword = await bcrypt.hash(req.body.Password, 10); //default strength for salt creation is 10
 
 
     let sql = `INSERT INTO Users (Username, Password, FirstName, LastName, Permissions, Email, Active) VALUES ('${req.body.Username}', '${hashedPassword}', ${sql_wrap(req.body.FirstName)}, ${sql_wrap(req.body.LastName)}, 'basic_client', ${sql_wrap(req.body.Email)}, ${!is_secured});`;
@@ -166,7 +166,7 @@ userRouter.post('/pre_signed_create_new_user', authenticateToken, async (req, re
 
 userRouter.post('/login', async (req, res) => {
 
-    if (!req?.body?.username) {
+    if (!req?.body?.Username) {
         return res.status(401).json({
             message: `Username required.`
         });
@@ -174,7 +174,7 @@ userRouter.post('/login', async (req, res) => {
 
     let sql = `SELECT * FROM Users WHERE Username = ?`;
 
-    await query(sql, req.body.username).then(async result => {
+    await query(sql, req.body.Username).then(async result => {
         if (!result || !result?. [0]) {
             return res.status(401).json({
                 message: `Username not recognized`
@@ -185,7 +185,7 @@ userRouter.post('/login', async (req, res) => {
                 message: `Cannot Login to Inactive Account. Must Activate first.`
             });
         }
-        if (await bcrypt.compare(req.body.password, result[0].Password)) {
+        if (await bcrypt.compare(req.body.Password, result[0].Password)) {
             const user = {
                 id: result[0].UserID
             };
