@@ -1,4 +1,7 @@
-import cron  from "node-cron";
+import cron from "node-cron";
+import emailService from '../jobs/emailService.js';
+
+import query from '../utils/db_connection.js';
 import emailService from '../jobs/emailService.js';
 
 const log = console.log;
@@ -21,18 +24,43 @@ const log = console.log;
 const REGULAR_SCHEDULED_JOBS = {
     monthly: cron.schedule("1 0 1 * *", async function () { //at 0:01am
         log(`Monthly triggerred`);
-        //no tasks yet
+        let monthly_tasks = await query(`Select * FROM Alerts WHERE Frequency = 'MONTHLY' AND Active = TRUE`);
+        for await (const task of monthly_tasks) {
+            job_handler(task);
+            //no tasks yet
+        }
     }),
     daily: cron.schedule("1 1 * * *", async function () { //at 1:01 am
         log(`Daily triggerred`);
-        //no tasks yet
+
+        let daily_tasks = await query(`Select * FROM Alerts WHERE Frequency = 'DAILY' AND Active = TRUE`);
+        for await (const task of daily_tasks) {
+            job_handler(task);
+            //no tasks yet
+        }
     }),
     quarterly: cron.schedule("1 2 1 1,4,7,10 *", async function () { //at 2:01am
         log(`Quarterly triggerred`);
-        //no tasks yet
+        let quarterly_tasks = await query(`Select * FROM Alerts WHERE Frequency = 'QUARTERLY' AND Active = TRUE`);
+        for await (const task of quarterly_tasks) {
+            job_handler(task);
+            //no tasks yet
+        }
     })
 };
 
 export default REGULAR_SCHEDULED_JOBS;
 
+const KNOWN_TASKS = {
+    future_dividends: async function (time_period) {},
+    past_dividends: async function (time_period) {},
+    past_performance : async function (time_period) {},
+    analyst_recommendations: async function () {}
+};
 
+async function job_handler(job, details) {
+    //knows how to handle a job.
+    if (!KNOWN_TASKS[job]) {
+        emailService({}) //to the owner, if email is known. do LEFT JOIN in query to know the emails.
+    }
+};
