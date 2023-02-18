@@ -6,8 +6,8 @@ POST http://localhost:8000/users/create_new_user/
 content-type: application/json
 
 {
-    "Username": "test_user_name",
-    "Password": "test_user_password"
+    "username": "test_user_name",
+    "password": "test_user_password"
 }
 
 ###
@@ -15,8 +15,8 @@ POST http://localhost:8000/users/login/
 content-type: application/json
 
 {
-    "Username": "test_user_name",
-    "Password": "test_user_password"
+    "username": "test_user_name",
+    "password": "test_user_password"
 }
 
 ###
@@ -34,11 +34,11 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiaWF0IjoxN
 content-type: application/json
 
 {
-    "Email": "hell2o@example.com",
-    "FirstName": "John2",
-    "LastName": "Doe2",
-    "Permissions": "total",
-    "Username": "test_user_name3"
+    "email": "hell2o@example.com",
+    "first_name": "John2",
+    "last_name": "Doe2",
+    "permissions": "total",
+    "username": "test_user_name3"
 }
 
 ###

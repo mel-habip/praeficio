@@ -10,55 +10,62 @@ const defaultPermissions = {
         ],
         "edit_user_details_framework": {
             "total": [
-                "FirstName",
-                "LastName",
-                "Username",
-                "CreatedOn",
-                "UpdatedOn",
-                "Email",
-                "Active"
+                "first_name",
+                "last_name",
+                "username",
+                "created_on",
+                "updated_on",
+                "email",
+                "active",
+                "deleted"
             ],
             "workspace_admin": [
-                "FirstName",
-                "LastName",
-                "Username",
-                "Email",
-                "Active"
+                "first_name",
+                "last_name",
+                "username",
+                "email",
+                "active",
+                "deleted"
             ],
             "workspace_supervisor": [
-                "FirstName",
-                "LastName",
-                "Username",
-                "Email",
-                "Active"
+                "first_name",
+                "last_name",
+                "username",
+                "email",
+                "active",
+                "deleted"
             ],
             "workspace_employee": [
-                "FirstName",
-                "LastName",
-                "Username",
-                "Email",
-                "Active"
+                "first_name",
+                "last_name",
+                "username",
+                "email",
+                "active",
+                "deleted"
             ],
             "dev_lead": [
-                "FirstName",
-                "LastName",
-                "Username",
-                "Email",
-                "Active"
+                "first_name",
+                "last_name",
+                "username",
+                "email",
+                "active",
+                "deleted"
             ],
             "dev_senior": [
-                "FirstName",
-                "LastName",
-                "Username",
-                "Email",
-                "Active"
+                "first_name",
+                "last_name",
+                "username",
+                "email",
+                "active",
+                "deleted"
             ],
             "dev_junior": [
-                "FirstName",
-                "LastName",
-                "Username",
-                "Email",
-                "Active"
+                "first_name",
+                "last_name",
+                "username",
+                "email",
+                "active",
+                "deleted"
             ]
         },
         "delete_self_user": [

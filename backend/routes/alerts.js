@@ -17,22 +17,22 @@ alertsRouter.get('/', async (req, res) => {
 
 //Create a new Alert
 alertsRouter.post('/', async (req, res) => {
-    let {UserID, Type, Frequency, Active, Notes} = req.body;
+    let {user_id, type, frequency, active, notes} = req.body;
 
-    if (!UserID || !Type || !Frequency) {
-        return res.status(400).send(`Params UserID, Type, Frequency are required`);
+    if (!user_id || !type || !frequency) {
+        return res.status(400).send(`Params user_id, type, frequency are required`);
     }
-    UserID = parseInt(UserID);
+    user_id = parseInt(user_id);
 
-    if (parseInt(UserID) !== req.user.id && !defaultPermissions.actions.edit_other_alerts.includes(req.user.Permissions)) return res.status(403).send('Forbidden: You do not have access to this.');
+    if (parseInt(user_id) !== req.user.id && !defaultPermissions.actions.edit_other_alerts.includes(req.user.permissions)) return res.status(403).send('Forbidden: You do not have access to this.');
 
-    let SQL = `INSERT INTO Alerts (UserID, Type, Frequency, Active, Notes) VALUES ?, ?, ?, ?, ?;`;
+    let SQL = `INSERT INTO alerts (user_id, type, frequency, active, notes) VALUES (?, ?, ?, ?, ?);`;
 
-    let result = await query(SQL, UserID, Type, Frequency, Active, Notes);
+    let result = await query(SQL, user_id, type, frequency, active, notes);
 
     if (!result) return res.status(422).send(`Something went wrong while creating Alert.`);
 
-    SQL = `SELECT * FROM Alerts WHERE AlertID = LAST_INSERT_ID();`;
+    SQL = `SELECT * FROM alerts WHERE alert_id = LAST_INSERT_ID();`;
 
     [result] = await query(SQL);
 
@@ -45,18 +45,18 @@ alertsRouter.post('/', async (req, res) => {
 //See alerts of a single user
 alertsRouter.get('/:user_id', async (req, res) => {
 
-    if (parseInt(req.params.user_id) !== req.user.id && !defaultPermissions.actions.edit_other_alerts.includes(req.user.Permissions)) return res.status(403).send('Forbidden: You do not have access to this.');
+    if (parseInt(req.params.user_id) !== req.user.id && !defaultPermissions.actions.edit_other_alerts.includes(req.user.permissions)) return res.status(403).send('Forbidden: You do not have access to this.');
 
-    let matches = await query(`SELECT * FROM Alerts WHERE UserID = ?`, req.params.user_id);
+    let matches = await query(`SELECT * FROM alerts WHERE user_id = ?`, req.params.user_id);
 
 });
 
 //See details of a single user
 alertsRouter.get('/:alert_id', async (req, res) => {
-    let [match] = await query(`SELECT * FROM Alerts WHERE AlertID = ?`, req.params.alert_id);
+    let [match] = await query(`SELECT * FROM alerts WHERE alert_id = ?`, req.params.alert_id);
     
 
-    if (match.UserID !== req.user.id && !defaultPermissions.actions.edit_other_alerts.includes(req.user.Permissions)) return res.status(403).send('Forbidden: You do not have access to this.');
+    if (match.user_id !== req.user.id && !defaultPermissions.actions.edit_other_alerts.includes(req.user.permissions)) return res.status(403).send('Forbidden: You do not have access to this.');
 
     
 
@@ -64,13 +64,13 @@ alertsRouter.get('/:alert_id', async (req, res) => {
 
 //Update a single Alert
 alertsRouter.put('/:alert_id', async (req, res) => {
-    let [match] = await query(`SELECT * FROM Alerts WHERE AlertID = ?`, req.params.alert_id);
+    let [match] = await query(`SELECT * FROM alerts WHERE alert_id = ?`, req.params.alert_id);
 
     if (!match) return res.status(404).send('Requested resource not found.');
 
-    if (parseInt(match.UserID) !== req.user.id && !defaultPermissions.actions.edit_other_alerts.includes(req.user.Permissions)) return res.status(403).send('Forbidden: You do not have access to this.');
+    if (parseInt(match.user_id) !== req.user.id && !defaultPermissions.actions.edit_other_alerts.includes(req.user.permissions)) return res.status(403).send('Forbidden: You do not have access to this.');
 
-    let result = await query(`UPDATE Alerts WHERE AlertID = ? SET Frequency = ? , Notes = ?, Active = ?, Type = ?;`, [req.params.alert_id, req.body.frequency ?? match.Frequency, req.body.notes ?? match.Notes, req.body.active, req.body.type ?? match.Type]);
+    let result = await query(`UPDATE alerts WHERE alert_id = ? SET frequency = ? , notes = ?, active = ?, type = ?;`, [req.params.alert_id, req.body.frequency ?? match.frequency, req.body.notes ?? match.notes, req.body.active, req.body.type ?? match.type]);
 
     if (!result) return res.status(422).send(`Something went wrong while updating Alert.`);
 });
@@ -81,9 +81,9 @@ alertsRouter.put('/:alert_id/turn_off', async (req, res) => {});
 //delete a single Alert
 alertsRouter.delete('/:alert_id', async (req, res) => {
 
-    if (parseInt(req.params.user_id) !== req.user.id && !defaultPermissions.actions.edit_other_alerts.includes(req.user.Permissions)) return res.status(403).send('Forbidden: You do not have access to this.');
+    if (parseInt(req.params.user_id) !== req.user.id && !defaultPermissions.actions.edit_other_alerts.includes(req.user.permissions)) return res.status(403).send('Forbidden: You do not have access to this.');
 
-    let result = await query(`DELETE FROM Alerts WHERE AlertID = ?;`, req.params.alert_id);
+    let result = await query(`DELETE FROM alerts WHERE alert_id = ?;`, req.params.alert_id);
 
     if (!result.status) return res.status(422).send('Something went wrong.');
 

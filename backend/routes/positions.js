@@ -22,7 +22,7 @@ import emailService from '../jobs/emailService.js';
 positionRouter.use(authenticateToken);
 
 positionRouter.get('/user/:user_id', async (req, res) => {
-    let sql = `Select * FROM Positions LEFT JOIN workspace_position_associations ON Positions.PositionID = workspace_position_associations.PositionID WHERE Positions.UserID = ?;`;
+    let sql = `Select * FROM positions LEFT JOIN workspace_position_associations ON positions.position_id = workspace_position_associations.position_id WHERE positions.user_id = ?;`;
 
     let matches = await query(sql, req.params.user_id);
 
@@ -30,27 +30,27 @@ positionRouter.get('/user/:user_id', async (req, res) => {
 
     if (parseInt(req.params.user_id) === req.user.id) return res.status(200).json(matches);
 
-    if (defaultPermissions.access.extract_position_data.includes(req.user.Permissions)) return res.status(200).json(matches);
+    if (defaultPermissions.access.extract_position_data.includes(req.user.permissions)) return res.status(200).json(matches);
 
-    if (req.user.Workspaces.includes(match.WorkspaceID))
+    if (req.user.workspaces.includes(match.workspace_id))
 
-        return res.status(200).json(matches.filter(pos => req.user.Workspaces.includes(pos.WorkspaceID)));
+        return res.status(200).json(matches.filter(pos => req.user.workspaces.includes(pos.workspace_id)));
 });
 
 positionRouter.get('/:position_id', async (req, res) => {
-    let sql = `Select * FROM Positions LEFT JOIN workspace_position_associations ON Positions.PositionID = workspace_position_associations.PositionID WHERE Positions.PositionID = ? LIMIT 1;`;
+    let sql = `Select * FROM positions LEFT JOIN workspace_position_associations ON positions.position_id = workspace_position_associations.position_id WHERE positions.position_id = ? LIMIT 1;`;
 
     let [match] = await query(sql, req.params.position_id);
 
     if (!match) return res.status(404).send(`Position not found.`);
 
-    if (match.UserID === req.user.id) return res.status(200).json(match);
+    if (match.user_id === req.user.id) return res.status(200).json(match);
 
-    if (defaultPermissions.access.extract_position_data.includes(req.user.Permissions)) return res.status(200).json(match);
+    if (defaultPermissions.access.extract_position_data.includes(req.user.permissions)) return res.status(200).json(match);
 
-    if (req.user.Workspaces.includes(match.WorkspaceID)) return res.status(200).json(match);
+    if (req.user.workspaces.includes(match.workspace_id)) return res.status(200).json(match);
 
-    return res.status(403).send(`Forbidden: ${req.user.Permissions} (Workspaces ${req.user.Workspaces}) cannot view this Position.`);
+    return res.status(403).send(`Forbidden: ${req.user.permissions} (Workspaces ${req.user.workspaces}) cannot view this Position.`);
 
     /**
      * 1) who does the position belong to?
@@ -63,17 +63,17 @@ positionRouter.get('/:position_id', async (req, res) => {
 
 positionRouter.post('/', async (req, res) => {
 
-    if (req.user.id !== req.body.user_id && !defaultPermissions.actions.create_positions_for_others.includes(req.user.Permissions)) {
-        return res.status(403).send(`Forbidden: ${req.user.Permissions} cannot create Position for non-self.`)
+    if (req.user.id !== req.body.user_id && !defaultPermissions.actions.create_positions_for_others.includes(req.user.permissions)) {
+        return res.status(403).send(`Forbidden: ${req.user.permissions} cannot create Position for non-self.`);
     }
 
-    let sql = `INSERT INTO Positions (UserID, Ticker, AcquiredOn, SoldOn) VALUES ?, ?, ?, ?`;
+    let sql = `INSERT INTO positions (user_id, ticker, acquired_on, sold_on) VALUES (?, ?, ?, ?)`;
 
     let result = await query(sql, req.body.user_id, req.body.ticker, req.body.acquired_on, req.body.sold_on);
 
     if (!result) return res.status(422).send(`Something went wrong while creating a new Position`);
 
-    sql = `SELECT * FROM Positions WHERE PositionID = LAST_INSERT_ID();`;
+    sql = `SELECT * FROM positions WHERE position_id = LAST_INSERT_ID();`;
 
     result = await query(sql);
 
@@ -107,13 +107,13 @@ positionRouter.post('/import', (req, res) => {
 
 
 
-    let sql = `INSERT INTO Positions (UserID, Ticker, AcquiredOn, SoldOn) ` + provided_data.map(row => `('${row.user_id}', '${row.ticker}', '${row.acquired_on}', '${row.sold_on}')`).join(', ') + ';';
+    let sql = `INSERT INTO positions (user_id, ticker, acquired_on, sold_on) ` + provided_data.map(row => `('${row.user_id}', '${row.ticker}', '${row.acquired_on}', '${row.sold_on}')`).join(', ') + ';';
 
 });
 
 positionRouter.post('/export', async (req, res) => {
 
-    let sql = `SELECT * FROM Positions` //TODO: finish this, provide as a CSV... I know how to prepare but not sure about making the FE download;
+    let sql = `SELECT * FROM positions` //TODO: finish this, provide as a CSV... I know how to prepare but not sure about making the FE download;
 
     let result = await query(sql);
 

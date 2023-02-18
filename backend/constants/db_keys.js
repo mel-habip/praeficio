@@ -1,33 +1,36 @@
 const db_keys = {
     all: [
-        'UserID',
-        'Username',
-        'FirstName',
-        'LastName',
-        'Permissions',
-        'Email',
-        'CreatedOn',
-        'UpdatedOn',
-        'Active',
-        'Password'
+        'user_id',
+        'username',
+        'first_name',
+        'last_name',
+        'permissions',
+        'email',
+        'created_on',
+        'updated_on',
+        'active',
+        'deleted',
+        'password'
     ],
     all_except_pass: [
-        'UserID',
-        'Username',
-        'FirstName',
-        'LastName',
-        'Permissions',
-        'Email',
-        'CreatedOn',
-        'UpdatedOn',
-        'Active'
+        'user_id',
+        'username',
+        'first_name',
+        'last_name',
+        'permissions',
+        'email',
+        'created_on',
+        'updated_on',
+        'active',
+        'deleted',
+
     ],
     tombstone: [
-        'UserID',
-        'Username',
-        'FirstName',
-        'LastName',
-        'Email',
+        'user_id',
+        'username',
+        'first_name',
+        'last_name',
+        'email',
     ]
 };
 

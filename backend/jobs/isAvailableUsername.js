@@ -7,9 +7,9 @@ const log = console.log;
  * @returns {Promise<Boolean>} - return true if the username is available
  */
 export default async function isAvailableUsername(username) {
-    let sql = `SELECT Username FROM Users WHERE Username = '${username}'`;
-    let temp_result = await query(sql);
+    let sql = `SELECT username FROM users WHERE username = '${username}'`;
+    let [temp_result] = await query(sql);
 
-    log(`${username} ${temp_result[0] ? 'is not' : 'is'} available`);
-    return !temp_result?.[0];
+    log(`${username} ${temp_result ? 'is not' : 'is'} available`);
+    return !temp_result;
 }

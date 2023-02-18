@@ -55,7 +55,7 @@ function booleanize_db_data(array=[]) {
     }
 
     return array.map(hash => {
-        ['Active', 'Deleted'].forEach(property => {
+        ['active', 'deleted'].forEach(property => {
             if (hash.hasOwnProperty(property)) hash[property] = Boolean(hash[property]);
         });
         return hash;

@@ -24,7 +24,7 @@ const log = console.log;
 const REGULAR_SCHEDULED_JOBS = {
     monthly: cron.schedule("1 0 1 * *", async function () { //at 0:01am
         log(`Monthly triggerred`);
-        let monthly_tasks = await query(`Select * FROM Alerts WHERE Frequency = 'MONTHLY' AND Active = TRUE`);
+        let monthly_tasks = await query(`Select * FROM alerts WHERE frequency = 'MONTHLY' AND active = TRUE`);
         for await (const task of monthly_tasks) {
             job_handler(task);
             //no tasks yet
@@ -33,7 +33,7 @@ const REGULAR_SCHEDULED_JOBS = {
     daily: cron.schedule("1 1 * * *", async function () { //at 1:01 am
         log(`Daily triggerred`);
 
-        let daily_tasks = await query(`Select * FROM Alerts WHERE Frequency = 'DAILY' AND Active = TRUE`);
+        let daily_tasks = await query(`Select * FROM alerts WHERE frequency = 'DAILY' AND active = TRUE`);
         for await (const task of daily_tasks) {
             job_handler(task);
             //no tasks yet
@@ -41,7 +41,7 @@ const REGULAR_SCHEDULED_JOBS = {
     }),
     quarterly: cron.schedule("1 2 1 1,4,7,10 *", async function () { //at 2:01am
         log(`Quarterly triggerred`);
-        let quarterly_tasks = await query(`Select * FROM Alerts WHERE Frequency = 'QUARTERLY' AND Active = TRUE`);
+        let quarterly_tasks = await query(`Select * FROM alerts WHERE frequency = 'QUARTERLY' AND active = TRUE`);
         for await (const task of quarterly_tasks) {
             job_handler(task);
             //no tasks yet
@@ -60,7 +60,10 @@ const KNOWN_TASKS = {
 
 async function job_handler(job, details) {
     //knows how to handle a job.
-    if (!KNOWN_TASKS[job]) {
-        emailService({}) //to the owner, if email is known. do LEFT JOIN in query to know the emails.
+    if (KNOWN_TASKS.hasOwnProperty(job)) {
+
+        let result_of_job = await KNOWN_TASKS[job];
+
+        emailService({}); //to the owner, if email is known. do LEFT JOIN in query to know the emails.
     }
 };

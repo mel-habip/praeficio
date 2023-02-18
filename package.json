@@ -2,7 +2,7 @@
   "name": "Stock-Portfolio-Website",
   "version": "1.0.0",
   "description": "A fun website for mel's learning journey",
-  "main": "index.js",
+  "main": "backend/backend.js",
   "scripts": {
     "devStart": "nodemon backend/backend.js",
     "test": "echo \"Error: no test specified\" && exit 1"
