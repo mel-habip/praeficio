@@ -1,11 +1,46 @@
-POST http://localhost:8000/login HTTP/1.1
-Content-Type: application/json
+###
+GET http://localhost:8000/
+
+###
+POST http://localhost:8000/users/create_new_user/
+content-type: application/json
 
 {
-    "username": "Kyle"
+    "username": "test_user_name",
+    "password": "test_user_password"
 }
 
 ###
-GET http://localhost:8000/posts HTTP/1.1
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Ikt5bGUiLCJwZXJtaXNzaW9ucyI6InRvdGFsIiwiaWF0IjoxNjczMTk4NTI3fQ.yeeADzB6YwPGookD_4VDCmv2Vj-ydORRENIpzKSCJr0
+POST http://localhost:8000/users/login/
+content-type: application/json
 
+{
+    "username": "test_user_name",
+    "password": "test_user_password"
+}
+
+###
+GET http://localhost:8000/users/?include_deactivated=true
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiaWF0IjoxNjc0NDg3MzA5fQ.Qh0-gsq4X1zxfFPpVPD-zOVNWsenvpcz252SsthGhrI
+
+
+###
+GET http://localhost:8000/users/4
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiaWF0IjoxNjc0NDg3MzA5fQ.Qh0-gsq4X1zxfFPpVPD-zOVNWsenvpcz252SsthGhrI
+
+###
+PUT http://localhost:8000/users/4
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiaWF0IjoxNjc0NDg3MzA5fQ.Qh0-gsq4X1zxfFPpVPD-zOVNWsenvpcz252SsthGhrI
+content-type: application/json
+
+{
+    "email": "hell2o@example.com",
+    "first_name": "John2",
+    "last_name": "Doe2",
+    "permissions": "total",
+    "username": "test_user_name3"
+}
+
+###
+POST http://localhost:8000/positions/export?keep=false
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywiaWF0IjoxNjc2MjM5NTQxfQ.BmpxHFnStp1Lk6oZxnbGRMOzU0PcQL-jsvwwTOkUGFw
