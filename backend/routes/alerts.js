@@ -17,11 +17,18 @@ alertsRouter.get('/', async (req, res) => {
 
 //Create a new Alert
 alertsRouter.post('/', async (req, res) => {
-    let {user_id, type, frequency, active, notes} = req.body;
+    let {user_id, type, frequency, active, notes=[]} = req.body;
 
     if (!user_id || !type || !frequency) {
         return res.status(400).send(`Params user_id, type, frequency are required`);
     }
+
+    try {
+        notes = JSON.stringify(notes);
+    } catch {
+        return res.status(400).send(`Params notes is invalid JSON`);
+    }
+
     user_id = parseInt(user_id);
 
     if (parseInt(user_id) !== req.user.id && !defaultPermissions.actions.edit_other_alerts.includes(req.user.permissions)) return res.status(403).send('Forbidden: You do not have access to this.');
@@ -48,6 +55,8 @@ alertsRouter.get('/:user_id', async (req, res) => {
     if (parseInt(req.params.user_id) !== req.user.id && !defaultPermissions.actions.edit_other_alerts.includes(req.user.permissions)) return res.status(403).send('Forbidden: You do not have access to this.');
 
     let matches = await query(`SELECT * FROM alerts WHERE user_id = ?`, req.params.user_id);
+
+    return res.status(200).json(matches);
 
 });
 

@@ -31,9 +31,9 @@ export default async function authenticateToken(req, res, next) { //this is midd
             return res.status(403).send(`Unauthenticated: Inactive User ${user.id} cannot make requests.`);
         };
 
-        req.user.permissions = !active_status.permissions;
+        req.user.permissions = active_status.permissions;
 
-        req.user.workspaces = await query(`SELECT workspace_id FROM workspace_user_associations WHERE user_id = ?;`, user.id);
+        await query(`SELECT workspace_id FROM workspace_user_associations WHERE user_id = ?;`, user.id).then(response => req.user.workspaces = response.map(row=> row.workspace_id));
 
         next();
     }));
