@@ -85,7 +85,17 @@ alertsRouter.put('/:alert_id', async (req, res) => {
 });
 
 //turn off a single Alert (just a quicker way)
-alertsRouter.put('/:alert_id/turn_off', async (req, res) => {});
+alertsRouter.put('/:alert_id/turn_off', async (req, res) => {
+    let [match] = await query(`SELECT * FROM alerts WHERE alert_id = ?`, req.params.alert_id);
+
+    if (!match) return res.status(404).send('Requested resource not found.');
+
+    if (parseInt(match.user_id) !== req.user.id && !defaultPermissions.actions.edit_other_alerts.includes(req.user.permissions)) return res.status(403).send('Forbidden: You do not have access to this.');
+
+    let result = await query(`UPDATE alerts WHERE alert_id = ? SET active = FALSE=;`);
+
+    if (!result) return res.status(422).send(`Something went wrong while updating Alert.`);
+});
 
 //delete a single Alert
 alertsRouter.delete('/:alert_id', async (req, res) => {
