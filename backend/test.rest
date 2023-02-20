@@ -6,7 +6,7 @@ POST http://localhost:8000/users/create_new_user/
 content-type: application/json
 
 {
-    "username": "test_user_name",
+    "username": "test_user_name_2",
     "password": "test_user_password"
 }
 
@@ -15,22 +15,22 @@ POST http://localhost:8000/users/login/
 content-type: application/json
 
 {
-    "username": "test_user_name",
+    "username": "test_user_name_1",
     "password": "test_user_password"
 }
 
 ###
 GET http://localhost:8000/users/?include_deactivated=true
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiaWF0IjoxNjc0NDg3MzA5fQ.Qh0-gsq4X1zxfFPpVPD-zOVNWsenvpcz252SsthGhrI
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjc2ODY0ODc2fQ.-Z59jWvMfRS3udlj-zf7lBzid5bxFgkC2gHNBRLkfcM
 
 
 ###
-GET http://localhost:8000/users/4
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiaWF0IjoxNjc0NDg3MzA5fQ.Qh0-gsq4X1zxfFPpVPD-zOVNWsenvpcz252SsthGhrI
+GET http://localhost:8000/users/1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjc2ODY0ODc2fQ.-Z59jWvMfRS3udlj-zf7lBzid5bxFgkC2gHNBRLkfcM
 
 ###
 PUT http://localhost:8000/users/4
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiaWF0IjoxNjc0NDg3MzA5fQ.Qh0-gsq4X1zxfFPpVPD-zOVNWsenvpcz252SsthGhrI
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjc2ODY0ODc2fQ.-Z59jWvMfRS3udlj-zf7lBzid5bxFgkC2gHNBRLkfcM
 content-type: application/json
 
 {
@@ -38,9 +38,63 @@ content-type: application/json
     "first_name": "John2",
     "last_name": "Doe2",
     "permissions": "total",
-    "username": "test_user_name3"
+    "username": "some_usernamne"
 }
 
 ###
 POST http://localhost:8000/positions/export?keep=false
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywiaWF0IjoxNjc2MjM5NTQxfQ.BmpxHFnStp1Lk6oZxnbGRMOzU0PcQL-jsvwwTOkUGFw
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjc2ODY0ODc2fQ.-Z59jWvMfRS3udlj-zf7lBzid5bxFgkC2gHNBRLkfcM
+
+###
+GET http://localhost:8000/positions/1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjc2ODY0ODc2fQ.-Z59jWvMfRS3udlj-zf7lBzid5bxFgkC2gHNBRLkfcM
+
+###
+POST http://localhost:8000/positions/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjc2ODY0ODc2fQ.-Z59jWvMfRS3udlj-zf7lBzid5bxFgkC2gHNBRLkfcM
+content-type: application/json
+
+{
+    "ticker": "PWI",
+    "user_id": 1,
+    "size": 304.3444,
+    "notes": [
+        "fave company",
+        "split stock",
+        "from: Brompton"
+    ]
+}
+
+###
+GET http://localhost:8000/users/session
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjc2ODY0ODc2fQ.-Z59jWvMfRS3udlj-zf7lBzid5bxFgkC2gHNBRLkfcM
+
+###
+GET http://localhost:8000/workspaces/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjc2ODY0ODc2fQ.-Z59jWvMfRS3udlj-zf7lBzid5bxFgkC2gHNBRLkfcM
+
+
+###
+POST http://localhost:8000/workspaces/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjc2ODY0ODc2fQ.-Z59jWvMfRS3udlj-zf7lBzid5bxFgkC2gHNBRLkfcM
+content-type: application/json
+
+{
+    "name": "my_first_workspace"
+}
+
+###
+DELETE http://localhost:8000/workspaces/4
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjc2ODY0ODc2fQ.-Z59jWvMfRS3udlj-zf7lBzid5bxFgkC2gHNBRLkfcM
+
+
+###
+POST http://localhost:8000/workspaces/add_user
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjc2ODY0ODc2fQ.-Z59jWvMfRS3udlj-zf7lBzid5bxFgkC2gHNBRLkfcM
+content-type: application/json
+
+{
+    "user_id": 2,
+    "workspace_id": 3,
+    "role": "workspace_supervisor"
+}

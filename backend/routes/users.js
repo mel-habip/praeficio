@@ -41,6 +41,10 @@ userRouter.get('/', authenticateToken, async (req, res) => {
     });
 });
 
+userRouter.get('/session', authenticateToken, (req, res)=> {
+    return res.status(200).json({...req.user});
+})
+
 userRouter.post('/create_new_user', async (req, res) => {
     log('received: ', req.body || {});
 
@@ -165,8 +169,7 @@ userRouter.post('/pre_signed_create_new_user', authenticateToken, async (req, re
 });
 
 userRouter.post('/login', async (req, res) => {
-
-    if (!req?.body?.username) {
+    if (!req.body?.username) {
         return res.status(401).json({
             message: `Username required.`
         });
@@ -174,27 +177,27 @@ userRouter.post('/login', async (req, res) => {
 
     let sql = `SELECT * FROM users WHERE username = ?`;
 
-    await query(sql, req.body.username).then(async result => {
-        if (!result || !result?. [0]) {
+    await query(sql, req.body.username).then(async ([result]) => {
+        if (!result || !result?.deleted) {
             return res.status(401).json({
                 message: `Username not recognized`
             });
         };
-        if (!result[0].active || result[0].deleted) {
+        if (!result.active) {
             return res.status(401).json({
                 message: `Cannot Login to Inactive Account. Must Activate first.`
             });
         }
         if (await bcrypt.compare(req.body.password, result[0].password)) {
             const user = {
-                id: result[0].user_id
+                id: result.user_id
             };
             const access_token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET_KEY);
             return res.status(200).json({
-                user_id: user.id,
-                first_name: result[0].first_name,
-                last_name: result[0].last_name,
-                created_on: result[0].created_on,
+                user_id: result.user_id,
+                first_name: result.first_name,
+                last_name: result.last_name,
+                created_on: result.created_on,
                 message: `Successful`,
                 access_token,
             });
@@ -203,18 +206,6 @@ userRouter.post('/login', async (req, res) => {
                 message: `Incorrect Password`
             });
         }
-
-
-
-
-
-        // try {
-        // } catch {
-        //     return res.status(422).json({
-        //         message: `Something went wrong`
-        //     });
-        // }
-
     });
 });
 
@@ -355,15 +346,18 @@ userRouter.put('/:user_id', authenticateToken, async (req, res) => {
 
     let sql = `UPDATE users SET ${Object.keys(changes).map(key => `${key} = ?`).join(', ')} WHERE user_id = ?;`;
 
-    await query(sql, [...Object.values(changes), req.params.id]).then(response => {
+    await query(sql, [...Object.values(changes), req.params.user_id]).then(response => {
         if (!response) {
             return res.status(422).json({
                 message: `Something went wrong`
             });
         };
         res.status(200).json({
-            message: `${list(Object.keys(changes))} updated.`
+            message: `${list(Object.keys(changes))} updated.`,
+            response,
         });
+    }).catch(error => {
+        return res.status(422).send({message: `Something went wrong`, error})
     });
 });
 

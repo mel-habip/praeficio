@@ -23,6 +23,20 @@ alertsRouter.post('/', async (req, res) => {
         return res.status(400).send(`Params user_id, type, frequency are required`);
     }
 
+    frequency = frequency.toUppercase().trim();
+    type = type.toUppercase().trim();
+
+    const FREQUENCIES = ['DAILY', 'MONTHLY', 'QUARTERLY', 'ANNUAL', 'SEMI_ANNUAL'];
+    const TYPES = ['PAST_DIVIDENDS', 'FUTURE_DIVIDENDS', 'ANALYST_RATINGS', 'PERFORMANCE'];
+
+    if (!FREQUENCIES.includes(frequency)) {
+        return res.status(400).send(`frequency ${frequency} not recognized. Supported values are: ${FREQUENCIES}`);
+    }
+
+    if (!TYPES.includes(type)) {
+        return res.status(400).send(`type ${type} not recognized. Supported values are: ${TYPES}`);
+    }
+
     try {
         notes = JSON.stringify(notes);
     } catch {
@@ -62,22 +76,20 @@ alertsRouter.get('/:user_id', async (req, res) => {
 
 //See details of a single user
 alertsRouter.get('/:alert_id', async (req, res) => {
-    let [match] = await query(`SELECT * FROM alerts WHERE alert_id = ?`, req.params.alert_id);
-    
-
     if (match.user_id !== req.user.id && !defaultPermissions.actions.edit_other_alerts.includes(req.user.permissions)) return res.status(403).send('Forbidden: You do not have access to this.');
 
+    let [match] = await query(`SELECT * FROM alerts WHERE alert_id = ?`, req.params.alert_id);
     
-
+    return res.status(200).json(match);
 });
 
 //Update a single Alert
 alertsRouter.put('/:alert_id', async (req, res) => {
+    if (parseInt(match.user_id) !== req.user.id && !defaultPermissions.actions.edit_other_alerts.includes(req.user.permissions)) return res.status(403).send('Forbidden: You do not have access to this.');
+
     let [match] = await query(`SELECT * FROM alerts WHERE alert_id = ?`, req.params.alert_id);
 
     if (!match) return res.status(404).send('Requested resource not found.');
-
-    if (parseInt(match.user_id) !== req.user.id && !defaultPermissions.actions.edit_other_alerts.includes(req.user.permissions)) return res.status(403).send('Forbidden: You do not have access to this.');
 
     let result = await query(`UPDATE alerts WHERE alert_id = ? SET frequency = ? , notes = ?, active = ?, type = ?;`, [req.params.alert_id, req.body.frequency ?? match.frequency, req.body.notes ?? match.notes, req.body.active, req.body.type ?? match.type]);
 
@@ -86,13 +98,26 @@ alertsRouter.put('/:alert_id', async (req, res) => {
 
 //turn off a single Alert (just a quicker way)
 alertsRouter.put('/:alert_id/turn_off', async (req, res) => {
+    if (parseInt(match.user_id) !== req.user.id && !defaultPermissions.actions.edit_other_alerts.includes(req.user.permissions)) return res.status(403).send('Forbidden: You do not have access to this.');
+
     let [match] = await query(`SELECT * FROM alerts WHERE alert_id = ?`, req.params.alert_id);
 
     if (!match) return res.status(404).send('Requested resource not found.');
 
+    let result = await query(`UPDATE alerts WHERE alert_id = ? SET active = FALSE;`);
+
+    if (!result) return res.status(422).send(`Something went wrong while updating Alert.`);
+});
+
+//turn on a single Alert (just a quicker way)
+alertsRouter.put('/:alert_id/turn_on', async (req, res) => {
     if (parseInt(match.user_id) !== req.user.id && !defaultPermissions.actions.edit_other_alerts.includes(req.user.permissions)) return res.status(403).send('Forbidden: You do not have access to this.');
 
-    let result = await query(`UPDATE alerts WHERE alert_id = ? SET active = FALSE=;`);
+    let [match] = await query(`SELECT * FROM alerts WHERE alert_id = ?`, req.params.alert_id);
+
+    if (!match) return res.status(404).send('Requested resource not found.');
+
+    let result = await query(`UPDATE alerts WHERE alert_id = ? SET active = TRUE;`);
 
     if (!result) return res.status(422).send(`Something went wrong while updating Alert.`);
 });

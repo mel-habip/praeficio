@@ -21,9 +21,9 @@ export default async function authenticateToken(req, res, next) { //this is midd
         if (err) return res.status(403).send('Unauthenticated: Invalid Token');
         req.user = user;
 
-        let [active_status] = await query(`SELECT active, permissions FROM users WHERE user_id = ? LIMIT 1;`, user.id);
+        let [active_status] = await query(`SELECT deleted, active, permissions FROM users WHERE user_id = ? LIMIT 1;`, user.id);
 
-        if (!active_status) {
+        if (!active_status || active_status?.deleted) {
             return res.status(403).send(`Unauthenticated: User ${user.id} not found.`);
         } 
         
@@ -33,7 +33,9 @@ export default async function authenticateToken(req, res, next) { //this is midd
 
         req.user.permissions = active_status.permissions;
 
-        await query(`SELECT workspace_id FROM workspace_user_associations WHERE user_id = ?;`, user.id).then(response => req.user.workspaces = response.map(row=> row.workspace_id));
+        if (active_status.permissions === 'total') req.user.is_total = true;
+
+        await query(`SELECT workspace_id, role FROM workspace_user_associations WHERE user_id = ?;`, user.id).then(response => req.user.workspaces = response);
 
         next();
     }));
