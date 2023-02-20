@@ -1,0 +1,55 @@
+.App {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.LoginPage {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-initial-buttons{
+  display: flex ;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  min-width: auto;
+}
+
+.ButtonBox {
+  border-color: #000713;
+  align-items: center;
+  justify-content: center;
+  border-style: solid;
+  margin: 50px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-left: 30px;
+  padding-right: 30px;
+  border-radius: 4px;
+  animation: ease-in-out 3s normal infinite;
+} 
+
+.Button {
+  border-style: solid;
+  background-color: #f6faff;
+  padding: 6px;
+  font-size: 80%;
+}
+
+.ButtonBox:hover {
+    animation-name: bounce;
+    animation-timing-function: ease;
+}
+@keyframes bounce {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(-15px); }
+  100% { transform: translateY(0); }
+}
+
