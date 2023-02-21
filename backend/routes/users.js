@@ -169,6 +169,7 @@ userRouter.post('/pre_signed_create_new_user', authenticateToken, async (req, re
 });
 
 userRouter.post('/login', async (req, res) => {
+    console.log('received', req.body);
     if (!req.body?.username) {
         return res.status(401).json({
             message: `Username required.`
@@ -178,7 +179,7 @@ userRouter.post('/login', async (req, res) => {
     let sql = `SELECT * FROM users WHERE username = ?`;
 
     await query(sql, req.body.username).then(async ([result]) => {
-        if (!result || !result?.deleted) {
+        if (!result || result?.deleted) {
             return res.status(401).json({
                 message: `Username not recognized`
             });
@@ -188,7 +189,7 @@ userRouter.post('/login', async (req, res) => {
                 message: `Cannot Login to Inactive Account. Must Activate first.`
             });
         }
-        if (await bcrypt.compare(req.body.password, result[0].password)) {
+        if (await bcrypt.compare(req.body.password, result.password)) {
             const user = {
                 id: result.user_id
             };

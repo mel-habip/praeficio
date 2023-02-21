@@ -6,7 +6,7 @@ POST http://localhost:8000/users/create_new_user/
 content-type: application/json
 
 {
-    "username": "test_user_name_2",
+    "username": "test_user_name_3",
     "password": "test_user_password"
 }
 
@@ -15,7 +15,7 @@ POST http://localhost:8000/users/login/
 content-type: application/json
 
 {
-    "username": "test_user_name_1",
+    "username": "test_user_name_3",
     "password": "test_user_password"
 }
 

@@ -16,7 +16,7 @@ import REGULAR_SCHEDULED_JOBS from './scheduled_jobs/regular_internal_jobs.js';
 
 
 const APP = express(); //creating and starting the server
-// APP.use(cors());
+APP.use(cors());
 APP.use(express.json()); 
 
 APP.listen(PORT, '127.0.0.1', () => log(`Server Running on PORT ${PORT}`));
