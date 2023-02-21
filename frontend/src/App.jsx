@@ -1,8 +1,8 @@
 // import logo from './logo.gif';
 import './App.css';
 import React, { useState } from 'react';
-import ButtonBox from './ButtonBox';
-import LoginPage from './LoginPage';
+import AnimatedButtonBox from './fields/AnimatedButtonBox';
+import LoginPage from './pages/LoginPage';
 
 function App() {
   document.body.style = 'background: lightsteelblue;';

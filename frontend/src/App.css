@@ -22,7 +22,7 @@
   min-width: auto;
 }
 
-.ButtonBox {
+.AnimatedButtonBox {
   border-color: #000713;
   align-items: center;
   justify-content: center;
@@ -43,7 +43,7 @@
   font-size: 80%;
 }
 
-.ButtonBox:hover {
+.AnimatedButtonBox:hover {
     animation-name: bounce;
     animation-timing-function: ease;
 }
