@@ -49,13 +49,13 @@ export default async function query(sql, ...values) {
 }
 
 
-function booleanize_db_data(array=[]) {
+function booleanize_db_data(array = []) {
     if (!Array.isArray(array)) {
         return array;
     }
 
     return array.map(hash => {
-        ['active', 'deleted'].forEach(property => {
+        ['active', 'deleted', 'invitation_accepted'].forEach(property => {
             if (hash.hasOwnProperty(property)) hash[property] = Boolean(hash[property]);
         });
         return hash;

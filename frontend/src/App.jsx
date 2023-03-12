@@ -12,7 +12,6 @@ import IsLoggedInContext from './contexts/IsLoggedInContext';
 import { NextUIProvider } from '@nextui-org/react';
 
 function App() {
-
   const browserDarkPreference = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const localTheme = localStorage.getItem('theme');
   let isDarkInitial = false; //proves persistence, sets State based on localStorage
