@@ -34,28 +34,6 @@ function Alerts() {
             <i className="fa-regular fa-bell"></i>
             </h2>
             <h3>coming soon ...&nbsp;<i className="fa-solid fa-hand-spock"></i> </h3>
-            <div>
-                <button
-                    onClick={() => {
-                        setIsOpen(true)
-                    }}
-                >
-                    Open
-                </button>
-                <DatePicker
-                    isOpen={isOpen}
-                    onClose={() => setIsOpen(false)}
-                    onChange={(val) => setDate(frmt(val)) || console.log(date) || setIsOpen(false)}
-                    closeText='close'
-                    clearText='garbageicon'
-                    
-                    defaultValue={new Date(2022, 8, 8)}
-                    minDate={new Date(2022, 10, 10)}
-                    maxDate={new Date(2023, 0, 10)}
-                    headerFormat='DD, MM dd'
-                />
-            </div>
-
         </>
     )
 }
