@@ -1,0 +1,119 @@
+:root {
+  --background-color: white;
+  --text-primary: black;
+  --text-secondary: royalblue;
+  --accent: purple;
+  --link-color: cornflowerblue;
+  --border_color: darkgrey;
+}
+
+[data-theme='dark'] {
+  --background-color: black;
+  --text-primary: white;
+  --text-secondary: grey;
+  --accent: darkred;
+  --link-color: lightblue;
+  --border_color: lightgrey;
+}
+
+body {
+  background-color: var(--background-color);
+  color: var(--font-color);
+}
+
+a {
+  color: var(--link-color);
+}
+
+.App {
+  color: var(--text-primary);
+  background-color: var(--background-color);
+  font-size: large;
+  font-weight: bold;
+  /* height: calc(100vh - 40px); */
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  transition: all .5s;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.AnimatedButtonBox {
+  border-color: var(--border-color);
+  align-items: center;
+  justify-content: center;
+  border-style: solid;
+  min-width: 55%;
+  margin: 50px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-left: 30px;
+  padding-right: 30px;
+  border-radius: 4px;
+  animation: ease-in-out 3s normal infinite;
+} 
+
+.AnimatedButtonBox-subbutton {
+  color: var(--text-primary);
+  position:relative;
+  width: 100%;
+}
+
+.AnimatedButtonBox:hover {
+    animation-name: bounce;
+    animation-timing-function: ease;
+}
+@keyframes bounce {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(-15px); }
+  100% { transform: translateY(0); }
+}
+
+
+.errorBounce {
+  outline: 0;
+  border-color: red;
+  animation-name: bounce;
+  animation-duration: .5s;
+  animation-delay: 0.25s;
+}
+
+/* This approximates the ease-in-out-bounce animation from easings.net, which would require a plug-in to use*/
+@keyframes errorBounce {
+  0% {
+    transform: translateX(0px);
+    timing-function: ease-in;
+  }
+  37% {
+    transform: translateX(5px);
+    timing-function: ease-out;
+  }
+  55% {
+    transform: translateX(-5px);
+    timing-function: ease-in;
+  }
+  73% {
+    transform: translateX(4px);
+    timing-function: ease-out;
+  }
+  82% {
+    transform: translateX(-4px);
+    timing-function: ease-in;
+  }
+  91% {
+    transform: translateX(2px);
+    timing-function: ease-out;
+  }
+  96% {
+    transform: translateX(-2px);
+    timing-function: ease-in;
+  }
+  100% {
+    transform: translateX(0px);
+    timing-function: ease-in;
+  }
+}

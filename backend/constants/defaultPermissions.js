@@ -206,3 +206,31 @@ const defaultPermissions = {
 };
 
 export default defaultPermissions;
+
+export const positions = {
+    get all() {
+        return Array.from(new Set(Object.keys(this).slice(1).reduce((acc, cur)=> acc.concat(this[cur]),[])));
+    },
+    clients: [
+        'pro_client',
+        'basic_client'
+    ],
+    devs: [
+        'dev_lead',
+        'dev_junior',
+        'dev_senior',
+    ],
+    internal_admins: [
+        'dev_lead'
+    ],
+    workspace_admins: [
+        'workspace_admin'
+    ],
+    workspace_users: [
+        'workspace_admin',
+        'workspace_supervisor',
+        'workspace_employee'
+    ]
+};
+
+Object.keys(positions).forEach(key => positions[key].push('total')); //adds 'total' to every category since total has all permissions.

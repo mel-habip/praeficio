@@ -15,12 +15,14 @@ const __dirname = path.dirname(fileURLToPath(
     import.meta.url));
 
 import authenticateToken from '../jobs/authenticateToken.js';
-import defaultPermissions from '../constants/defaultPermissions.js';
+import defaultPermissions, {positions} from '../constants/defaultPermissions.js';
 import query from '../utils/db_connection.js';
 import emailService from '../jobs/emailService.js';
 
 positionRouter.use(authenticateToken);
 
+
+//all positions of a user, including the workspaces to which they might be associated
 positionRouter.get('/user/:user_id', async (req, res) => {
     let sql = `Select * FROM positions LEFT JOIN workspace_position_associations ON positions.position_id = workspace_position_associations.position_id WHERE positions.user_id = ?;`;
 
@@ -37,8 +39,9 @@ positionRouter.get('/user/:user_id', async (req, res) => {
         return res.status(200).json(matches.filter(pos => req.user.workspaces.includes(pos.workspace_id)));
 });
 
+//details of a single position
 positionRouter.get('/:position_id', async (req, res) => {
-    let sql = `Select * FROM positions LEFT JOIN workspace_position_associations ON positions.position_id = workspace_position_associations.position_id WHERE positions.position_id = ? LIMIT 1;`;
+    let sql = `Select positions.*, workspace_position_associations.workspace_id  FROM positions LEFT JOIN workspace_position_associations ON positions.position_id = workspace_position_associations.position_id WHERE positions.position_id = ? LIMIT 1;`;
 
     let [match] = await query(sql, req.params.position_id);
 
@@ -61,25 +64,48 @@ positionRouter.get('/:position_id', async (req, res) => {
      */
 });
 
+//create new position
 positionRouter.post('/', async (req, res) => {
 
-    if (req.user.id !== req.body.user_id && !defaultPermissions.actions.create_positions_for_others.includes(req.user.permissions)) {
+    let {
+        user_id,
+        ticker,
+        acquired_on,
+        sold_on,
+        notes = [],
+        size,
+    } = req.body;
+
+    if (!user_id || !ticker) return res.status(400).send(`Params user_id and ticker are required.`);
+
+    try {
+        notes = JSON.stringify(notes);
+    } catch {
+        return res.status(400).send(`Param notes is invalid JSON.`);
+    }
+
+    if (req.user.id !== user_id) { //TODO: permissions
         return res.status(403).send(`Forbidden: ${req.user.permissions} cannot create Position for non-self.`);
     }
 
-    let sql = `INSERT INTO positions (user_id, ticker, acquired_on, sold_on) VALUES (?, ?, ?, ?)`;
+    let sql = `INSERT INTO positions (user_id, ticker, size, acquired_on, sold_on, notes) VALUES (?, ?, ?, ?, ?, ?)`;
 
-    let result = await query(sql, req.body.user_id, req.body.ticker, req.body.acquired_on, req.body.sold_on);
+    let result = await query(sql, user_id, ticker, size, acquired_on, sold_on, notes);
 
     if (!result) return res.status(422).send(`Something went wrong while creating a new Position`);
 
     sql = `SELECT * FROM positions WHERE position_id = LAST_INSERT_ID();`;
 
-    result = await query(sql);
+    [result] = await query(sql);
+
+    try {
+        result.notes = JSON.parse(result.notes);
+    } catch {}
 
     return res.status(200).json(result);
 });
 
+//import positions in bulk TODO:
 positionRouter.post('/import', (req, res) => {
 
     const provided_data = []; //TODO: provide import modes as CSV, XML or JSON in prescribed formats
@@ -111,27 +137,42 @@ positionRouter.post('/import', (req, res) => {
 
 });
 
+//export positions in bulk
 positionRouter.post('/export', async (req, res) => {
 
-    let sql = `SELECT * FROM positions` //TODO: finish this, provide as a CSV... I know how to prepare but not sure about making the FE download;
+    let sql = `SELECT * FROM positions` //TODO: finish filtering this
 
-    let result = await query(sql);
+    const result = await query(sql);
 
     //implement Json logic from --> https://jsonlogic.com/ ? Or build your own? I don't like this one too much and can build a simplified version of it myself
     //consider a mechanism whereby we do the filter at the SQL level instead of JS. In theory this should reduce Server Memory usage? 
 
     // let filtered_result = result.filter(position => condition_evaluator(req.body.filter_rule, position));
-
-    const csv = Papa.unparse(result);
     counter++;
-    const temp_name = `${Date.now()}-${counter}.csv`;
-    const filePath = path.join(__dirname + '/temp_files', temp_name);
 
-    fs.writeFileSync(filePath, csv, (err) => {
-        if (err) throw err;
-    });
+    let temp_name = `${Date.now()}-${counter}`;
+    let filePath = path.join(__dirname + '/temp_files', temp_name);
 
-    res.status(200).download(filePath, async (err) => {
+    if (req.query?.format === 'json') {
+        temp_name += `.json`;
+        filePath += `.json`;
+
+        fs.writeFileSync(filePath, JSON.stringify(result, null, 2), (err) => {
+            if (err) throw err;
+        });
+    } else if (req.query?.format === 'xml') {
+        //handle xml
+    } else {
+        const csv = Papa.unparse(result);
+        temp_name += `.csv`;
+        filePath += `.csv`;
+
+        fs.writeFileSync(filePath, csv, (err) => {
+            if (err) throw err;
+        });
+    }
+
+    return res.status(200).download(filePath, async (err) => {
         let att = [{
             filename: temp_name,
             content: fs.createReadStream(filePath)
@@ -148,7 +189,6 @@ positionRouter.post('/export', async (req, res) => {
 
         if (req.query?.keep !== 'true') fs.unlinkSync(filePath);
     });
-
 });
 
 
