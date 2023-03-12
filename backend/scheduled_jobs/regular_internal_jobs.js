@@ -46,6 +46,33 @@ const REGULAR_SCHEDULED_JOBS = {
             job_handler(task);
             //no tasks yet
         }
+<<<<<<< Updated upstream
+=======
+    }),
+    annual: cron.schedule("1 4 1 1 *", async function () { //at 4:01am
+        log(`Quarterly triggered`);
+        let quarterly_tasks = await query(`Select * FROM alerts WHERE frequency = 'ANNUAL' AND active = TRUE`);
+        for await (const task of quarterly_tasks) {
+            job_handler(task);
+            //no tasks yet
+        }
+    }),
+    semi_annual: cron.schedule("1 5 1 1,7 *", async function () { //at 5:01am
+        log(`Quarterly triggered`);
+        let quarterly_tasks = await query(`Select * FROM alerts WHERE frequency = 'SEMI_ANNUAL' AND active = TRUE`);
+        for await (const task of quarterly_tasks) {
+            job_handler(task);
+            //no tasks yet
+        }
+    }),
+    minutely: cron.schedule("* * * * *", async function () { //at 5:01am
+        // log(`minutely triggered`);
+        // let quarterly_tasks = await query(`Select * FROM alerts WHERE frequency = 'SEMI_ANNUAL' AND active = TRUE`);
+        // for await (const task of quarterly_tasks) {
+        //     job_handler(task);
+        //     //no tasks yet
+        // }
+>>>>>>> Stashed changes
     })
 };
 
