@@ -3,10 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import NavMenu from './components/NavMenu';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import LoginPage from './pages/LoginPage';
-import Portal from './pages/Portal';
-import Positions from './pages/Positions';
-import Alerts from './pages/Alerts';
+import LoginPage from './pages/LoginPage.jsx';
+import Portal from './pages/Portal.jsx';
+import Positions from './pages/Positions.jsx';
+import Alerts from './pages/Alerts.jsx';
+import NotFoundPage from './pages/NotFoundPage.jsx';
 import ThemeContext from './contexts/ThemeContext';
 import IsLoggedInContext from './contexts/IsLoggedInContext';
 import { NextUIProvider } from '@nextui-org/react';
@@ -55,8 +56,10 @@ function App() {
             <Router >
               <Routes>
                 <Route path='/' element={isLoggedIn ? <Portal /> : <LoginPage />} exact />
+                <Route path='/login' element={<LoginPage />} />
                 <Route path='/positions' element={isLoggedIn ? <Positions /> : <LoginPage />} exact />
                 <Route path='/alerts' element={isLoggedIn ? <Alerts /> : <LoginPage />} exact />
+                <Route path='/*' element={<NotFoundPage />} />
               </Routes>
             </Router>
           </div>
