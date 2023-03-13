@@ -100,6 +100,7 @@ function Positions() {
                 aria-label="Example table with dynamic content"
                 striped
                 bordered
+                compact
                 shadow={true}
                 hoverable
                 color="primary"
