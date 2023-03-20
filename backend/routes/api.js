@@ -9,11 +9,11 @@ const log = console.log;
 apiRouter.use(authenticateToken);
 
 
-userRouter.get('/', async (req, res) => {
+apiRouter.get('/', async (req, res) => {
     res.status(200).send('Hello World from the API!');
 });
 
-userRouter.post('/test_email_service', async (req, res) => {
+apiRouter.post('/test_email_service', async (req, res) => {
     let result = await emailService(req.data);
 
     if (result.success) {

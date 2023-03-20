@@ -12,22 +12,40 @@
 .btn {
   padding: 8px 20px;
   border-radius: 2px;
+  min-width: 60px;
   outline: none;
   border: none;
   cursor: pointer;
 }
 
-.btn--primary {
+.disabled {
+  color: grey;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.disabled.btn--transparent {
+  background-color: transparent;
+}
+
+.btn--primary:not(.disabled) {
   background-color: var(--primary);
   color: var(--secondary);
   border: 1px solid var(--primary);
 }
 
-.btn--outline {
+.btn--outline:not(.disabled) {
   background-color: transparent;
   color: var(--secondary);
   padding: 8px 20px;
   border: 1px solid var(--primary);
+  transition: all 0.3s ease-out;
+}
+
+.btn--transparent:not(.disabled) {
+  background-color: transparent;
+  color: var(--secondary);
+  padding: 8px 20px;
   transition: all 0.3s ease-out;
 }
 

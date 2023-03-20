@@ -8,6 +8,7 @@ import userRouter from './routes/users.js';
 import positionRouter from './routes/positions.js';
 import workspacesRouter from './routes/workspaces.js';
 import alertsRouter from './routes/alerts.js';
+import todosRouter from './routes/todos.js';
 
 const log = console.log;
 
@@ -24,6 +25,8 @@ APP.listen(PORT, '127.0.0.1', () => log(`Server Running on PORT ${PORT}`));
 APP.use('/users', userRouter);
 APP.use('/positions', positionRouter);
 APP.use('/workspaces', workspacesRouter);
+APP.use('/alerts', alertsRouter);
+APP.use('/todos', todosRouter);
 
 Object.values(REGULAR_SCHEDULED_JOBS).forEach(job => job.start());
 

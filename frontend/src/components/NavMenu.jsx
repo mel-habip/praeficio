@@ -1,10 +1,9 @@
-import React, { useState, useContext, useEffect } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import React, { useState, useContext } from 'react';
 import { CustomButton } from '../fields/CustomButton';
 import { Link } from 'react-router-dom';
 import ThemeContext from '../contexts/ThemeContext';
 import IsLoggedInContext from '../contexts/IsLoggedInContext';
-import { Row } from '@nextui-org/react';
+import { Row, Text } from '@nextui-org/react';
 
 // import './NavMenu.css';
 
@@ -14,10 +13,6 @@ function NavMenu() {
     const { setIsLoggedIn, firstName } = useContext(IsLoggedInContext);
 
     const [NavMenuOpen, setNavMenuOpen] = useState(false);
-
-    // useEffect(() => {
-    //     setNavMenuClicked(true);
-    // }, []);
 
     const openNavMenu = () => setNavMenuOpen(true);
     const toggleNavMenu = () => setNavMenuOpen(!NavMenuOpen);
@@ -121,6 +116,9 @@ function NavMenu() {
                         </Link>
                     </li>
                 </ul>
+                <Text css={{ 'white-space': 'pre-wrap', bottom: '50px', position: 'absolute', margin: '10px'}} blockquote size={15} em >
+                    Made with&nbsp; <i className="fa fa-heart fa-1x fa-beat"></i>&nbsp; <i className="fa fa-heart fa-1x fa-beat"></i>&nbsp; {"\n by "} <Link to={'https://github.com/mel-habip'}>{"Mel Habip :) "} <i className="fa-brands fa-github"></i>{" \n \n "}</Link> Please consider purchasing the <Link to={'/settings/purchases'}>Pro version</Link> 🙏
+                </Text>
             </nav>
         </>
     );

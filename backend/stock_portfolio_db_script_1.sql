@@ -93,6 +93,19 @@ CREATE TABLE alerts (
         ON DELETE CASCADE
 );
 
+CREATE TABLE todos (
+	to_do_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    content VARCHAR(255),
+    category VARCHAR(255) DEFAULT "General",
+    completed BOOLEAN DEFAULT FALSE,
+    created_on DATETIME DEFAULT current_timestamp,
+    updated_on DATETIME DEFAULT NULL ON UPDATE current_timestamp,
+    FOREIGN KEY (user_id)
+        REFERENCES users (user_id)
+        ON DELETE CASCADE
+);
+
 
 SET GLOBAL event_scheduler = ON;
 
@@ -108,10 +121,10 @@ CREATE EVENT users_table_cleaning ON SCHEDULE EVERY 1 WEEK ENABLE
   DELETE FROM users
   WHERE deleted = TRUE AND `updated_on` < CURRENT_TIMESTAMP - INTERVAL 3 MONTH;
 
-CREATE EVENT positions_table_cleaning ON SCHEDULE EVERY 1 WEEK ENABLE
+CREATE EVENT positions_table_cleaning ON SCHEDULE EVERY 3 DAY ENABLE
   DO 
   DELETE FROM positions
-  WHERE deleted = TRUE AND `updated_on` < CURRENT_TIMESTAMP - INTERVAL 3 MONTH;
+  WHERE deleted = TRUE AND `updated_on` < CURRENT_TIMESTAMP - INTERVAL 1 WEEK;
   
 CREATE EVENT expired_workspace_invitations_cleaning ON SCHEDULE EVERY 1 WEEK ENABLE
 	DO

@@ -7,10 +7,11 @@ import LoginPage from './pages/LoginPage.jsx';
 import Portal from './pages/Portal.jsx';
 import Positions from './pages/Positions.jsx';
 import Alerts from './pages/Alerts.jsx';
+import ToDos from './pages/ToDos.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
 import ThemeContext from './contexts/ThemeContext';
 import IsLoggedInContext from './contexts/IsLoggedInContext';
-import { NextUIProvider } from '@nextui-org/react';
+import { NextUIProvider, createTheme } from '@nextui-org/react';
 
 function App() {
   const browserDarkPreference = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -32,7 +33,14 @@ function App() {
 
   const toggleTheme = () => {
     setDark(!isDark);
-  }
+  };
+  const lightTheme = createTheme({
+    type: 'light'
+  });
+
+  const darkTheme = createTheme({
+    type: 'dark'
+  });
 
   useEffect(() => { //provides the persistence, makes doc attribute update when StateLoads
     console.log('isDarkState', isDark);
@@ -49,9 +57,9 @@ function App() {
   }, [localAccessToken]);
 
   return (
-    <NextUIProvider theme={isDark ? 'dark' : 'light'}>
+    <NextUIProvider theme={isDark ? darkTheme : lightTheme}> 
       <IsLoggedInContext.Provider value={{ isLoggedIn, setIsLoggedIn, userId, setUserId, firstName, setFirstName, accessToken, setAccessToken }}>
-        <ThemeContext.Provider value={{ isDark, toggleTheme }}>
+        <ThemeContext.Provider value={{ isDark, toggleTheme }}> {/*this controls everything custom */}
           <div className="App" style={{ height: "100vh" }}>
             <Router >
               <Routes>
@@ -59,6 +67,7 @@ function App() {
                 <Route path='/login' element={<LoginPage />} />
                 <Route path='/positions' element={isLoggedIn ? <Positions /> : <LoginPage />} exact />
                 <Route path='/alerts' element={isLoggedIn ? <Alerts /> : <LoginPage />} exact />
+                <Route path='/todos' element={isLoggedIn ? <ToDos /> : <LoginPage />} exact />
                 <Route path='/*' element={<NotFoundPage />} />
               </Routes>
             </Router>

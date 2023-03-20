@@ -6,6 +6,8 @@
   --accent: purple;
   --link-color: darkblue;
   --border_color: darkgrey;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 [data-theme='dark'] {
@@ -32,11 +34,10 @@ a {
   background-color: var(--background-color);
   font-size: large;
   font-weight: bold;
-  /* height: calc(100vh - 40px); */
   height: 100%;
   padding: 0;
   margin: 0;
-  z-index: 5; /* this was stuff can be hidden behind it*/
+  z-index: 5; /* this way stuff can be hidden behind it*/
   transition: all .5s;
   text-align: center;
   display: flex;
@@ -198,28 +199,28 @@ a {
   }
 }
 
-
-.positions-date-field {
-  border: 3px solid lightgrey;
-  border-radius: 20px;
-  width:90%;
-  padding-left: 10px;
-  padding-top: 4px;
-  padding-bottom: 4px;
-}
-
-.positions-date-calendar {
-  position: relative;
-  overflow:visible;
-  z-index:100000;
-  height: 40%;
-}
-
 ._3curk {
   position: fixed;
   z-index: 100000;
+  color: Black;
 }
 
-.fa-trash-can {
+.fa-trash-can, .fa-heart {
   color: red;
+}
+
+.fa-github {
+  color: var(--text-primary);
+}
+
+.heart {
+  animation: beat .75s infinite alternate;
+}
+
+@keyframes beat{
+	to { transform: scale(1.4); }
+}
+
+.nextui-c-ftJsHY {
+  display: inline-flex;
 }

@@ -2,7 +2,7 @@ import React from 'react';
 import './CustomButton.css';
 import { Link } from 'react-router-dom';
 
-const STYLES = ['btn--primary', 'btn--outline', 'btn--test'];
+const STYLES = ['btn--primary', 'btn--outline', 'btn--transparent'];
 
 const SIZES = ['btn--medium', 'btn--large'];
 
@@ -13,6 +13,7 @@ export const CustomButton = ({
     buttonStyle,
     buttonSize,
     to,
+    disabled=false,
 }) => {
     const checkButtonStyle = STYLES.includes(buttonStyle)
         ? buttonStyle
@@ -24,7 +25,7 @@ export const CustomButton = ({
         return (
             <Link to={to} className='btn-mobile'>
                 <button
-                    className={`btn ${checkButtonStyle} ${checkButtonSize}`}
+                    className={`btn ${checkButtonStyle} ${checkButtonSize} ${disabled?'disabled':''}`}
                     onClick={onClick}
                     type={type}
                 >
@@ -35,7 +36,7 @@ export const CustomButton = ({
     } else {
         return (
             <button
-                className={`btn ${checkButtonStyle} ${checkButtonSize}`}
+                className={`btn ${checkButtonStyle} ${checkButtonSize} ${disabled?'disabled':''}`}
                 onClick={onClick}
                 type={type}
             >
