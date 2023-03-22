@@ -5,16 +5,23 @@ import ThemeContext from '../contexts/ThemeContext';
 import IsLoggedInContext from '../contexts/IsLoggedInContext';
 import { Row, Text } from '@nextui-org/react';
 
-// import './NavMenu.css';
+const permissionsMap = {
+    basic_client: 'Free User',
+    pro_client: 'Paid User (thank you!)',
+    total: 'Total',
+    dev: 'Developer',
+    dev_junior: 'Junior Dev',
+    dev_senior: 'Senior Dev',
+    dev_lead: 'Lead Dev',
+};
 
 function NavMenu() {
 
     const { isDark, toggleTheme } = useContext(ThemeContext);
-    const { setIsLoggedIn, firstName } = useContext(IsLoggedInContext);
+    const { setIsLoggedIn, user } = useContext(IsLoggedInContext);
 
     const [NavMenuOpen, setNavMenuOpen] = useState(false);
 
-    const openNavMenu = () => setNavMenuOpen(true);
     const toggleNavMenu = () => setNavMenuOpen(!NavMenuOpen);
     const closeNavMenu = () => setNavMenuOpen(false);
 
@@ -26,7 +33,7 @@ function NavMenu() {
         }
     });
 
-    const Toggle = (props) => <div className='nav-menu-toggle'><CustomButton onClick={toggleNavMenu}><i className={NavMenuOpen ? 'fas fa-times' : 'fas fa-bars'} /></CustomButton> </div>
+    const Toggle = () => <div className='nav-menu-toggle'><CustomButton onClick={toggleNavMenu}><i className={NavMenuOpen ? 'fas fa-times' : 'fas fa-bars'} /></CustomButton> </div>
 
     return (
         <>
@@ -50,7 +57,7 @@ function NavMenu() {
                 </Row>
 
                 <Link to='/' className='nav-menu-logo' onClick={closeNavMenu}>
-                    {firstName ? `${firstName}'s` : 'Your'} Portfolio Tracker&nbsp;
+                    {user.first_name ? `${user.first_name}'s` : 'Your'} Portfolio Tracker&nbsp;
                     <i className="fa-solid fa-user-secret"></i>
                 </Link>
 
@@ -116,8 +123,10 @@ function NavMenu() {
                         </Link>
                     </li>
                 </ul>
-                <Text css={{ 'white-space': 'pre-wrap', bottom: '50px', position: 'absolute', margin: '10px'}} blockquote size={15} em >
-                    Made with&nbsp; <i className="fa fa-heart fa-1x fa-beat"></i>&nbsp; <i className="fa fa-heart fa-1x fa-beat"></i>&nbsp; {"\n by "} <Link to={'https://github.com/mel-habip'}>{"Mel Habip :) "} <i className="fa-brands fa-github"></i>{" \n \n "}</Link> Please consider purchasing the <Link to={'/settings/purchases'}>Pro version</Link> 🙏
+                <Text em>{`Your Tier: ${permissionsMap[user.permissions]}`}</Text>
+                <Text css={{ 'white-space': 'pre-wrap', bottom: '50px', position: 'absolute', margin: '10px' }} blockquote size={15} em >
+                    Made with&nbsp; <i className="fa fa-heart fa-1x fa-beat"></i>&nbsp; <i className="fa fa-heart fa-1x fa-beat"></i>&nbsp; {"\n by "} <Link to={'https://github.com/mel-habip'}>{"Mel Habip :) "} <i className="fa-brands fa-github"></i>{" \n \n "}</Link>
+                    {user.permissions === 'basic_client' && <>Please consider purchasing the <Link to={'/settings/purchases'}>Pro version</Link> 🙏</>}
                 </Text>
             </nav>
         </>

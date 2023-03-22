@@ -12,8 +12,11 @@ export const CustomButton = ({
     onClick,
     buttonStyle,
     buttonSize,
+    style={},
     to,
-    disabled=false,
+    disabled = false,
+    rounded = false,
+    shadow = false,
 }) => {
     const checkButtonStyle = STYLES.includes(buttonStyle)
         ? buttonStyle
@@ -21,13 +24,16 @@ export const CustomButton = ({
 
     const checkButtonSize = SIZES.includes(buttonSize) ? buttonSize : SIZES[0];
 
+    const btnClassList = ['btn', checkButtonStyle, checkButtonSize, disabled ? 'disabled' : false, rounded ? 'rounded' : false, shadow ? 'shadow' : false,].filter(Boolean).join(' ');
+
     if (to) {
         return (
             <Link to={to} className='btn-mobile'>
                 <button
-                    className={`btn ${checkButtonStyle} ${checkButtonSize} ${disabled?'disabled':''}`}
+                    className={btnClassList}
                     onClick={onClick}
                     type={type}
+                    style={style}
                 >
                     {children}
                 </button>
@@ -36,7 +42,7 @@ export const CustomButton = ({
     } else {
         return (
             <button
-                className={`btn ${checkButtonStyle} ${checkButtonSize} ${disabled?'disabled':''}`}
+                className={btnClassList}
                 onClick={onClick}
                 type={type}
             >

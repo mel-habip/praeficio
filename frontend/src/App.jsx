@@ -6,12 +6,16 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import LoginPage from './pages/LoginPage.jsx';
 import Portal from './pages/Portal.jsx';
 import Positions from './pages/Positions.jsx';
+import Settings from './pages/Settings.jsx';
 import Alerts from './pages/Alerts.jsx';
 import ToDos from './pages/ToDos.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
 import ThemeContext from './contexts/ThemeContext';
 import IsLoggedInContext from './contexts/IsLoggedInContext';
 import { NextUIProvider, createTheme } from '@nextui-org/react';
+
+import axios from 'axios';
+
 
 function App() {
   const browserDarkPreference = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -28,8 +32,9 @@ function App() {
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userId, setUserId] = useState(null);
-  const [firstName, setFirstName] = useState('');
   const [accessToken, setAccessToken] = useState('');
+  const [toDoCategories, setToDoCategories] = useState([]);
+  const [user, setUser] = useState(null);
 
   const toggleTheme = () => {
     setDark(!isDark);
@@ -53,12 +58,27 @@ function App() {
   useEffect(() => {
     const localUserId = localStorage.getItem('user_id');
     if (!localUserId) return;
-    if (localAccessToken) { setAccessToken(localAccessToken); setUserId(parseInt(localUserId)); setIsLoggedIn(true); }
-  }, [localAccessToken]);
+    if (localAccessToken) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${localAccessToken}`;
+      axios.get(`http://localhost:8000/users/session`).then(response => {
+        console.log('/session fetch results', response)
+        if (response.status === 200) {
+          setUser(response.data);
+          setAccessToken(localAccessToken);
+          setUserId(response.data.id);
+          setIsLoggedIn(true);
+        } else if (response.status === 401) {
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('user_id');
+          setIsLoggedIn(false);
+        }
+      })
+    }
+  }, [localAccessToken, isLoggedIn]);
 
   return (
-    <NextUIProvider theme={isDark ? darkTheme : lightTheme}> 
-      <IsLoggedInContext.Provider value={{ isLoggedIn, setIsLoggedIn, userId, setUserId, firstName, setFirstName, accessToken, setAccessToken }}>
+    <NextUIProvider theme={isDark ? darkTheme : lightTheme}>
+      <IsLoggedInContext.Provider value={{ isLoggedIn, setIsLoggedIn, userId, setUserId, accessToken, setAccessToken, toDoCategories, setToDoCategories, user, setUser }}>
         <ThemeContext.Provider value={{ isDark, toggleTheme }}> {/*this controls everything custom */}
           <div className="App" style={{ height: "100vh" }}>
             <Router >
@@ -68,6 +88,7 @@ function App() {
                 <Route path='/positions' element={isLoggedIn ? <Positions /> : <LoginPage />} exact />
                 <Route path='/alerts' element={isLoggedIn ? <Alerts /> : <LoginPage />} exact />
                 <Route path='/todos' element={isLoggedIn ? <ToDos /> : <LoginPage />} exact />
+                <Route path='/settings' element={isLoggedIn ? <Settings /> : <LoginPage />} exact />
                 <Route path='/*' element={<NotFoundPage />} />
               </Routes>
             </Router>

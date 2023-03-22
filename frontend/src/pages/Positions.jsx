@@ -3,6 +3,8 @@ import IsLoggedInContext from '../contexts/IsLoggedInContext';
 import ThemeContext from '../contexts/ThemeContext';
 import axios from 'axios';
 
+import removeIndex from '../utils/removeIndex';
+
 import NavMenu from '../components/NavMenu';
 import { Button, Modal, Spacer, Table, Text, Input, Checkbox, Tooltip, Row, Grid } from '@nextui-org/react';
 
@@ -10,6 +12,7 @@ import { DatePicker } from 'react-responsive-datepicker'
 import 'react-responsive-datepicker/dist/index.css'
 
 import { CustomButton } from '../fields/CustomButton';
+import DateField from '../fields/DateField';
 
 let delay = 300; //for Tooltips
 
@@ -48,10 +51,10 @@ function Positions() {
     const [ticker, setTicker] = useState('');
     const [size, setSize] = useState('');
     const [active, setActive] = useState(true);
+    const [acquiredOn, setAcquiredOn] = useState('');
     const [soldOn, setSoldOn] = useState('');
     const [notes, setNotes] = useState([]);
     const [newNote, setNewNote] = useState('');
-    const [acquiredOn, setAcquiredOn] = useState('');
     const [tickerError, setTickerError] = useState('');
     const [sizeError, setSizeError] = useState('');
     const [acquiredOnPickerIsOpen, setAcquiredOnPickerIsOpen] = useState(false);
@@ -172,12 +175,12 @@ function Positions() {
         });
     }
 
-    function updateNotes(position_id, notes=[]) {
-        axios.put(`http://localhost:8000/positions/${position_id}`, {notes: JSON.stringify(notes)}).then(response => {
+    function updateNotes(position_id, notes = []) {
+        axios.put(`http://localhost:8000/positions/${position_id}`, { notes: JSON.stringify(notes) }).then(response => {
             if (response.status === 401) {
                 kickOut();
             } else if (response.status === 200) {
-                updateCachedPositions(position_id, { ...response.data.data});
+                updateCachedPositions(position_id, { ...response.data.data });
                 setDetailViewModalOpen(false);
             } else {
                 console.log('response:', response.data);
@@ -226,7 +229,7 @@ function Positions() {
 
     return (
         <>
-            <NavMenu first_name={firstName}></NavMenu>
+            <NavMenu></NavMenu>
 
             <Checkbox
                 color="secondary"
@@ -294,7 +297,13 @@ function Positions() {
 
             </Table>
             <Spacer y={4}></Spacer>
-            <Button onClick={() => setActive(true) || setIsUpdate(false) || setCreationUpdateModalOpen(true)} >Add position&nbsp;<i className="fa-regular fa-square-plus"></i></Button>
+            <Row justify="space-evenly" >
+                <Button onClick={() => setActive(true) || setIsUpdate(false) || setCreationUpdateModalOpen(true)} >Add position&nbsp;<i className="fa-regular fa-square-plus"></i></Button>
+                <Button disabled={true} >Export Positions&nbsp;<i className="fa-solid fa-download"></i></Button>
+                <Button disabled={true} >Import Positions&nbsp;<i className="fa-solid fa-upload"></i></Button>
+            </Row>
+
+
 
             {creationUpdateModalOpen && (<Modal closeButton blur aria-labelledby="modal-title" open={true} onClose={() => setIsUpdate(false) || setCreationUpdateModalOpen(false)} >
                 <Modal.Header css={{ 'z-index': 86, position: 'relative' }}>
@@ -347,70 +356,93 @@ function Positions() {
                                 }
                                 setIsUpdate(false);
                             });
-                        }}> {isUpdate ? <>Update Position&nbsp;&nbsp;<i className="fa-regular fa-pen-to-square"></i></> : <>Create Position&nbsp;&nbsp;<i className="fa-regular fa-square-plus"></i></>} </Button> </Modal.Body> </Modal>)}
-            <Button  >Export Positions&nbsp;<i className="fa-regular fa-square-plus"></i></Button>
-
-
-
-
-            {detailViewModalOpen && (
-                <Modal css={isDark ? { 'background-color': '#0d0d0d' } : {}} closeButton blur aria-labelledby="modal-title" open={detailViewModalOpen} onClose={() => setDetailViewModalOpen(false)} > <Modal.Header css={{ 'z-index': 86, position: 'relative' }}>
-                    <Text size={18} > Position details are given below</Text>
-                </Modal.Header>
-                    <Modal.Body> {function () { if (!positionDetails || positionDetails.index === -1) return 'Not Recognized'; return (<> <Text size={15} css={{ 'white-space': 'pre-wrap', 'padding-left': '5rem' }}> {positionDetails.text} </Text> <Spacer y={0.1} ></Spacer> <Text size={15} css={{ 'padding-left': '4rem' }}>Notes:</Text> {notes.length ? <></> : <Text size={15} css={{ 'padding-left': '5rem' }}>No notes yet! Enter one below!</Text>} {notes.map((note, index) => <Row justify="space-between" css={{ 'white-space': 'pre-wrap', 'padding-left': '1rem', 'padding-right': '1rem' }} > <Text><i className="fa-regular fa-hand-point-right"></i>  &nbsp;&nbsp;&nbsp; {note} </Text> <Spacer x={0.2}></Spacer> <CustomButton buttonStyle="btn--transparent" onClick={() => { setNotes(removeIndex(notes, index)) }} ><i className="fa-regular fa-trash-can"></i></CustomButton> </Row> )} <Row > < Input bordered shadow color="primary" value={newNote} css={{ width: '100%' }} aria-label="new note input" labelPlaceholder="New Note" clearable onChange={(e) => setNewNote(e.target.value)}> </Input> <CustomButton buttonStyle="btn--transparent" onClick={() => console.log('clicked') || setNotes(notes.concat(newNote)) || setNewNote('')} ><i className="fa-regular fa-hand-point-up"></i></CustomButton> </Row> </>) }()} <Row justify='space-evenly' > <Button auto shadow color="inverse" onPress={() => setDetailViewModalOpen(false)}> Cancel&nbsp;<i className="fa-solid fa-person-walking-arrow-loop-left"></i> </Button>
-                            <Button auto
-                                disabled={notes.length === positionDetails.position?.notes?.length && notes.every((note, index) => note === positionDetails.position?.notes?.[index])}
-                                shadow
-                                color="success"
-                                onPress={async () => {
-                                    updateNotes(selectedPositionID, notes);
-                                    }}> Save&nbsp;<i className="fa-solid fa-floppy-disk"></i>
-                            </Button>
-                        </Row>
-                        <Text size={12} em css={{ 'text-align': 'center' }}> Note: changes cannot be undone </Text>
-                    </Modal.Body>
-                </Modal >)
+                        }}> {isUpdate ? <>Update Position&nbsp;&nbsp;<i className="fa-regular fa-pen-to-square"></i></> : <>Create Position&nbsp;&nbsp;<i className="fa-regular fa-square-plus"></i></>} </Button> </Modal.Body> </Modal>)
             }
 
 
 
 
 
-            {deletionModalOpen && (
-                <Modal css={isDark ? { 'background-color': '#0d0d0d' } : {}} closeButton blur aria-labelledby="modal-title" open={deletionModalOpen} onClose={() => setDeletionModalOpen(false)} > <Modal.Header css={{ 'z-index': 86, position: 'relative' }}>
-                    <Text size={18} > Are you sure you want to delete this position?</Text>
-                </Modal.Header>
-                    <Modal.Body>
-                        <Text size={15} css={{ 'white-space': 'pre-wrap', 'padding-left': '5rem' }}> {positionDetails.text} </Text>
-                        <Row
-                            justify='space-evenly'
-                        >
-                            <Button auto
-                                shadow
-                                color="primary"
-                                onPress={() => setDeletionModalOpen(false)}> Cancel&nbsp;<i className="fa-solid fa-person-walking-arrow-loop-left"></i>
-                            </Button>
-                            <Button auto
-                                shadow
-                                color="error"
-                                onPress={async () => {
-                                    console.log(`deleting ${selectedPositionID}`);
-                                    await axios.delete(`http://localhost:8000/positions/${selectedPositionID}`).then(response => {
-                                        if (response.status === 401) {
-                                            kickOut();
-                                        } else if (response.status === 200) {
-                                            updateCachedPositions(selectedPositionID, { ...response.data.data, deleted: true, active: false });
-                                            setDeletionModalOpen(false);
-                                        } else {
-                                            console.log('response:', response.data);
-                                        }
-                                    });
-                                }}> Trash It!&nbsp;<i className="fa-solid fa-skull-crossbones"></i>
-                            </Button>
-                        </Row>
-                        <Text size={12} em css={{ 'text-align': 'center' }}> Note: deleted positions can be recovered for 1 week </Text>
-                    </Modal.Body>
-                </Modal>)
+            {
+                detailViewModalOpen && (
+                    <Modal css={isDark ? { 'background-color': '#0d0d0d' } : {}} closeButton blur aria-labelledby="modal-title" open={detailViewModalOpen} onClose={() => setDetailViewModalOpen(false)} > <Modal.Header css={{ 'z-index': 86, position: 'relative' }}>
+                        <Text size={18} > Position details are given below</Text>
+                    </Modal.Header>
+                        <Modal.Body>
+                            {function () {
+                                if (!positionDetails || positionDetails.index === -1) return 'Not Recognized';
+                                return (<>
+                                    <Text size={15} css={{ 'white-space': 'pre-wrap', 'padding-left': '5rem' }}> {positionDetails.text} </Text> <Spacer y={0.1} ></Spacer> <Text size={15} css={{ 'padding-left': '4rem' }}>Notes:</Text>
+                                    {notes.length ? <></> : <Text size={15} css={{ 'padding-left': '5rem' }}>No notes yet! Enter one below!</Text>} {notes.map((note, index) => <Row justify="space-between" css={{ 'white-space': 'pre-wrap', 'padding-left': '1rem', 'padding-right': '1rem' }} >
+                                        <Text><i className="fa-regular fa-hand-point-right"></i>  &nbsp;&nbsp;&nbsp; {note}
+                                        </Text>
+                                        <Spacer x={0.2}></Spacer>
+                                        <CustomButton buttonStyle="btn--transparent" onClick={() => { setNotes(removeIndex(notes, index)) }} ><i
+                                            className="fa-regular fa-trash-can"></i></CustomButton> </Row>)} <Row >
+                                        <Input bordered shadow color="primary" value={newNote} css={{ width: '100%' }} aria-label="new note input" labelPlaceholder="New Note" clearable onChange={(e) => setNewNote(e.target.value)} />
+                                        <CustomButton
+                                            buttonStyle="btn--transparent"
+                                            rounded
+                                            shadow
+                                            disabled={!newNote}
+                                            onClick={() => console.log('clicked') || setNotes(notes.concat(newNote)) || setNewNote('')} ><i className="fa-regular fa-hand-point-up"></i></CustomButton> </Row>
+                                </>)
+                            }()}
+                            <Row justify='space-evenly' > <Button auto shadow color="inverse" onPress={() => setDetailViewModalOpen(false)}> Cancel&nbsp;<i className="fa-solid fa-person-walking-arrow-loop-left"></i> </Button>
+                                <Button auto
+                                    disabled={notes.length === positionDetails.position?.notes?.length && notes.every((note, index) => note === positionDetails.position?.notes?.[index])}
+                                    shadow
+                                    color="success"
+                                    onPress={async () => {
+                                        updateNotes(selectedPositionID, notes);
+                                    }}> Save&nbsp;<i className="fa-solid fa-floppy-disk"></i>
+                                </Button>
+                            </Row>
+                            <Text size={12} em css={{ 'text-align': 'center' }}> Note: changes cannot be undone </Text>
+                        </Modal.Body>
+                    </Modal >)
+            }
+
+
+
+
+
+            {
+                deletionModalOpen && (
+                    <Modal css={isDark ? { 'background-color': '#0d0d0d' } : {}} closeButton blur aria-labelledby="modal-title" open={deletionModalOpen} onClose={() => setDeletionModalOpen(false)} > <Modal.Header css={{ 'z-index': 86, position: 'relative' }}>
+                        <Text size={18} > Are you sure you want to delete this position?</Text>
+                    </Modal.Header>
+                        <Modal.Body>
+                            <Text size={15} css={{ 'white-space': 'pre-wrap', 'padding-left': '5rem' }}> {positionDetails.text} </Text>
+                            <Row
+                                justify='space-evenly'
+                            >
+                                <Button auto
+                                    shadow
+                                    color="primary"
+                                    onPress={() => setDeletionModalOpen(false)}> Cancel&nbsp;<i className="fa-solid fa-person-walking-arrow-loop-left"></i>
+                                </Button>
+                                <Button auto
+                                    shadow
+                                    color="error"
+                                    onPress={async () => {
+                                        console.log(`deleting ${selectedPositionID}`);
+                                        await axios.delete(`http://localhost:8000/positions/${selectedPositionID}`).then(response => {
+                                            if (response.status === 401) {
+                                                kickOut();
+                                            } else if (response.status === 200) {
+                                                updateCachedPositions(selectedPositionID, { ...response.data.data, deleted: true, active: false });
+                                                setDeletionModalOpen(false);
+                                            } else {
+                                                console.log('response:', response.data);
+                                            }
+                                        });
+                                    }}> Trash It!&nbsp;<i className="fa-solid fa-skull-crossbones"></i>
+                                </Button>
+                            </Row>
+                            <Text size={12} em css={{ 'text-align': 'center' }}> Note: deleted positions can be recovered for 1 week </Text>
+                        </Modal.Body>
+                    </Modal>)
             }
         </>
     );
@@ -420,9 +452,3 @@ function Positions() {
 }
 
 export default Positions;
-
-function removeIndex(ar, index_to_remove) {
-    const arClone = [...ar];
-    arClone.splice(index_to_remove, 1);
-    return arClone;
-}
