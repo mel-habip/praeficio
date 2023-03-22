@@ -99,6 +99,7 @@ CREATE TABLE todos (
     content VARCHAR(255),
     category VARCHAR(255) DEFAULT "General",
     completed BOOLEAN DEFAULT FALSE,
+    archived BOOLEAN DEFAULT FALSE,
     created_on DATETIME DEFAULT current_timestamp,
     updated_on DATETIME DEFAULT NULL ON UPDATE current_timestamp,
     FOREIGN KEY (user_id)

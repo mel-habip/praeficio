@@ -55,8 +55,17 @@ function booleanize_db_data(array = []) {
     }
 
     return array.map(hash => {
-        ['active', 'deleted', 'invitation_accepted'].forEach(property => {
+        ['active', 'deleted', 'invitation_accepted', 'completed', 'archived'].forEach(property => {
             if (hash.hasOwnProperty(property)) hash[property] = Boolean(hash[property]);
+        });
+        ['to_do_categories', 'notes'].forEach(property => {
+            if (hash.hasOwnProperty(property)) {
+                try {
+                    hash[property] = JSON.parse(hash[property]);
+                } catch (e) {
+                    console.log(`\nFailed to parse into JSON\n\tProperty: ${property}\n\tValue: ${hash[property]}`);
+                }
+            }
         });
         return hash;
     });

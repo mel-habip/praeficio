@@ -53,28 +53,28 @@ userRouter.post('/create_new_user', async (req, res) => {
     log('received: ', req.body || {});
 
     if (!req.body.username) {
-        return res.status(401).json({
+        return res.status(405).json({
             message: `Username required.`,
             error_part: 'username'
         });
     }
 
     if (!req.body.password) {
-        return res.status(401).json({
+        return res.status(405).json({
             message: `Password required.`,
             error_part: 'password'
         });
     }
 
     if (!validatePassword(req.body.password)) {
-        return res.status(401).json({
+        return res.status(405).json({
             message: `Password not strong enough.`,
             error_part: 'password'
         });
     }
 
     if (!await isAvailableUsername(req.body.username)) {
-        return res.status(401).json({
+        return res.status(405).json({
             message: `Username ${req.body.username} already in use`,
             error_part: 'username'
         });
@@ -83,7 +83,7 @@ userRouter.post('/create_new_user', async (req, res) => {
     let is_secured = !!req.body.email; //if email is provided, we will set the account as inactive and await activation
 
     if (is_secured && !is_valid_email(req.body.email)) {
-        return res.status(401).json({
+        return res.status(405).json({
             message: `Invalid email address.`,
             error_part: 'email'
         });
@@ -330,8 +330,8 @@ userRouter.put('/:user_id', authenticateToken, async (req, res) => {
     let selected_user_details = await fetchUserDetails(req.params.user_id);
 
     if (!selected_user_details) {
-        return res.status(422).json({
-            message: `Something went wrong`
+        return res.status(404).json({
+            message: `User ${req.params.user_id} not found`
         });
     };
 
@@ -339,7 +339,10 @@ userRouter.put('/:user_id', authenticateToken, async (req, res) => {
 
     Object.entries(selected_user_details).forEach(([key, og_value]) => {
         let changed_value = req.body[key];
-        if (changed_value != null && changed_value !== og_value) {
+
+        if (changed_value != null && Array.isArray(changed_value)) {
+            changes[key] = JSON.stringify(changed_value);
+        } else if (changed_value != null && changed_value !== og_value) {
             changes[key] = changed_value;
         }
     });
@@ -360,11 +363,13 @@ userRouter.put('/:user_id', authenticateToken, async (req, res) => {
         }
     }
 
-    if (!Object.values(changes).length) { //this is concerning as it might be giving away the current status
-        return res.status(422).json({
-            message: `No Changes Detected`
-        });
-    }
+    if (changes.to_do_categories)
+
+        if (!Object.values(changes).length) { //this is concerning as it might be giving away the current status
+            return res.status(422).json({
+                message: `No Changes Detected`
+            });
+        }
 
     if (req.user.id === parseInt(req.params.user_id)) { //self-edit pathway, anyone can do it
 
@@ -384,13 +389,14 @@ userRouter.put('/:user_id', authenticateToken, async (req, res) => {
     let sql = `UPDATE users SET ${Object.keys(changes).map(key => `${key} = ?`).join(', ')} WHERE user_id = ?;`;
 
     await query(sql, [...Object.values(changes), req.params.user_id]).then(response => {
-        if (!response) {
-            return res.status(422).json({
-                message: `Something went wrong`
+        if (response.affectedRows) {
+            return res.status(200).json({
+                message: `${list(Object.keys(changes))} updated.`,
+                response,
             });
-        };
-        res.status(200).json({
-            message: `${list(Object.keys(changes))} updated.`,
+        }
+        return res.status(422).json({
+            message: `Something went wrong`,
             response,
         });
     }).catch(error => {

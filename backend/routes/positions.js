@@ -20,9 +20,12 @@ import defaultPermissions, {
 } from '../constants/defaultPermissions.js';
 import query from '../utils/db_connection.js';
 import emailService from '../jobs/emailService.js';
-import Position from '../modules/Position.mjs';
+import PositionService from '../modules/PositionService.mjs';
+
+const helper = new PositionService();
 
 positionRouter.use(authenticateToken);
+
 
 
 //all positions of a user, including the workspaces to which they might be associated
@@ -35,10 +38,10 @@ positionRouter.get('/user/:user_id', async (req, res) => {
     if (req.query.include_deleted?.toLowerCase() === 'true') {
         query_to_text = '';
     } else if (req.query.include_inactive?.toLowerCase() === 'true') {
-         query_to_text = 'AND deleted = FALSE';
+        query_to_text = 'AND deleted = FALSE';
     }
 
-    let sql = `Select positions.*, workspace_id FROM positions LEFT JOIN workspace_position_associations ON positions.position_id = workspace_position_associations.position_id WHERE positions.user_id = ? ${req.query.include_deleted?.toLowerCase()==='true'?'':'AND DELETED = FALSE'} ${req.query.include_inactive?.toLowerCase()==='true'?'':'AND ACTIVE = TRUE'};`;
+    let sql = `Select positions.*, workspace_id FROM positions LEFT JOIN workspace_position_associations ON positions.position_id = workspace_position_associations.position_id WHERE positions.user_id = ? ${query_to_text};`;
 
     let matches = await query(sql, req.params.user_id);
 
@@ -53,9 +56,8 @@ positionRouter.get('/user/:user_id', async (req, res) => {
 
 //details of a single position
 positionRouter.get('/:position_id', async (req, res) => {
-    let sql = `Select positions.*, workspace_position_associations.workspace_id  FROM positions LEFT JOIN workspace_position_associations ON positions.position_id = workspace_position_associations.position_id WHERE positions.position_id = ? LIMIT 1;`;
 
-    let [match] = await query(sql, req.params.position_id);
+    let match = await helper.fetch_by_id(req.params.position_id);
 
     if (!match) return res.status(404).send(`Position not found.`);
 
@@ -102,7 +104,7 @@ positionRouter.post('/', async (req, res) => {
 
     let sql = `INSERT INTO positions (user_id, ticker, size, acquired_on, sold_on, notes) VALUES (?, ?, ?, ?, ?, ?)`;
 
-    let result = await query(sql, user_id, ticker, size, acquired_on, sold_on, notes);
+    let result = await query(sql, user_id, ticker, size, acquired_on || null, sold_on || null, notes);
 
     if (!result || !result?.affectedRows) return res.status(422).send(`Something went wrong while creating a new Position`);
 
@@ -205,9 +207,8 @@ positionRouter.post('/export', async (req, res) => {
 
 //soft-delete position
 positionRouter.delete('/:position_id', async (req, res) => {
-    let sql = `Select positions.*, workspace_position_associations.workspace_id  FROM positions LEFT JOIN workspace_position_associations ON positions.position_id = workspace_position_associations.position_id WHERE positions.position_id = ? AND DELETED = FALSE LIMIT 1;`;
 
-    let [match] = await query(sql, req.params.position_id);
+    let match = await helper.fetch_by_id(req.params.position_id, {deleted: false});
 
     if (!match) return res.status(404).send(`Position not found.`);
 
@@ -221,34 +222,17 @@ positionRouter.delete('/:position_id', async (req, res) => {
         return res.status(403).send(`Forbidden: ${req.user.permissions} (Workspaces ${req.user.workspaces}) cannot view this Position.`);
     }
 
-    sql = `UPDATE positions SET deleted = TRUE, active = FALSE WHERE position_id = ?`;
+    let result = await helper.soft_delete(req.params.position_id);
 
-    let result = await query(sql, req.params.position_id);
-
-    if (result?.affectedRows) {
-        return res.status(200).json({
-            success: true,
-            message: 'deleted',
-            data: match
-        });
-    } else {
-        return res.status(422).json({
-            success: false,
-            message: 'failed',
-            details: result
-        });
-    }
-
+    return res.status(result.success ? 200 : 422).json(result);
 });
 
 //un-soft-delete position
 positionRouter.put('/:position_id/recover', async (req, res) => {
 
-    const helper = new Position();
+    
 
-    let sql = `Select positions.*, workspace_position_associations.workspace_id  FROM positions LEFT JOIN workspace_position_associations ON positions.position_id = workspace_position_associations.position_id WHERE positions.position_id = ? AND DELETED = TRUE LIMIT 1;`;
-
-    let [match] = await query(sql, req.params.position_id);
+    let match = await helper.fetch_by_id(req.params.position_id);
 
     if (!match) return res.status(404).send(`Position not found.`);
 
@@ -264,7 +248,7 @@ positionRouter.put('/:position_id/recover', async (req, res) => {
 
     let result = await helper.un_soft_delete(req.params.position_id);
 
-    return res.status(result.success?200:422).json(result);
+    return res.status(result.success ? 200 : 422).json(result);
 
 });
 
@@ -368,7 +352,7 @@ positionRouter.put('/:position_id/', async (req, res) => {
 
     //if value coming is is not null, it is intentional, so if blank, set to null to clear value
     //if value coming is nullish, its not intentional, so try to keep as is by referencing the match
-    let result = await query(update_sql, props.map(prop => (req.body[prop] == null) ? match[prop]: req.body[prop] || null).concat(req.params.position_id));
+    let result = await query(update_sql, props.map(prop => (req.body[prop] == null) ? match[prop] : req.body[prop] || null).concat(req.params.position_id));
 
     if (result?.affectedRows) {
         let [data] = await query(sql, req.params.position_id);
