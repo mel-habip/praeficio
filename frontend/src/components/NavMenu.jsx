@@ -3,7 +3,9 @@ import { CustomButton } from '../fields/CustomButton';
 import { Link } from 'react-router-dom';
 import ThemeContext from '../contexts/ThemeContext';
 import IsLoggedInContext from '../contexts/IsLoggedInContext';
-import { Row, Text } from '@nextui-org/react';
+import { Badge, Row, Text } from '@nextui-org/react';
+
+import './NavMenu.css';
 
 const permissionsMap = {
     basic_client: 'Free User',
@@ -57,7 +59,7 @@ function NavMenu() {
                 </Row>
 
                 <Link to='/' className='nav-menu-logo' onClick={closeNavMenu}>
-                    {user.first_name ? `${user.first_name}'s` : 'Your'} Portfolio Tracker&nbsp;
+                    {user?.first_name ? `${user.first_name}'s` : 'Your'} Portfolio Tracker&nbsp;
                     <i className="fa-solid fa-user-secret"></i>
                 </Link>
 
@@ -122,11 +124,30 @@ function NavMenu() {
                             Settings&nbsp; <i className="fa-solid fa-wrench"></i>
                         </Link>
                     </li>
+                    <li className='nav-item'>
+                        <Link
+                            to='/feedback_logs'
+                            className='nav-links'
+                            onClick={closeNavMenu}
+                        >
+                            Feedback Logs&nbsp; <i className="fa-solid fa-bars-staggered"></i>
+                        </Link>
+                    </li>
+                    <li className='nav-item'>
+                        <Link
+                            to='/service_desk'
+                            className='nav-links'
+                            onClick={closeNavMenu}
+                        >
+                            Service Desk&nbsp; <i className="fa-solid fa-headset"></i>
+                        </Link>
+                    </li>
                 </ul>
-                <Text em>{`Your Tier: ${permissionsMap[user.permissions]}`}</Text>
-                <Text css={{ 'white-space': 'pre-wrap', bottom: '50px', position: 'absolute', margin: '10px' }} blockquote size={15} em >
+                <Text className="nav-menu-permission-badge">Your Tier: &nbsp;<Badge  color={user?.permissions === 'basic_client' ? 'primary' : 'success'}>{permissionsMap[user?.permissions]}</Badge></Text>
+                
+                <Text css={{ 'white-space': 'pre-wrap', bottom: '2%', position: 'absolute', margin: 'revert'}} blockquote size={15} em >
                     Made with&nbsp; <i className="fa fa-heart fa-1x fa-beat"></i>&nbsp; <i className="fa fa-heart fa-1x fa-beat"></i>&nbsp; {"\n by "} <Link to={'https://github.com/mel-habip'}>{"Mel Habip :) "} <i className="fa-brands fa-github"></i>{" \n \n "}</Link>
-                    {user.permissions === 'basic_client' && <>Please consider purchasing the <Link to={'/settings/purchases'}>Pro version</Link> 🙏</>}
+                    {user?.permissions === 'basic_client' && <>Please consider purchasing the <Link to={'/settings/purchases'}>Pro version</Link> 🙏</>}
                 </Text>
             </nav>
         </>

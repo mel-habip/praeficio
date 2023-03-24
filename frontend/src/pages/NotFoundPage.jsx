@@ -22,10 +22,11 @@ function NotFoundPage() {
       <h1>Oopsie-daisie!</h1>
       <h2>You stumbled here but there is nothing to see!</h2>
       <h6>(this is a 404 error)</h6>
-      <img src={centerpiece} alt="welcome" width="500" style={{ 'border-radius': '15px', filter: `drop-shadow(0 -10px 4.5rem ${isDark ? 'blue' :'orange'})` }} />
+      <img src={centerpiece} alt="welcome" width="500" style={{ 'border-radius': '15px', filter: `drop-shadow(0 -10px 4.5rem ${isDark ? 'blue' : 'orange'})` }} />
       <br></br>
-      <Link to='/' className='nav-links'>
-        Let's go home...
+
+      <Link to='/' className='nav-links' >
+          Let's go home...
       </Link>
     </>
   )

@@ -21,7 +21,6 @@ function ToDos() {
     const [contentText, setContentText] = useState('');
     const [categoryText, setCategoryText] = useState(new Set());
     const [isLoading, setIsLoading] = useState(false);
-    const [initiallyCompleted, SetInitiallyCompleted] = useState([]);
     const [previousUpdate, setPreviousUpdate] = useState(null);
 
     const selectedValue = React.useMemo(
@@ -41,30 +40,15 @@ function ToDos() {
         setIsLoggedIn(false);
     };
 
-    const ToDoCategoryCard = ({ text, children }) => {
-        return (
-            <Card css={{ $$cardColor: '$colors$primary' }} shadow>
-                <Card.Body>
-                    <Text h3 color="white" css={{ mt: 0 }}>
-                        {text}
-                    </Text>
-                    <Card.Divider />
-                    {children}
-                </Card.Body>
-            </Card>
-        );
-    };
+    
 
     function updateToDo(to_do_id, status) {
-        if (!status && initiallyCompleted.includes(to_do_id)) SetInitiallyCompleted(initiallyCompleted.filter(i => i !== to_do_id));
         axios.put(`http://localhost:8000/todos/${to_do_id}`, { completed: status }).then(response => {
             if (response.status === 401) {
                 kickOut();
             } else if (response.status === 200) {
-                updateCachedToDoList(to_do_id, response.data.data);
-                setTimeout(() => {
-                    SetInitiallyCompleted(initiallyCompleted.concat(to_do_id));
-                }, 1500);
+
+
             } else {
                 console.log('fetch', response);
             }
@@ -87,7 +71,6 @@ function ToDos() {
                 kickOut();
             } else if (response.status === 200) {
                 setToDoList(response.data.data ?? []);
-                SetInitiallyCompleted(response.data.data.filter(todo => todo.completed).map(todo => todo.to_do_id));
             } else {
                 console.log('fetch', response);
             }
@@ -114,15 +97,22 @@ function ToDos() {
 
 
     return (<>
-        <NavMenu first_name={firstName}></NavMenu>
+        <NavMenu />
         {!toDoList.length && <> <h2>No To-Do's Yet! Let's create one now! XD </h2> </>}
 
         <Grid.Container gap={1} justify="center">
             {Object.entries(toDoMap).map(([category, items]) =>
-                <Grid >
-
-                    <ToDoCategoryCard text={category} children={items.map(item => <><Checkbox color="success" onChange={(val) => { updateToDo(item.to_do_id, val); item.completed = true; console.log(item.to_do_id, val) }} isSelected={item.completed} ><Text h4 color="white" className={(initiallyCompleted.includes(item.to_do_id) && item.completed) ? 'striked' : item.completed ? 'strike' : ''} >{item.content}</Text></Checkbox><br /></>)} />
-
+                <Grid key={category}>
+                    <ToDoCategoryCard
+                        text={category}
+                        key={`${category}-card`}
+                        children={items.map(item =>
+                            <ToDoItem is_initially_checked={item.completed}
+                                id={item.to_do_id}
+                                key={item.to_do_id}
+                                text={item.content}
+                                update_function={updateToDo} />
+                        )} />
                 </Grid>
             )}
         </Grid.Container>
@@ -130,11 +120,13 @@ function ToDos() {
         <Spacer y={2} />
         <Button
             onClick={() => setCreationModalOpen(true)}
+            shadow
         > Let's Create a To-Do! </Button>
         <Spacer y={2} />
 
         <Button
             color="success"
+            shadow
             disabled={toDoList.every(item => !item.completed)}
             onClick={() => console.log('move to archive button clicked')}
         > Move Completed to Archive </Button>
@@ -186,7 +178,7 @@ function ToDos() {
                                     console.log(response);
                                 }
                             });
-                        }}> {<>Create Position&nbsp;&nbsp;<i className="fa-regular fa-square-plus"></i></>} </Button>
+                        }}> {<>Create To-Do&nbsp;&nbsp;<i className="fa-regular fa-square-plus"></i></>} </Button>
                 </Modal.Body>
             </Modal>)
         }
@@ -196,3 +188,36 @@ function ToDos() {
 };
 
 export default ToDos;
+
+function ToDoItem({ is_initially_checked = false, update_function, id, text }) {
+    const [itemChecked, setItemChecked] = useState(is_initially_checked);
+
+    return (<>
+        <Checkbox
+            key={id}
+            color="success"
+            onChange={(val) => { setItemChecked(val); console.log(id, val); update_function(id, val) }}
+            isSelected={itemChecked} >
+            <Text h4
+                color="white"
+                className={itemChecked ? 'strike' : ''} >{text}
+            </Text>
+        </Checkbox>
+        <br />
+    </>);
+}
+
+
+function ToDoCategoryCard ({ text, children }) {
+    return (
+        <Card css={{ $$cardColor: '$colors$primary' }}>
+            <Card.Body>
+                <Text h3 color="white" css={{ mt: 0 }}>
+                    {text}
+                </Text>
+                <Card.Divider />
+                {children}
+            </Card.Body>
+        </Card>
+    );
+};
