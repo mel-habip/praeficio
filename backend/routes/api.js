@@ -52,3 +52,5 @@ apiRouter.get('/random_result', (_, res) => {
         success: false
     });
 });
+
+export default apiRouter;

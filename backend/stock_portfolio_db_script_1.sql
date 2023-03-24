@@ -15,6 +15,7 @@ CREATE TABLE users (
     last_name VARCHAR(255),
     first_name VARCHAR(255),
     email VARCHAR(255),
+    use_beta_features BOOLEAN DEFAULT FALSE,
     permissions VARCHAR(100) DEFAULT 'client',
     active BOOLEAN DEFAULT FALSE,
     deleted BOOLEAN DEFAULT FALSE,
@@ -105,6 +106,47 @@ CREATE TABLE todos (
     FOREIGN KEY (user_id)
         REFERENCES users (user_id)
         ON DELETE CASCADE
+);
+
+CREATE TABLE feedback_logs (
+	feedback_log_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    archived BOOLEAN DEFAULT FALSE,
+    notes JSON,
+    created_on DATETIME DEFAULT current_timestamp,
+    updated_on DATETIME DEFAULT NULL ON UPDATE current_timestamp
+);
+
+CREATE TABLE feedback_log_user_associations (
+	feedback_log_id INT NOT NULL,
+    user_id INT NOT NULL,
+    created_on DATETIME DEFAULT current_timestamp,
+    PRIMARY KEY (feedback_log_id , user_id),
+    FOREIGN KEY (user_id)
+        REFERENCES users (user_id)
+        ON DELETE CASCADE,
+	FOREIGN KEY (feedback_log_id)
+        REFERENCES feedback_logs (feedback_log_id)
+        ON DELETE CASCADE
+);
+
+CREATE TABLE feedback_log_items (
+	feedback_log_item_id INT AUTO_INCREMENT PRIMARY KEY,
+	feedback_log_id INT NOT NULL,
+    status VARCHAR(255) DEFAULT "submitted",
+    header VARCHAR(100),
+    content VARCHAR(800),
+    created_by INT,
+    notes JSON,
+    internal_notes JSON,
+    created_on DATETIME DEFAULT current_timestamp,
+    updated_on DATETIME DEFAULT NULL ON UPDATE current_timestamp,
+    FOREIGN KEY (feedback_log_id)
+        REFERENCES feedback_logs (feedback_log_id)
+        ON DELETE CASCADE,
+	FOREIGN KEY (created_by)
+        REFERENCES users (user_id)
+        ON DELETE SET NULL
 );
 
 

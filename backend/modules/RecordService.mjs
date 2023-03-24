@@ -5,7 +5,7 @@ const recordTypeMap = {
     table_names: {
         Position: 'positions',
         Alert: 'alerts',
-        ToDo: 'to_do_s',
+        ToDo: 'todos',
         Workspace: 'workspaces',
         WorkspaceUserAssociation: 'workspace_user_associations',
         WorkspacePositionAssociation: 'workspace_position_associations',
@@ -17,6 +17,9 @@ const recordTypeMap = {
         ToDo: 'to_do_id',
         Workspace: 'workspace_id',
         User: 'user_id',
+    },
+    complex_primary_key:{
+        WorkspaceUserAssociation: ['workspace_id', 'user_id']
     }
 }
 
@@ -29,13 +32,17 @@ const recordTypeMap = {
  */
 export default class RecordService {
     constructor(data) {
-        console.log(`You shouldn't initialize this Class directly.`);
+        if (data) console.log(`You shouldn't initialize this Class directly.`);
     };
 
     data = {};
     record_type;
 
-    async fetch_by_id(record_id, constraints = {}, detailed = false) {
+    /**
+     * @param {Number} record_id - the record to be fetched
+     * @returns {Promise<{to_do_id?: number, user_id?: number, position_id?:number, content?:string, notes?:string[], completed?:boolean, archived?:boolean, deleted?:boolean, active?:boolean}>}
+     */
+    async fetch_by_id(record_id, constraints = {}, inclusions = {}) {
         if (!this.record_type) {
             console.error(`No Record Type specified`);
             return null;
@@ -45,6 +52,11 @@ export default class RecordService {
             case 'Position': {
                 const sql = `SELECT positions.*, workspace_position_associations.workspace_id  FROM positions LEFT JOIN workspace_position_associations ON positions.position_id = workspace_position_associations.position_id WHERE positions.position_id = ? ${constraint_stringifier(constraints)} LIMIT 1;`;
                 const [position] = await query(sql, record_id);
+
+                if (inclusions.workspaces) {
+                    const sql_2 = `SELECT workspace_id FROM workspace_position_associations WHERE position_id = ?;`;
+                    await query(sql_2, record_id).then(response => position.workspaces = response?. [0]?.workspace_id ?? null);
+                }
                 return position;
             }
             case 'Alert': {
@@ -53,18 +65,18 @@ export default class RecordService {
                 return alert;
             }
             case 'ToDo': {
-                const sql = `SELECT * FROM to_do_s WHERE to_do_id = ? ${constraint_stringifier(constraints)}`;
+                const sql = `SELECT * FROM todos WHERE to_do_id = ? ${constraint_stringifier(constraints)}`;
                 const [to_do] = await query(sql, record_id);
                 return to_do;
             }
             case 'User': {
-                const sql_1 = `SELECT user_id, username, last_name, first_name, email, permissions, active, created_on, updated_on FROM users WHERE user_id = ? ${constraint_stringifier(constraints)} LIMIT 1;`;
+                const sql_1 = `SELECT user_id, username, last_name, first_name, email, permissions, active, created_on, updated_on, use_beta_features FROM users WHERE user_id = ? ${constraint_stringifier(constraints)} LIMIT 1;`;
 
                 const [user] = await query(sql_1, record_id);
 
                 if (!user) return null;
 
-                if (detailed) {
+                if (inclusions.workspaces) {
                     const sql_2 = `SELECT workspace_id, role FROM workspace_user_associations WHERE user_id = ?;`;
                     await query(sql_2, record_id).then(response => user.workspaces = response);
                 }
@@ -75,15 +87,38 @@ export default class RecordService {
                 const sql = `SELECT * FROM workspaces WHERE workspace_id = ?`;
                 const [workspace] = await query(sql, record_id);
                 if (!workspace) return null;
-                if (detailed) {
-                    await query(`SELECT * FROM workspace_user_associations WHERE workspace_id = ?`, workspace.workspace_id).then(response => {
+                if (inclusions.users) {
+                    await query(`SELECT * FROM workspace_user_associations WHERE workspace_id = ?`, record_id).then(response => {
                         workspace.users = response.map(x => x.user_id);
                     });
-                    await query(`SELECT * FROM workspace_position_associations WHERE workspace_id = ?`, workspace.workspace_id).then(response => {
+                }
+                if (inclusions.positions) {
+                    await query(`SELECT * FROM workspace_position_associations WHERE workspace_id = ?`, record_id).then(response => {
                         workspace.positions = response.map(x => x.position_id);
                     });
                 }
                 return workspace;
+            }
+            case 'FeedbackLog': {
+                const sql = `SELECT * FROM feedback_logs WHERE feedback_log_id = ?`;
+                const [feedbackLog] = await query(sql, record_id);
+                if (!feedbackLog) return null;
+                if (inclusions.users) {
+                    await query(`SELECT * FROM feedback_log_user_associations WHERE feedback_log_id = ?`, record_id).then(response => {
+                        feedbackLog.users = response.map(x => x.user_id);
+                    });
+                }
+                if (inclusions.feedback_log_items || inclusions.items) {
+                    await query(`SELECT * FROM feedback_log_items WHERE feedback_log_id = ?`, record_id).then(response => {
+                        feedbackLog.feedback_log_items = response.map(x => x.feedback_log_item_id);
+                    });
+                }
+                return feedbackLog;
+            }
+            case 'FeedbackLogItem': {
+                const sql = `SELECT feedback_log_items.*, users.username AS created_by_username, archived FROM feedback_log_items LEFT JOIN feedback_logs ON feedback_logs.feedback_log_id = feedback_log_items.feedback_log_item_id LEFT JOIN users ON created_by = users.user_id WHERE feedback_log_item_id = ?`;
+                const [feedbackLogItem] = await query(sql, record_id);
+                return feedbackLogItem;
             }
             default: {
                 if (!this.record_type) {
@@ -99,14 +134,19 @@ export default class RecordService {
     async fetch_by_user_id(user_id, constraints = {}) {
         switch (this.record_type) {
             case 'Position': {
-                const sql = `SELECT positions.*, workspace_position_associations.workspace_id  FROM positions LEFT JOIN workspace_position_associations ON positions.position_id = workspace_position_associations.position_id WHERE positions.user_id = ? ${constraint_stringifier(constraints)} LIMIT 1;`;
-                const [position] = await query(sql, user_id);
-                return position;
+                const sql = `SELECT positions.*, workspace_position_associations.workspace_id  FROM positions LEFT JOIN workspace_position_associations ON positions.position_id = workspace_position_associations.position_id WHERE positions.user_id = ? ${constraint_stringifier(constraints)} ;`;
+                const positions = await query(sql, user_id);
+                return positions;
             }
             case 'Alert': {
                 const sql = `SELECT * FROM alerts WHERE user_id = ? ${constraint_stringifier(constraints)}`;
-                const [alert] = await query(sql, user_id);
-                return alert;
+                const alerts = await query(sql, user_id);
+                return alerts;
+            }
+            case 'FeedbackLog': {
+                const sql = `SELECT feedback_logs.*, feedback_log_user_associations.user_id  FROM feedback_logs LEFT JOIN feedback_log_user_associations ON feedback_logs.feedback_log_id = feedback_log_user_associations.feedback_log_id WHERE feedback_log_user_associations.user_id = ?`;
+                const feedbackLogs = await query(sql, user_id);
+                return feedbackLogs;
             }
         }
     }

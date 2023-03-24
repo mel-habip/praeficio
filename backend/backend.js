@@ -9,6 +9,9 @@ import positionRouter from './routes/positions.js';
 import workspacesRouter from './routes/workspaces.js';
 import alertsRouter from './routes/alerts.js';
 import todosRouter from './routes/todos.js';
+import apiRouter from './routes/api.js';
+import feedbackLogRouter from './routes/feedback_logs.js';
+import feedbackLogItemsRouter from './routes/feedback_log_items.js';
 
 const log = console.log;
 
@@ -27,6 +30,9 @@ APP.use('/positions', positionRouter);
 APP.use('/workspaces', workspacesRouter);
 APP.use('/alerts', alertsRouter);
 APP.use('/todos', todosRouter);
+APP.use('/api', apiRouter);
+APP.use('/feedback_logs', feedbackLogRouter);
+APP.use('/feedback_log_items', feedbackLogItemsRouter);
 
 Object.values(REGULAR_SCHEDULED_JOBS).forEach(job => job.start());
 
