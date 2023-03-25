@@ -11,6 +11,7 @@ import LoadingPage from './LoadingPage';
 import axios from 'axios';
 
 import NavMenu from '../components/NavMenu';
+import NotesModule from '../components/NotesModule';
 
 import { Button, Modal, Spacer, Text, Input, Tooltip, Row, Table, Textarea, useAsyncList, useCollator } from '@nextui-org/react';
 
@@ -109,25 +110,25 @@ function FeedbackItemCreationModal({ is_open, set_is_open, setFeedbackLogItems, 
     const [status, setStatus] = useState('');
 
     const descriptionHelpers = React.useMemo(() => {
-        if (description.length < 100) {
+        if (description?.length < 100) {
             return {
                 color: 'default',
                 text: 'Please provide some more details'
             }
         }
-        if (description.length < 200) {
+        if (description?.length < 200) {
             return {
                 color: 'secondary',
                 text: 'Doing great! Keep going! 👍'
             }
         }
-        if (description.length < 300) {
+        if (description?.length < 300) {
             return {
                 color: 'primary',
                 text: 'Oh wow! This is great! 🔥🔥'
             }
         }
-        if (description.length > 750) {
+        if (description?.length > 750) {
             return {
                 color: 'error',
                 text: 'While being detailed is good, being concise can be better 👁️👄👁️'
@@ -147,7 +148,7 @@ function FeedbackItemCreationModal({ is_open, set_is_open, setFeedbackLogItems, 
             open={is_open}
             onClose={() => set_is_open(false)}
             scroll
-            width="60%" >
+            width='1000px' >
             <Modal.Header css={{ 'z-index': 86, position: 'relative' }}>
                 <Text size={14} > Please enter the ticket information below </Text>
             </Modal.Header>
@@ -184,7 +185,7 @@ function FeedbackItemCreationModal({ is_open, set_is_open, setFeedbackLogItems, 
                 <StatusDropdown user={user} update_func={setStatus} default_value={status} />
 
                 <Button
-                    disabled={!description || description.length < 50}
+                    disabled={!description || description?.length < 50}
                     shadow
                     auto
                     onPress={async () => {
@@ -217,25 +218,25 @@ function FeedbackItemUpdateModal({ is_open, set_is_open, updateCachedItems, setI
     const [status, setStatus] = useState('');
 
     const descriptionHelpers = React.useMemo(() => {
-        if (description.length < 100) {
+        if (description?.length < 100) {
             return {
                 color: 'default',
                 text: 'Please provide some more details'
             }
         }
-        if (description.length < 200) {
+        if (description?.length < 200) {
             return {
                 color: 'secondary',
                 text: 'Doing great! Keep going! 👍'
             }
         }
-        if (description.length < 300) {
+        if (description?.length < 300) {
             return {
                 color: 'primary',
                 text: 'Oh wow! This is great! 🔥🔥'
             }
         }
-        if (description.length > 750) {
+        if (description?.length > 750) {
             return {
                 color: 'error',
                 text: 'While being detailed is good, being concise can be better 👁️👄👁️'
@@ -263,7 +264,7 @@ function FeedbackItemUpdateModal({ is_open, set_is_open, updateCachedItems, setI
             open={is_open}
             onClose={() => set_is_open(false)}
             scroll
-            width="60%"
+            width='1000px'
         >
             <Modal.Header css={{ 'z-index': 86, position: 'relative' }}>
                 <Text size={14} > Updating Details of #{item_id} </Text>
@@ -272,9 +273,9 @@ function FeedbackItemUpdateModal({ is_open, set_is_open, updateCachedItems, setI
                 <Spacer y={0.5} />
                 <Input
                     labelPlaceholder="Item Header"
-                    color={itemHeader.length < 50 ? 'primary' : 'error'}
-                    helperColor={itemHeader.length < 50 ? 'default' : 'error'}
-                    helperText={`${itemHeader.length}/50`}
+                    color={itemHeader?.length < 50 ? 'primary' : 'error'}
+                    helperColor={itemHeader?.length < 50 ? 'default' : 'error'}
+                    helperText={`${itemHeader?.length}/50`}
                     bordered
                     clearable
                     onChange={(e) => setItemHeader(e.target.value)}
@@ -301,7 +302,7 @@ function FeedbackItemUpdateModal({ is_open, set_is_open, updateCachedItems, setI
                 <StatusDropdown user={user} update_func={setStatus} default_value={status} />
 
                 <Button
-                    disabled={!description || description.length < 50}
+                    disabled={!description || description?.length < 50}
                     shadow
                     auto
                     onPress={async () => {
@@ -431,10 +432,10 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
 
                                         <Row align='flex-start' >
                                             <Tooltip content="Modify" placement="left" shadow enterDelay={delay}>
-                                                <CustomButton buttonStyle="btn--transparent" onClick={() => { setUpdateDetails({ status: item.status, header: item.header, content: item.content }) || setUpdateModalOpen(true) }} ><i className="fa-regular fa-pen-to-square"></i></CustomButton>
+                                                <CustomButton buttonStyle="btn--transparent" onClick={() => { setUpdateDetails({ ...updateDetails, status: item.status, header: item.header, content: item.content }) || setUpdateModalOpen(true) }} ><i className="fa-regular fa-pen-to-square"></i></CustomButton>
                                             </Tooltip>
                                             <Tooltip content="Details" placement="top" shadow enterDelay={delay}>
-                                                <CustomButton buttonStyle="btn--transparent" onClick={() => setNotesModalOpen(true)}><i className="fa-solid fa-list-ul"></i></CustomButton>
+                                                <CustomButton buttonStyle="btn--transparent" onClick={() => setUpdateDetails({ ...updateDetails, notes: item.notes, internal_notes: item.internal_notes || [] }) || setNotesModalOpen(true)}><i className="fa-solid fa-list-ul"></i></CustomButton>
                                             </Tooltip>
                                             <Tooltip content="Thread" placement="right" shadow enterDelay={delay}>
                                                 <CustomButton buttonStyle="btn--transparent" onClick={() => { }}><i className="fa-regular fa-comments"></i></CustomButton>
@@ -468,6 +469,52 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
 
 
             <FeedbackItemUpdateModal is_open={updateModalOpen} set_is_open={setUpdateModalOpen} {...{ user, setIsLoggedIn, updateCachedItems, updateDetails }} item_id={selected} />
+
+            <Modal
+                scroll
+                blur
+                aria-labelledby="modal-title"
+                css={{'max-width': '550px'}}
+                open={notesModalOpen}
+                closeButton onClose={() => setNotesModalOpen(false)} >
+                <Modal.Body>
+
+                    <NotesModule notes_list={updateDetails?.notes} user={user} title_text="Notes" update_func={(notes) => {
+                        console.log('updating feedback log item', selected, notes);
+                        axios.put(`http://localhost:8000/feedback_log_items/${selected}`, {
+                            notes
+                        }).then(response => {
+                            console.log('response:', response.data);
+                            if ([201, 200].includes(response.status)) {
+                                console.log('successful');
+                            } else if (response.status === 401) {
+                                setIsLoggedIn(false);
+                            } else {
+                                console.log(response);
+                            }
+                        });
+                    }} />
+                    {user.permissions.endsWith('client') ? undefined : <NotesModule
+                        notes_list={updateDetails?.internal_notes} user={user}
+                        title_text="Internal Notes"
+                        update_func={(notes) => {
+                            console.log('updating feedback log item', selected, notes);
+                            axios.put(`http://localhost:8000/feedback_log_items/${selected}`, {
+                                notes
+                            }).then(response => {
+                                console.log('response:', response.data);
+                                if ([201, 200].includes(response.status)) {
+                                    console.log('successful');
+                                } else if (response.status === 401) {
+                                    setIsLoggedIn(false);
+                                } else {
+                                    console.log(response);
+                                }
+                            });
+                        }} />}
+
+                </Modal.Body>
+            </Modal>
         </>
     );
 }
@@ -479,7 +526,9 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
 
 
 
-
+function ThreadsModal({user, feedback_log_item_id}) {
+    
+}
 
 
 

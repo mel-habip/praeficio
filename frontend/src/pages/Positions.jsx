@@ -151,7 +151,7 @@ function Positions() {
         });
     }, [includeDeletedPositions, includeInactivePositions]);
 
-    if (!positions) return (<LoadingPage/> );
+    if (!positions) return (<LoadingPage />);
 
     function togglePosition(position_id, turn_on_off) {
         axios.put(`http://localhost:8000/positions/${position_id}/${turn_on_off ? 'reactivate' : 'deactivate'}`).then(response => {
@@ -362,13 +362,22 @@ function Positions() {
                             {function () {
                                 if (!positionDetails || positionDetails.index === -1) return 'Not Recognized';
                                 return (<>
-                                    <Text size={15} css={{ 'white-space': 'pre-wrap', 'padding-left': '5rem' }}> {positionDetails.text} </Text> <Spacer y={0.1} ></Spacer> <Text size={15} css={{ 'padding-left': '4rem' }}>Notes:</Text>
-                                    {notes.length ? <></> : <Text size={15} css={{ 'padding-left': '5rem' }}>No notes yet! Enter one below!</Text>} {notes.map((note, index) => <Row justify="space-between" css={{ 'white-space': 'pre-wrap', 'padding-left': '1rem', 'padding-right': '1rem' }} >
-                                        <Text><i className="fa-regular fa-hand-point-right"></i>  &nbsp;&nbsp;&nbsp; {note}
-                                        </Text>
-                                        <Spacer x={0.2}></Spacer>
-                                        <CustomButton buttonStyle="btn--transparent" onClick={() => { setNotes(removeIndex(notes, index)) }} ><i
-                                            className="fa-regular fa-trash-can"></i></CustomButton> </Row>)} <Row >
+                                    <Text size={15} css={{ 'white-space': 'pre-wrap', 'padding-left': '5rem' }}> {positionDetails.text} </Text>
+                                    <Spacer y={0.1} ></Spacer>
+                                    <Text size={15} css={{ 'padding-left': '4rem' }}>
+                                        Notes:
+                                    </Text>
+                                    {notes.length ? <></> : <Text size={15} css={{ 'padding-left': '5rem' }}>No notes yet! Enter one below!</Text>}
+
+                                    {notes.map((note, index) =>
+                                        <Row justify="space-between"
+                                            css={{ 'white-space': 'pre-wrap', 'padding-left': '1rem', 'padding-right': '1rem' }} >
+                                            <Text>
+                                                <i className="fa-regular fa-hand-point-right"></i>  &nbsp;&nbsp;&nbsp; {note}
+                                            </Text>
+                                            <Spacer x={0.2}></Spacer>
+                                            <CustomButton buttonStyle="btn--transparent" onClick={() => { setNotes(removeIndex(notes, index)) }} ><i
+                                                className="fa-regular fa-trash-can"></i></CustomButton> </Row>)} <Row >
                                         <Input bordered shadow color="primary" value={newNote} css={{ width: '100%' }} aria-label="new note input" labelPlaceholder="New Note" clearable onChange={(e) => setNewNote(e.target.value)} />
                                         <CustomButton
                                             buttonStyle="btn--transparent"

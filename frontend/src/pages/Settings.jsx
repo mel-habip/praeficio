@@ -44,7 +44,6 @@ export default function Settings() {
 
 
 function ToDoCategoriesSection() {
-
     const { setIsLoggedIn, user, setUser } = useContext(IsLoggedInContext);
 
 

@@ -54,13 +54,13 @@ feedbackLogItemRouter.put('/:feedback_log_item_id', async (req, res) => {
         return res.status(403).send(`Forbidden: Feedback Log Item ${req.params.feedback_log_item_id} has been completed.`);
     }
 
-    if (!feedback_log_item.content && !feedback_log_item.header && !feedback_log_item.status) {
+    if (! req.body.content && ! req.body.header && ! req.body.status || ! req.body.notes || ! req.body.internal_notes) {
         return res.status(400).send(`Content, Header or Status must be provided`);
     }
 
-    const update_sql = `UPDATE feedback_log_items SET content = ?, status = ?, header = ? WHERE feedback_log_item_id = ?`;
+    const update_sql = `UPDATE feedback_log_items SET content = ?, status = ?, header = ?, notes = ?, internal_notes = ? WHERE feedback_log_item_id = ?`;
 
-    let update_results = await query(update_sql, req.body.content || feedback_log_item.content, req.body.status || feedback_log_item.status, req.body.header || feedback_log_item.header, req.params.feedback_log_item_id);
+    let update_results = await query(update_sql, req.body.content || feedback_log_item.content, req.body.status || feedback_log_item.status, req.body.header || feedback_log_item.header, JSON.stringify(req.body.notes || feedback_log_item.notes), JSON.stringify(req.body.internal_notes || feedback_log_item.internal_notes), req.params.feedback_log_item_id);
 
     if (!update_results || !update_results.affectedRows) {
         return res.status(422).json({

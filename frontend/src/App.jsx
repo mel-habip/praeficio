@@ -9,6 +9,7 @@ import Positions from './pages/Positions.jsx';
 import Settings from './pages/Settings.jsx';
 import Alerts from './pages/Alerts.jsx';
 import ToDos from './pages/ToDos.jsx';
+import TestZone from './pages/TestZone';
 import FeedbackLogsPage from './pages/FeedbackLogsPage.jsx';
 import SpecificFeedbackLogPage from './pages/SpecificFeedbackLogPage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
@@ -100,6 +101,7 @@ function App() {
                 <Route path='/settings' element={isLoggedIn ? <Settings /> : <LoginPage />} exact />
                 <Route path='/feedback_logs' element={isLoggedIn ? <FeedbackLogsPage /> : <LoginPage />} exact />
                 <Route path='/feedback_logs/:feedback_log_id' element={isLoggedIn ? <SpecificFeedbackLogPage /> : <LoginPage />} exact />
+                <Route path='/testzone' element={<TestZone />} exact />
                 <Route path='/*' element={<NotFoundPage />} />
               </Routes>
             </Router>
