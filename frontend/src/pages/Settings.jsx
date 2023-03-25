@@ -15,21 +15,29 @@ import { Button, Modal, Spacer, Text, Input, Checkbox, Tooltip, Row, Grid, Dropd
 import { DatePicker } from 'react-responsive-datepicker'
 import 'react-responsive-datepicker/dist/index.css'
 
-
+import validatePassword from '../utils/validatePassword.mjs';
 
 export default function Settings() {
-    const { user, accessToken } = useContext(IsLoggedInContext);
+    const { user, accessToken, setUser } = useContext(IsLoggedInContext);
     const { isDark } = useContext(ThemeContext);
+
     axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+
+
 
     return (
         <>
             <NavMenu ></NavMenu>
-            <Text h1 >{user.first_name ? `${user.first_name}'s` : 'Your'} Settings </Text>
+            <Text h1 css={{ top: 0, 'margin-top': '10%' }} >{user.first_name ? `${user.first_name}'s` : 'Your'} Settings </Text>
             <hr className="line-primary"></hr>
             <ToDoCategoriesSection />
             <hr className="line-primary"></hr>
             <h2>Purchases? go here...</h2>
+            <hr className="line-primary"></hr>
+
+
+            <PersonalSettingsSection user={user} setUser={setUser} />
+            <hr className="line-primary"></hr>
         </>
     );
 };
@@ -62,12 +70,12 @@ function ToDoCategoriesSection() {
 
     const textLimit = 40;
 
-    return (<section style={{ 'width': '35%'}} >
+    return (<section style={{ 'width': '35%' }} >
         <Text h3 css={{ 'margin-top': '10px', 'border-bottom': '1px solid var(--text-primary)' }}>My To-Do Categories</Text>
 
         <Spacer y={0.1} ></Spacer>
         {currentCategories.map((catName, index) =>
-            <Row justify="space-between" css={{ 'white-space': 'pre-wrap', 'padding-left': '1rem', 'padding-right': '1rem', 'min-width': '65%' }} >
+            <Row key={index + '-row'} justify="space-between" css={{ 'white-space': 'pre-wrap', 'padding-left': '1rem', 'padding-right': '1rem', 'min-width': '65%' }} >
                 <Text><i className="fa-regular fa-hand-point-right"></i>  &nbsp;&nbsp;&nbsp; {catName}</Text>
                 <Spacer x={0.2}></Spacer>
                 <CustomButton
@@ -122,4 +130,152 @@ function ToDoCategoriesSection() {
         <Spacer y={0.5} ></Spacer>
     </section>)
 
+}
+
+
+function PersonalSettingsSection({ user, setUser }) {
+    const [useBetaFeatures, setUseBetaFeatures] = useState(false);
+    const [firstName, setFirstName] = useState(null);
+    const [lastName, setLastName] = useState(null);
+    const [username, setUsername] = useState(null);
+    const [password, setPassword] = useState(''); //this doesn't come from the BE and can only be reset, not edited
+    const [email, setEmail] = useState(null);
+    const [generalErrorMessage, setGeneralErrorMessage] = useState('');
+    const [emailError, setEmailError] = useState('');
+    const [usernameError, setUsernameError] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+
+    useEffect(() => {
+        setUseBetaFeatures(user.use_beta_features);
+        setFirstName(user.first_name || '');
+        setLastName(user.last_name || '');
+        setUsername(user.username);
+        setEmail(user.email || '');
+        setPassword('');
+    }, []);
+
+    const differencesMade = React.useMemo(() => {
+        const curr = [firstName, lastName, email, username, password];
+        const orig = [user.first_name || '', user.last_name || '', user.email || '', user.username || '', ''];
+
+        return curr.some((val, ix) => val !== orig[ix]) || useBetaFeatures !== user.use_beta_features;
+    }, [firstName, lastName, email, username, useBetaFeatures, password]);
+
+    return (
+        <section style={{ 'width': '35%' }}>
+            <Text h3 css={{ 'margin-top': '10px', 'border-bottom': '1px solid var(--text-primary)' }}>My Profile</Text>
+
+            <Spacer y={2} />
+            <Input
+                rounded
+                value={username}
+                clearable
+                css={{ 'width': '75%' }}
+                type="text"
+                bordered
+                labelPlaceholder="Username*"
+                color={usernameError ? "error" : "primary"}
+                status={usernameError ? "error" : "default"}
+                helperText={usernameError}
+                helperColor={usernameError ? "error" : "primary"}
+                onChange={(e) => setUsernameError('') || setUsername(e.target.value)} />
+            <Spacer y={2} />
+
+            <Input.Password
+                rounded
+                initialValue=""
+                value={password}
+                clearable
+                css={{ 'width': '75%' }}
+                required
+                bordered
+                labelPlaceholder="Password*"
+                color={passwordError ? "error" : "primary"}
+                status={passwordError ? "error" : "default"}
+                helperText={passwordError}
+                helperColor={passwordError ? "error" : "primary"}
+                onChange={(e) => setPasswordError('') || setPassword(e.target.value)} />
+            <Spacer y={2} />
+            <Input
+                clearable
+                bordered
+                value={firstName}
+                css={{ 'width': '33%', 'margin-right': '10px' }}
+                rounded
+                labelPlaceholder="First Name"
+                color="primary"
+                onChange={(e) => setFirstName(e.target.value)} />
+
+            <Input
+                clearable
+                bordered
+                value={lastName}
+                css={{ 'width': '33%' }}
+                rounded
+                labelPlaceholder="Last Name"
+                color="primary"
+                onChange={(e) => setLastName(e.target.value)} />
+
+            <Spacer y={2} />
+            <Input
+                rounded
+                clearable
+                value={email}
+                type="email"
+                css={{ 'width': '75%' }}
+                bordered
+                labelPlaceholder="Email"
+                placeholder='you@domain.ca'
+                color={emailError ? "error" : "primary"}
+                status={emailError ? "error" : "default"}
+                helperText={emailError}
+                helperColor={emailError ? "error" : "primary"}
+                onChange={(e) => setEmailError('') || setEmail(e.target.value)} />
+            <Spacer y={1} />
+
+            <Checkbox isSelected={useBetaFeatures} onChange={(e) => setUseBetaFeatures(e)}><Text>Use Beta Features &nbsp; <i className="fa-solid fa-flask"></i></Text></Checkbox>
+            <Spacer y={1} ></Spacer>
+            <Row justify='space-evenly' >
+                <Button
+                    auto
+                    disabled={!differencesMade}
+                    shadow color="inverse"
+                    onPress={() => {
+                        setUseBetaFeatures(user.use_beta_features);
+                        setFirstName(user.first_name || '');
+                        setLastName(user.last_name || '');
+                        setUsername(user.username);
+                        setEmail(user.email || '');
+                        setPassword('');
+                    }}> Cancel&nbsp;<i className="fa-solid fa-person-walking-arrow-loop-left"></i>
+                </Button>
+                <Button
+                    auto
+                    // enabled => differencesMade || (password && validatePassword(password))
+                    disabled={!differencesMade || (password && !validatePassword(password))}
+                    aria-label="user details save button"
+                    shadow
+                    color="success"
+                    onPress={() => {
+                        axios.put(`http://localhost:8000/users/${user.id}`, {
+                            first_name: firstName,
+                            last_name: lastName,
+                            email,
+                            username,
+                            use_beta_features: useBetaFeatures,
+                            password,
+                        }).then(response => {
+                            if (response.status === 200) {
+                                setUser({ ...user });
+                            } else {
+                                console.log('response', response);
+                            }
+                        })
+                    }}> Save&nbsp;<i className="fa-solid fa-floppy-disk"></i>
+                </Button>
+            </Row>
+
+        </section>
+
+    );
 }
