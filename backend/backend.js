@@ -4,6 +4,7 @@ const DOMAIN = `http://localhost:${PORT}`;
 
 import express from 'express';
 import cors from 'cors';
+
 import userRouter from './routes/users.js';
 import positionRouter from './routes/positions.js';
 import workspacesRouter from './routes/workspaces.js';
@@ -12,6 +13,7 @@ import todosRouter from './routes/todos.js';
 import apiRouter from './routes/api.js';
 import feedbackLogRouter from './routes/feedback_logs.js';
 import feedbackLogItemsRouter from './routes/feedback_log_items.js';
+import feedbackLogItemMessagesRouter from './routes/feedback_log_item_messages.js';
 
 const log = console.log;
 
@@ -33,6 +35,7 @@ APP.use('/todos', todosRouter);
 APP.use('/api', apiRouter);
 APP.use('/feedback_logs', feedbackLogRouter);
 APP.use('/feedback_log_items', feedbackLogItemsRouter);
+APP.use('/feedback_log_item_messages', feedbackLogItemMessagesRouter);
 
 Object.values(REGULAR_SCHEDULED_JOBS).forEach(job => job.start());
 

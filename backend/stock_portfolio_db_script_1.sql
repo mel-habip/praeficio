@@ -149,6 +149,21 @@ CREATE TABLE feedback_log_items (
         ON DELETE SET NULL
 );
 
+CREATE TABLE feedback_log_item_messages (
+	feedback_log_item_message_id INT AUTO_INCREMENT PRIMARY KEY,
+	feedback_log_item_id INT NOT NULL,
+    content VARCHAR(800),
+    sent_by INT,
+    created_on DATETIME DEFAULT current_timestamp,
+    updated_on DATETIME DEFAULT NULL ON UPDATE current_timestamp,
+    FOREIGN KEY (feedback_log_item_id)
+        REFERENCES feedback_log_items (feedback_log_item_id)
+        ON DELETE CASCADE,
+	FOREIGN KEY (sent_by)
+        REFERENCES users (user_id)
+        ON DELETE SET NULL
+);
+
 
 SET GLOBAL event_scheduler = ON;
 

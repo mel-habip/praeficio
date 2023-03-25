@@ -12,7 +12,7 @@ export default function NotesModule({ field_text = '', title_text = '', notes_li
 
     const [newNoteText, setNewNoteText] = useState('');
     const [notesList, setNotesList] = useState([]);
-    useEffect(() => setNotesList(notes_list), []);
+    useEffect(() => setNotesList(notes_list), [notes_list]);
 
     const differencesMade = React.useMemo(() => !deepEqual(notesList, notes_list), [notesList]);
 

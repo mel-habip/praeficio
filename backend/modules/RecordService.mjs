@@ -10,6 +10,9 @@ export const recordTypeMap = {
         WorkspaceUserAssociation: 'workspace_user_associations',
         WorkspacePositionAssociation: 'workspace_position_associations',
         User: 'users',
+        FeedbackLog: 'feedback_log',
+        FeedbackLogItem: 'feedback_log_items',
+        FeedbackLogItemMessage: 'feedback_log_item_messages',
     },
     simple_primary_key: {
         Position: 'position_id',
@@ -17,9 +20,14 @@ export const recordTypeMap = {
         ToDo: 'to_do_id',
         Workspace: 'workspace_id',
         User: 'user_id',
+        FeedbackLog: 'feedback_log_id',
+        FeedbackLogItem: 'feedback_log_item_id',
+        FeedbackLogItemMessage: 'feedback_log_item_message_id',
     },
-    complex_primary_key:{
-        WorkspaceUserAssociation: ['workspace_id', 'user_id']
+    complex_primary_key: {
+        WorkspaceUserAssociation: ['workspace_id', 'user_id'],
+        WorkspacePositionAssociation: ['workspace_id', 'position_id'],
+        FeedbackLogUserAssociation: ['feedback_log_id', 'user_id'],
     }
 }
 
@@ -120,6 +128,11 @@ export default class RecordService {
                 const [feedbackLogItem] = await query(sql, record_id);
                 return feedbackLogItem;
             }
+            case 'FeedbackLogItemMessage': {
+                const sql = `SELECT feedback_log_item_messages.*, users.username AS sent_by_username FROM feedback_log_item_messages LEFT JOIN users ON sent_by = users.user_id WHERE feedback_log_item_message_id = ?`;
+                const [feedbackLogItemMessage] = await query(sql, record_id);
+                return feedbackLogItemMessage;
+            }
             default: {
                 if (!this.record_type) {
                     console.error(`No Record Type specified`);
@@ -144,7 +157,7 @@ export default class RecordService {
                 return alerts;
             }
             case 'FeedbackLog': {
-                const sql = `SELECT feedback_logs.*, feedback_log_user_associations.user_id  FROM feedback_logs LEFT JOIN feedback_log_user_associations ON feedback_logs.feedback_log_id = feedback_log_user_associations.feedback_log_id WHERE feedback_log_user_associations.user_id = ?`;
+                const sql = `SELECT feedback_logs.*, feedback_log_user_associations.user_id  FROM feedback_logs LEFT JOIN feedback_log_user_associations ON feedback_logs.feedback_log_id = feedback_log_user_associations.feedback_log_id WHERE feedback_log_user_associations.user_id = ? ${constraint_stringifier(constraints)}`;
                 const feedbackLogs = await query(sql, user_id);
                 return feedbackLogs;
             }
@@ -153,45 +166,70 @@ export default class RecordService {
 
 
     /**
-     * @param {Number} primary_record_id sole identifier for primitive records
-     * @param {Number?} secondary_record_id - secondary identifier for complex records
-     * @param {Number?} tertiary_record_id - tertiary identifier for complex records
+     * @param {Number} record_ids one or more of the primary keys for the record
      */
-    async hard_delete(primary_record_id, secondary_record_id, tertiary_record_id) {
+    async hard_delete(...record_ids) {
         const table_name = recordTypeMap.table_names[this.record_type];
 
         if (!table_name) throw Error(`${this.record_type} not recognized`);
 
-        const primary_key = recordTypeMap.simple_primary_key[this.record_type];
+        const primary_keys = recordTypeMap.simple_primary_key[this.record_type] || recordTypeMap.complex_primary_key[this.record_type];
+
+        if (!primary_keys) throw Error(`${this.record_type} not recognized`);
 
         let result;
 
-        if (primary_key) {
-            const sql = `DELETE FROM ${table_name} WHERE ${primary_key} = ?;`;
+        if (typeof primary_keys === 'string') { //simple
+            const sql = `DELETE FROM ${table_name} WHERE ${primary_keys} = ?;`;
             result = await query(sql, primary_record_id);
-        } else {
+        } else { //complex
             let sql = `DELETE FROM ${table_name} WHERE`;
-
-            switch (this.record_type) {
-                case 'WorkspaceUserAssociation': {
-                    sql += `workspace_id = ? AND user_id = ?;`;
-                    break;
-                }
-                case 'WorkspacePositionAssociation': {
-                    sql += `workspace_id = ? AND position_id = ?;`;
-                    break;
-                }
-                default: {
-                    throw Error(`${this.record_type} not recognized`);
-                }
-            }
-            result = await query(sql, primary_record_id, secondary_record_id, tertiary_record_id);
+            sql += primary_keys.map(a => a + ' = ?').join(',');
+            result = await query(sql, record_ids);
         }
 
         return {
             success: !!result?.affectedRows,
             message: result?.affectedRows ? 'deleted' : 'failed',
             details: result
+        };
+    }
+
+    /**
+     * @param {Number} record_ids one or more of the primary keys for the record
+     */
+    async update(data, ...record_ids) {
+
+    }
+
+    /**
+     * @param {{any:string|number|boolean}} data details of the new record
+     */
+    async create_single(data) {
+        const table_name = recordTypeMap.table_names[this.record_type];
+
+        if (!table_name) throw Error(`${this.record_type} not recognized`);
+
+        let keys = Object.keys(data);
+
+
+        const sql = `INSERT INTO ${table_name} ( ${keys.join(', ')} ) VALUES ( ${keys.map(a => ' ? ').join(', ')} )`;
+        const creation_details = await query(sql, ...keys.map(key => data[key]));
+
+        if (!creation_details || !creation_details?.affectedRows) {
+            return {
+                success: false,
+                message: creation_details?.affectedRows ? 'deleted' : 'failed',
+                details: creation_details
+            };
+        }
+
+        let new_record_details = await this.fetch_by_id(creation_details.insertId);
+
+        return {
+            success: !!new_record_details,
+            message: new_record_details ? 'created' : 'failed',
+            details: new_record_details
         };
     }
 };
@@ -210,7 +248,7 @@ function constraint_stringifier(constraints = {}) {
         } else if (typeof value === 'string') {
             t.push(`AND ${key} = '${value}'`);
         } else if (value === null) {
-            t.push(`AND ${key} = NULL`);
+            t.push(`AND ${key} IS NULL`);
         } else if (typeof value === 'number') {
             t.push(`AND ${key} = ${value}`);
         } else {

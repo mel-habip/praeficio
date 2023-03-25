@@ -12,8 +12,9 @@ import axios from 'axios';
 
 import NavMenu from '../components/NavMenu';
 import NotesModule from '../components/NotesModule';
+import MessengerSection from '../components/Messenger';
 
-import { Button, Modal, Spacer, Text, Input, Tooltip, Row, Table, Textarea, useAsyncList, useCollator } from '@nextui-org/react';
+import { Button, Modal, Spacer, Text, Input, Tooltip, Row, Table, Textarea, useAsyncList, useCollator, Loading, Badge } from '@nextui-org/react';
 
 import { CustomButton } from '../fields/CustomButton';
 import CustomizedDropdown from '../fields/CustomizedDropdown';
@@ -67,24 +68,23 @@ export default function SpecificFeedbackLogPage() {
         <NavMenu />
 
         <h1>{feedbackLogOwnDetails.name}</h1>
-        <Link to="/feedback_logs">
-            <CustomButton buttonStyle="btn--outline"><i className="fa-solid fa-angles-left"></i> Back to My Feedback Logs</CustomButton>
-        </Link>
+        <CustomButton to="/feedback_logs" buttonStyle="btn--outline"><i className="fa-solid fa-angles-left"></i> Back to My Feedback Logs</CustomButton>
 
 
-        {!feedbackLogItems.length && <><h3>No items in this log yet - Go ahead & add some! </h3><hr className="line-primary" /></>}
+        {(!feedbackLogItems.length && !feedbackLogOwnDetails.archived) && <><h3>No items in this log yet - Go ahead & add some! </h3><hr className="line-primary" /></>}
+        {feedbackLogOwnDetails.archived && <><h3> This log has been locked and archived. </h3><hr className="line-primary" /></>}
 
-        {!!feedbackLogItems.length && <FeedbackLogTable feedbackLogItems={feedbackLogItems} updateCachedItems={updateCachedItems} {...{ user, setIsLoggedIn }} />}
+        {!!feedbackLogItems.length && <FeedbackLogTable archived={feedbackLogOwnDetails.archived} {...{ updateCachedItems, feedbackLogItems, user, setIsLoggedIn }} />}
 
         <Spacer y={1} />
         {/*need to handle these, TODO: */}
         <Row justify="space-evenly" >
-            <Button shadow onClick={() => setCreationModalOpen(true)} > Add Items </Button>
+            <Button disabled={feedbackLogOwnDetails.archived} shadow onClick={() => setCreationModalOpen(true)} > Add Items </Button>
             <Button shadow onClick={() => console.log(true)} > Bulk-Export Items </Button>
 
             {!user.permissions.endsWith('client') && <>
                 <Button shadow onClick={() => setUserAdditionModalOpen(true)} > Add Users </Button>
-                <Button shadow onClick={() => console.log(true)} > Bulk-Import Items </Button>
+                <Button disabled={feedbackLogOwnDetails.archived} shadow onClick={() => console.log(true)} > Bulk-Import Items </Button>
             </>}
         </Row>
 
@@ -336,6 +336,7 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
     const [selected, SetSelected] = useState(null);
     const [notesModalOpen, setNotesModalOpen] = useState(false);
     const [updateModalOpen, setUpdateModalOpen] = useState(false);
+    const [threadsModalOpen, setThreadsModalOpen] = useState(false);
     const [updateDetails, setUpdateDetails] = useState(null);
 
     //since the items are passed as a prop, it doesn't re-render the child when the parent's State is updated, this should do that
@@ -438,7 +439,9 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
                                                 <CustomButton buttonStyle="btn--transparent" onClick={() => setUpdateDetails({ ...updateDetails, notes: item.notes, internal_notes: item.internal_notes || [] }) || setNotesModalOpen(true)}><i className="fa-solid fa-list-ul"></i></CustomButton>
                                             </Tooltip>
                                             <Tooltip content="Thread" placement="right" shadow enterDelay={delay}>
-                                                <CustomButton buttonStyle="btn--transparent" onClick={() => { }}><i className="fa-regular fa-comments"></i></CustomButton>
+                                                <Badge isInvisible={!item.last_message_sent_by || item.last_message_sent_by === user.id} color="warning" content="!" shape="circle" >
+                                                    <CustomButton buttonStyle="btn--transparent" onClick={() => { setThreadsModalOpen(true) }}><i className="fa-regular fa-comments"></i></CustomButton>
+                                                </Badge>
                                             </Tooltip>
                                             <Spacer x={0.5} />
                                             <StatusDropdown user={user} default_value={item.status} />
@@ -470,11 +473,13 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
 
             <FeedbackItemUpdateModal is_open={updateModalOpen} set_is_open={setUpdateModalOpen} {...{ user, setIsLoggedIn, updateCachedItems, updateDetails }} item_id={selected} />
 
+            <ThreadsModal is_open={threadsModalOpen} set_is_open={setThreadsModalOpen} {...{ user, setIsLoggedIn }} item_id={selected} />
+
             <Modal
                 scroll
                 blur
                 aria-labelledby="modal-title"
-                css={{'max-width': '550px'}}
+                css={{ 'max-width': '550px' }}
                 open={notesModalOpen}
                 closeButton onClose={() => setNotesModalOpen(false)} >
                 <Modal.Body>
@@ -487,6 +492,7 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
                             console.log('response:', response.data);
                             if ([201, 200].includes(response.status)) {
                                 console.log('successful');
+                                setUpdateDetails({ ...updateDetails, notes });
                             } else if (response.status === 401) {
                                 setIsLoggedIn(false);
                             } else {
@@ -520,14 +526,114 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
 }
 
 
+function ThreadsModal({ user, item_id, is_open, set_is_open, setIsLoggedIn }) {
+    const [messageList, setMessageList] = useState(null);
+    const [newMessageText, setNewMessageText] = useState('');
+
+    const textLimit = 300;
+
+    useEffect(() => {
+        if (!item_id) return;
+        setMessageList(null);
+        axios.get(`http://localhost:8000/feedback_log_item_messages/${item_id}`).then(response => {
+            console.log('response:', response.data);
+            setNewMessageText('');
+            if ([200].includes(response.status)) {
+                console.log('successful');
+                setMessageList(response.data.data);
+            } else if (response.status === 401) {
+                setIsLoggedIn(false);
+            } else {
+                console.log(response);
+            }
+        });
+    }, [item_id]);
 
 
+    if (!messageList) return (<Modal
+        closeButton
+        blur
+        aria-labelledby="chat modal"
+        open={is_open}
+        onClose={() => set_is_open(false)}
+        scroll
+        width='700px'
+    >
+        <Modal.Body>
 
+            <Loading size="lg" />
 
+        </Modal.Body>
+    </Modal>);
 
+    return (<Modal
+        closeButton
+        blur
+        aria-labelledby="chat modal"
+        open={is_open}
+        onClose={() => set_is_open(false)}
+        scroll
+        width='700px'
+    >
+        <Modal.Body>
+            <CustomButton
+                buttonStyle="btn--transparent"
+                rounded
+                onClick={() => {
+                    axios.get(`http://localhost:8000/feedback_log_item_messages/${item_id}`).then(response => {
+                        console.log('response:', response.data);
+                        setNewMessageText('');
+                        if ([200].includes(response.status)) {
+                            console.log('successful');
+                            setMessageList(response.data.data);
+                        } else if (response.status === 401) {
+                            setIsLoggedIn(false);
+                        } else {
+                            console.log(response);
+                        }
+                    });
+                }}
+                style={{ 'align-self': 'flex-start' }}
+            ><i className="fa-solid fa-rotate"></i> </CustomButton>
 
-function ThreadsModal({user, feedback_log_item_id}) {
-    
+            <MessengerSection messageList={messageList} user={user} />
+            <Row css={{ 'margin-top': '15px' }} justify='space-evenly' >
+                <Textarea
+                    bordered
+                    minRows={3}
+                    maxRows={10}
+                    value={newMessageText}
+                    labelPlaceholder="New message"
+                    color={newMessageText.length > textLimit ? 'error' : 'default'}
+                    width="100%"
+                    onChange={(e) => setNewMessageText(e.target.value)}
+                />
+                <CustomButton
+                    buttonStyle="btn--transparent"
+                    aria-label="send message button"
+                    rounded
+                    shadow
+                    disabled={!newMessageText || newMessageText.length > textLimit}
+                    onClick={() => {
+                        console.log('sending message', newMessageText);
+                        axios.post(`http://localhost:8000/feedback_log_item_messages/${item_id}`, {
+                            content: newMessageText,
+                        }).then(response => {
+                            console.log('response:', response.data);
+                            if ([201, 200].includes(response.status)) {
+                                console.log('successful');
+                                setMessageList(messageList.concat({ id: 1231, sent_by: user.id, sent_by_name: user.first_name || user.username, content: newMessageText, created_on: new Date() }));
+                                setNewMessageText('');
+                            } else if (response.status === 401) {
+                                setIsLoggedIn(false);
+                            } else {
+                                console.log(response);
+                            }
+                        });
+                    }} ><i className="fa-solid fa-dove"></i></CustomButton>
+            </Row>
+        </Modal.Body>
+    </Modal>);
 }
 
 

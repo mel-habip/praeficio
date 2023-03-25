@@ -18,9 +18,11 @@ feedbackLogRouter.get('/test', async (_, res) => {
 //fetch the names of the feedback logs that user has access to
 feedbackLogRouter.get('/', async (req, res) => {
 
+    const show_archived = req.query.archived === 'true';
+
     if (req.user.is_total) {
-        const sql = 'SELECT * FROM feedback_logs;';
-        let feedback_logs = await query(sql);
+        const sql = 'SELECT * FROM feedback_logs WHERE archived = ?';
+        let feedback_logs = await query(sql, show_archived);
         return res.status(!!feedback_logs ? 200 : 422).json({
             success: !!feedback_logs,
             message: 'Special - you are total',
@@ -28,7 +30,10 @@ feedbackLogRouter.get('/', async (req, res) => {
         });
     }
 
-    let feedback_logs = await helper.fetch_by_user_id(req.user.id);
+
+    let feedback_logs = await helper.fetch_by_user_id(req.user.id, {
+        archived: show_archived
+    });
 
     return res.status(!!feedback_logs ? 200 : 422).json({
         success: !!feedback_logs,
@@ -93,9 +98,26 @@ feedbackLogRouter.get('/:feedback_log_id', async (req, res) => {
         feedback_log_exists.associated_users = await query(`SELECT * FROM feedback_log_user_associations WHERE feedback_log_id = ?;`, req.params.feedback_log_id);
     }
 
+    /**
+     * source-- > https: //stackoverflow.com/questions/1313120/retrieving-the-last-record-in-each-group-mysql
+     * returns all items in log and adds `created_by_username` through a LEFT JOIN
+     * the complex part is that it partitions the `feedback_log_item_messages` table by their parent's id's and finds the `sent_by` value of the last item in that partition
+     */
+    const new_sql = ` 
+    WITH ranked_messages AS(
+        SELECT m.*, ROW_NUMBER() OVER(PARTITION BY feedback_log_item_id ORDER BY feedback_log_item_message_id DESC) AS rn FROM feedback_log_item_messages AS m
+    ) SELECT feedback_log_items.*, sent_by AS last_message_sent_by, users.username AS created_by_username
+        FROM feedback_log_items 
+        LEFT JOIN users 
+            ON created_by = users.user_id
+        LEFT JOIN ranked_messages
+            ON ranked_messages.feedback_log_item_id = feedback_log_items.feedback_log_item_id
+        WHERE (rn = 1 OR rn IS NULL) AND feedback_log_id = ? ;
+    `;
+
     const sql = 'SELECT feedback_log_items.*, users.username AS created_by_username FROM feedback_log_items LEFT JOIN users ON created_by = users.user_id WHERE feedback_log_id = ?;';
 
-    let feedback_log_items = await query(sql, req.params.feedback_log_id);
+    let feedback_log_items = await query(new_sql, req.params.feedback_log_id);
 
     if (!feedback_log_items) {
         return res.status(422).send(`Something went wrong`);
@@ -155,21 +177,21 @@ feedbackLogRouter.put('/:feedback_log_id', async (req, res) => {
         return res.status(404).send(`Feedback Log ${req.params.feedback_log_id} Not Found.`);
     }
 
-    if (['basic_client', 'pro_client'].includes(req.user.permissions) || !req.user.feedback_logs.includes(parseInt(req.params.feedback_log_id))) {
+    if (!req.user.is_total && (['basic_client', 'pro_client'].includes(req.user.permissions) || !req.user.feedback_logs.includes(parseInt(req.params.feedback_log_id)))) {
         return res.status(403).send(`Forbidden: You do not have access to editing this Feedback Log.`);
     }
 
-    if (feedback_log_details.archived) {
+    if (!req.user.is_total && feedback_log_details.archived) {
         return res.status(403).send(`Forbidden: This Feedback Log has been archived and cannot be edited.`);
     }
 
-    if (!req.body.name && !req.body.notes) {
-        return res.status(400).send(`Either name or notes must be provided.`);
+    if (!req.body.name && !req.body.notes && req.body.archived == null) {
+        return res.status(400).send(`Either name, archived or notes must be provided.`);
     }
 
-    const update_sql = `UPDATE feedback_logs SET name = ?, notes = ? WHERE feedback_log_id = ?;`;
+    const update_sql = `UPDATE feedback_logs SET name = ?, notes = ?, archived = ? WHERE feedback_log_id = ?;`;
 
-    let feedback_log_update = await query(update_sql, req.body.name || feedback_log_details.name, req.body.notes ? JSON.stringify(req.body.notes) : JSON.stringify(feedback_log_details.notes), req.params.feedback_log_id);
+    let feedback_log_update = await query(update_sql, req.body.name || feedback_log_details.name, req.body.notes ? JSON.stringify(req.body.notes) : JSON.stringify(feedback_log_details.notes), req.body.archived ?? feedback_log_details.archived, req.params.feedback_log_id);
 
     if (!feedback_log_update || !feedback_log_update?.affectedRows) {
         return res.status(422).json({
@@ -188,14 +210,14 @@ feedbackLogRouter.put('/:feedback_log_id', async (req, res) => {
     });
 });
 
-
+//give user access to feedback log
 feedbackLogRouter.post('/:feedback_log_id/add_user', async (req, res) => {
 
     if (!req.body.user_id) {
         return res.status(400).send('user_id is required');
     }
 
-    if (['basic_client', 'pro_client'].includes(req.user.permissions) || !req.user.feedback_logs.includes(parseInt(req.params.feedback_log_id))) {
+    if (!req.user.is_total && (['basic_client', 'pro_client'].includes(req.user.permissions) || !req.user.feedback_logs.includes(parseInt(req.params.feedback_log_id)))) {
         return res.status(403).send(`Forbidden: You do not have access to adding users to this Feedback Log.`);
     }
 
