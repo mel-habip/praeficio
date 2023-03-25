@@ -32,6 +32,7 @@ export const CustomButton = ({
                 <button
                     className={btnClassList}
                     onClick={onClick}
+                    onDoubleClick={onClick}
                     type={type}
                     style={style}
                 >
@@ -44,7 +45,9 @@ export const CustomButton = ({
             <button
                 className={btnClassList}
                 onClick={onClick}
+                onDoubleClick={onClick}
                 type={type}
+                style={style}
             >
                 {children}
             </button>

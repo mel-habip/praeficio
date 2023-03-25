@@ -35,10 +35,7 @@ todosRouter.post(`/`, async (req, res) => {
 
     if (result.affectedRows) {
         let [newly_created] = await query(`SELECT * FROM todos WHERE to_do_id = LAST_INSERT_ID();`);
-        return res.status(201).json({
-            success: true,
-            details: newly_created
-        });
+        return res.status(201).json(newly_created);
     } else {
         return res.status(422).json({
             success: false,
@@ -75,11 +72,12 @@ todosRouter.put('/:to_do_id/', async (req, res) => {
     let result = await query(update_sql, props.map(prop => (req.body[prop] == null) ? match[prop] : req.body[prop] || propDefaults[prop]).concat(req.params.to_do_id));
 
     if (result?.affectedRows) {
-        let [data] = await query(sql, req.params.to_do_id);
+        let data = await helper.fetch_by_id(req.params.to_do_id);
+
         return res.status(200).json({
             success: true,
             message: 'updated',
-            data
+            data: data
         });
     } else {
         return res.status(422).json({

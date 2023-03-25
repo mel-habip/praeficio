@@ -9,6 +9,8 @@ import Positions from './pages/Positions.jsx';
 import Settings from './pages/Settings.jsx';
 import Alerts from './pages/Alerts.jsx';
 import ToDos from './pages/ToDos.jsx';
+import FeedbackLogsPage from './pages/FeedbackLogsPage.jsx';
+import SpecificFeedbackLogPage from './pages/SpecificFeedbackLogPage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
 import ThemeContext from './contexts/ThemeContext';
 import IsLoggedInContext from './contexts/IsLoggedInContext';
@@ -30,7 +32,7 @@ function App() {
   }
   const [isDark, setDark] = useState(isDarkInitial);
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(null); //we start as null so that we don't immediately kick ourselves out, after that it is a boolean
   const [userId, setUserId] = useState(null);
   const [accessToken, setAccessToken] = useState('');
   const [toDoCategories, setToDoCategories] = useState([]);
@@ -46,6 +48,7 @@ function App() {
   const darkTheme = createTheme({
     type: 'dark'
   });
+
 
   useEffect(() => { //provides the persistence, makes doc attribute update when StateLoads
     console.log('isDarkState', isDark);
@@ -68,17 +71,23 @@ function App() {
           setUserId(response.data.id);
           setIsLoggedIn(true);
         } else if (response.status === 401) {
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('user_id');
           setIsLoggedIn(false);
         }
-      })
+      });
     }
-  }, [localAccessToken, isLoggedIn]);
+  }, [localAccessToken]);
+
+  useEffect(() => { //kickout function
+    if (isLoggedIn === false) {
+      console.log('kicked out');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('user_id');
+    }
+  }, [isLoggedIn]);
 
   return (
     <NextUIProvider theme={isDark ? darkTheme : lightTheme}>
-      <IsLoggedInContext.Provider value={{ isLoggedIn, setIsLoggedIn, userId, setUserId, accessToken, setAccessToken, toDoCategories, setToDoCategories, user, setUser }}>
+      <IsLoggedInContext.Provider value={{ isLoggedIn, setIsLoggedIn,  setUserId, accessToken, setAccessToken, toDoCategories, setToDoCategories, user, setUser }}>
         <ThemeContext.Provider value={{ isDark, toggleTheme }}> {/*this controls everything custom */}
           <div className="App" style={{ height: "100vh" }}>
             <Router >
@@ -89,6 +98,8 @@ function App() {
                 <Route path='/alerts' element={isLoggedIn ? <Alerts /> : <LoginPage />} exact />
                 <Route path='/todos' element={isLoggedIn ? <ToDos /> : <LoginPage />} exact />
                 <Route path='/settings' element={isLoggedIn ? <Settings /> : <LoginPage />} exact />
+                <Route path='/feedback_logs' element={isLoggedIn ? <FeedbackLogsPage /> : <LoginPage />} exact />
+                <Route path='/feedback_logs/:feedback_log_id' element={isLoggedIn ? <SpecificFeedbackLogPage /> : <LoginPage />} exact />
                 <Route path='/*' element={<NotFoundPage />} />
               </Routes>
             </Router>

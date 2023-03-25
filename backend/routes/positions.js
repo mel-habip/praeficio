@@ -112,10 +112,6 @@ positionRouter.post('/', async (req, res) => {
 
     [result] = await query(sql);
 
-    try {
-        result.notes = JSON.parse(result.notes);
-    } catch {}
-
     return res.status(201).json(result);
 });
 
@@ -208,7 +204,9 @@ positionRouter.post('/export', async (req, res) => {
 //soft-delete position
 positionRouter.delete('/:position_id', async (req, res) => {
 
-    let match = await helper.fetch_by_id(req.params.position_id, {deleted: false});
+    let match = await helper.fetch_by_id(req.params.position_id, {
+        deleted: false
+    });
 
     if (!match) return res.status(404).send(`Position not found.`);
 
@@ -230,7 +228,7 @@ positionRouter.delete('/:position_id', async (req, res) => {
 //un-soft-delete position
 positionRouter.put('/:position_id/recover', async (req, res) => {
 
-    
+
 
     let match = await helper.fetch_by_id(req.params.position_id);
 
@@ -330,9 +328,10 @@ positionRouter.put('/:position_id/deactivate', async (req, res) => {
 
 //edit a position
 positionRouter.put('/:position_id/', async (req, res) => {
-    let sql = `SELECT positions.*, workspace_position_associations.workspace_id  FROM positions LEFT JOIN workspace_position_associations ON positions.position_id = workspace_position_associations.position_id WHERE positions.position_id = ? AND DELETED = FALSE LIMIT 1;`;
 
-    let [match] = await query(sql, req.params.position_id);
+    let match = await helper.fetch_by_id(req.params.position_id, {
+        deleted: false
+    });
 
     if (!match) return res.status(404).send(`Position not found.`);
 
@@ -352,10 +351,16 @@ positionRouter.put('/:position_id/', async (req, res) => {
 
     //if value coming is is not null, it is intentional, so if blank, set to null to clear value
     //if value coming is nullish, its not intentional, so try to keep as is by referencing the match
-    let result = await query(update_sql, props.map(prop => (req.body[prop] == null) ? match[prop] : req.body[prop] || null).concat(req.params.position_id));
+    let result = await query(update_sql, props.map(prop => {
+        if (prop === 'notes') {
+            return (req.body[prop] == null) ? JSON.stringify(match[prop]) : JSON.stringify(req.body[prop]) || "[]"
+        }
+        return (req.body[prop] == null) ? match[prop] : req.body[prop] || null
+
+    }).concat(req.params.position_id));
 
     if (result?.affectedRows) {
-        let [data] = await query(sql, req.params.position_id);
+        let data = await helper.fetch_by_id(req.params.position_id);
         return res.status(200).json({
             success: true,
             message: 'updated',

@@ -8,6 +8,8 @@
   --border_color: darkgrey;
   overflow-x: hidden;
   overflow-y: auto;
+  height: 100vh;
+  --nextui-colors-accents0: lightgrey;
 }
 
 [data-theme='dark'] {
@@ -18,6 +20,7 @@
   --accent: darkred;
   --link-color: lightblue;
   --border_color: lightgrey;
+  --nextui-colors-accents0: #16181A;
 }
 
 body {
@@ -34,7 +37,6 @@ a {
   background-color: var(--background-color);
   font-size: large;
   font-weight: bold;
-  height: 100%;
   padding: 0;
   margin: 0;
   z-index: 5; /* this way stuff can be hidden behind it*/
@@ -44,60 +46,6 @@ a {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-}
-
-.nav-menu {
-  height: 100%;
-  width: auto;
-  color: var(--text-primary);
-  backdrop-filter: blur(8px);
-  position: fixed;
-  left: -50rem;
-  z-index: 2000;
-  border-right: 1px solid var(--border_color);
-  padding-right: 2rem;
-  animation: close-navmenu 0.75s;
-}
-
-
-.nav-menu.active {
-  animation: open-navmenu 0.75s;
-  transform: translateX(50rem);
-}
-
-.nav-menu-logo {
-  padding-left: 0.5rem;
-}
-
-.nav-list, .nav-item {
-  text-align: left;
-  width: calc(100% + 2rem);
-  left: 0%;
-  margin: 0px;
-  padding-left:20px;
-  animation: ease-in-out 3s normal infinite;  
-}
-
-.nav-item, .nav-links {
-  width: 100%;
-}
-
-/* makes the whole width clickable */
-.nav-links { 
-  display: block;
-}
-
-.nav-item:hover {
-  left: 0%;
-  background-color: var(--secondary-background-color);
-}
-
-.nav-menu-toggle {
-  position: fixed;
-  left: 0%;
-  top: 0%;
-  z-index: 9999;
-  padding-left:0.5rem;
 }
 
 .AnimatedButtonBox {
@@ -176,28 +124,9 @@ a {
   }
 }
 
-@keyframes open-navmenu {
-  0% {
-    transform: translateX(0px);
-    timing-function: ease-in;
-  }
-  100% {
-    transform: translateX(50rem);
-    timing-function: ease-in;
-  }
-}
 
-@keyframes close-navmenu {
-  0% {
-    transform: translateX(50rem);
-    timing-function: ease-in;
-  }
-  100% {
-    transform: translateX(0px);
-    timing-function: ease-in;
-  }
-}
 
+/* date picker, so that it shows up on top */
 ._3curk {
   position: fixed;
   z-index: 100000;
@@ -208,9 +137,7 @@ a {
   color: red;
 }
 
-.fa-github {
-  color: var(--text-primary);
-}
+
 
 
 /* not used currently */
@@ -236,7 +163,7 @@ a {
   height: 2.5px;
   background: black;
   animation-name: strike;
-  animation-duration: 1.25s;
+  animation-duration: 1s;
   animation-timing-function: linear;
   animation-iteration-count: 1;
   animation-fill-mode: forwards; 
@@ -260,4 +187,9 @@ a {
   color: white;
   width: 100vw;
   height: 5px;
+}
+
+/* its a weird seperator in the Card components */
+.nextui-c-bZLhCa-iiMwZzC-css:not(.intentional-divider) {
+  height: 0;
 }

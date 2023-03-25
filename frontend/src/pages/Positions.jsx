@@ -5,6 +5,8 @@ import axios from 'axios';
 
 import removeIndex from '../utils/removeIndex';
 
+import LoadingPage from '../pages/LoadingPage';
+
 import NavMenu from '../components/NavMenu';
 import { Button, Modal, Spacer, Table, Text, Input, Checkbox, Tooltip, Row, Grid } from '@nextui-org/react';
 
@@ -37,9 +39,7 @@ const frmt = (date) => {
 }
 
 function Positions() {
-
-
-    const [positions, setPositions] = useState([]);
+    const [positions, setPositions] = useState(null);
     const [includeDeletedPositions, setIncludeDeletedPositions] = useState(false);
     const [includeInactivePositions, setIncludeInactivePositions] = useState(false);
     const [creationUpdateModalOpen, setCreationUpdateModalOpen] = useState(false);
@@ -61,19 +61,12 @@ function Positions() {
     const [soldOnPickerIsOpen, setSoldOnPickerIsOpen] = useState(false);
 
 
-    const { setIsLoggedIn, userId, accessToken, firstName } = useContext(IsLoggedInContext);
+    const { setIsLoggedIn, user, accessToken } = useContext(IsLoggedInContext);
     const { isDark } = useContext(ThemeContext);
-
-    const user = {
-        id: userId,
-        access_token: accessToken,
-    };
 
     axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
 
     const kickOut = () => {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('user_id');
         setIsLoggedIn(false);
     }
 
@@ -114,16 +107,11 @@ function Positions() {
                 text_array.push(`Last Updated: \t${frmt(new Date(s_pos.updated_on)) || 'Never updated'}`);
             }
 
-            let notes = [];
+            let notes = s_pos.notes;
 
-            if (s_pos.notes) {
-                try {
-                    notes = JSON.parse(s_pos.notes);
-                    if (notes.length && deletionModalOpen) {
-                        text_array.push(`Notes: \n\t\t++ ${notes.join('\n\t\t++ ')}`)
-                    }
-                } catch (e) { }
-            };
+            if (notes.length && deletionModalOpen) {
+                text_array.push(`Notes: \n\t\t++ ${notes.join('\n\t\t++ ')}`)
+            }
 
             setPositionDetails({ text: text_array.join('\n'), position: { ...s_pos, notes }, index: s_index });
         }
@@ -162,6 +150,8 @@ function Positions() {
             }
         });
     }, [includeDeletedPositions, includeInactivePositions]);
+
+    if (!positions) return (<LoadingPage/> );
 
     function togglePosition(position_id, turn_on_off) {
         axios.put(`http://localhost:8000/positions/${position_id}/${turn_on_off ? 'reactivate' : 'deactivate'}`).then(response => {
@@ -276,7 +266,7 @@ function Positions() {
                                             {item.deleted ? <CustomButton buttonStyle="btn--transparent" onClick={() => recoverPosition(item.position_id)}><i className="fa-solid fa-recycle"></i></CustomButton> : <CustomButton buttonStyle="btn--transparent" onClick={() => setDeletionModalOpen(true)} ><i className="fa-regular fa-trash-can"></i></CustomButton>}
                                         </Tooltip>
                                         <Tooltip content="Details" placement="right" shadow enterDelay={delay}>
-                                            <CustomButton buttonStyle="btn--transparent" onClick={() => setDetailViewModalOpen(true) || setNotes(JSON.parse(item.notes))}><i className="fa-solid fa-list-ul"></i></CustomButton>
+                                            <CustomButton buttonStyle="btn--transparent" onClick={() => setDetailViewModalOpen(true) || setNotes(item.notes)}><i className="fa-solid fa-list-ul"></i></CustomButton>
                                         </Tooltip>
                                         {item.active ? '' : <Tooltip content="Reactivate" placement="top" shadow enterDelay={delay}> <CustomButton disabled={item.deleted} buttonStyle="btn--transparent" onClick={() => togglePosition(item.position_id, true)} ><i className="fa-solid fa-heart-pulse"></i></CustomButton> </Tooltip>}
 
@@ -332,7 +322,7 @@ function Positions() {
                         shadow
                         auto
                         onPress={async () => {
-                            console.log('creating position', acquiredOn);
+                            console.log('creating/updating position');
                             const options = {
                                 method: isUpdate ? 'PUT' : 'POST',
                                 url: `http://localhost:8000/positions/${isUpdate ? selectedPositionID : ''}`,
