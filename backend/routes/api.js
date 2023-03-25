@@ -4,6 +4,13 @@ const apiRouter = express.Router();
 import emailService from '../jobs/emailService.js';
 import authenticateToken from '../jobs/authenticateToken.js';
 import * as random from '../utils/random_value_generators.js';
+import query from '../utils/db_connection.js';
+
+import {
+    recordTypeMap
+} from '../modules/RecordService.mjs';
+
+import fuzzySearch from '../utils/fuzzy_search.js';
 
 const log = console.log;
 
@@ -51,6 +58,44 @@ apiRouter.get('/random_result', (_, res) => {
         value: ranVal,
         success: false
     });
+});
+
+apiRouter.post('/search', async (req, res) => { //TODO: Consider some caching here
+    const {
+        type,
+        keyword,
+        columns
+    } = req.body;
+
+
+    if (!type || !keyword || !columns || !columns.length) {
+        return res.status(400).send(`type, columns and keyword are required.`);
+    }
+
+    if (columns.includes('password')) return res.status(400).send(`you may not search passwords`);
+
+    const tableName = recordTypeMap.table_names[type];
+
+    if (!tableName) {
+        return res.status(400).send(`type ${type} not recognized.`);
+    }
+
+    const sql = `SELECT ${columns.join(', ')} FROM ${tableName};`
+
+    let data = await query(sql, keyword);
+
+    if (!data) return res.status(400).send(`Bad Request`);
+
+    if (!data.length) return res.status(200).json({
+        data
+    });
+
+    let filtered_data = fuzzySearch(data, columns, keyword);
+
+    return res.status(200).json({
+        data: filtered_data.slice(0, 10)
+    });
+
 });
 
 export default apiRouter;

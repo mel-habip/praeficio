@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, Suspense } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useParams } from 'react-router-dom'
 
 import { Link } from 'react-router-dom';
@@ -12,10 +12,12 @@ import axios from 'axios';
 
 import NavMenu from '../components/NavMenu';
 
-import { Button, Modal, Spacer, Text, Input, Checkbox, Tooltip, Row, Grid, Dropdown, Card, Table, Badge, Textarea } from '@nextui-org/react';
+import { Button, Modal, Spacer, Text, Input, Tooltip, Row, Table, Textarea, useAsyncList, useCollator } from '@nextui-org/react';
 
 import { CustomButton } from '../fields/CustomButton';
 import CustomizedDropdown from '../fields/CustomizedDropdown';
+
+import UserSearchModal from '../components/UserSearchModal';
 
 export default function SpecificFeedbackLogPage() {
 
@@ -29,6 +31,7 @@ export default function SpecificFeedbackLogPage() {
     const [feedbackLogItems, setFeedbackLogItems] = useState(null);
     const [feedbackLogOwnDetails, setFeedbackLogOwnDetails] = useState({});
     const [creationModalOpen, setCreationModalOpen] = useState(false);
+    const [userAdditionModalOpen, setUserAdditionModalOpen] = useState(false);
 
 
     //fetch the data
@@ -46,7 +49,7 @@ export default function SpecificFeedbackLogPage() {
         });
     }, []);
 
-    if (!feedbackLogItems) { return (<LoadingPage />); }
+    if (!feedbackLogItems || !user) { return (<LoadingPage />); }
 
     const updateCachedItems = (item_id, updated_details) => {
         setFeedbackLogItems(feedbackLogItems.map(item => {
@@ -79,10 +82,22 @@ export default function SpecificFeedbackLogPage() {
             <Button shadow onClick={() => console.log(true)} > Bulk-Export Items </Button>
 
             {!user.permissions.endsWith('client') && <>
-                <Button shadow onClick={() => console.log(true)} > Add Users </Button>
+                <Button shadow onClick={() => setUserAdditionModalOpen(true)} > Add Users </Button>
                 <Button shadow onClick={() => console.log(true)} > Bulk-Import Items </Button>
             </>}
         </Row>
+
+        <UserSearchModal is_open={userAdditionModalOpen} set_is_open={setUserAdditionModalOpen} user={user} setIsLoggedIn={setIsLoggedIn} add_button_text={`Add user to ${feedbackLogOwnDetails.name}`} button_function={(user_id) => {
+            axios.post(`http://localhost:8000/feedback_logs/${feedback_log_id}/add_user`, { user_id }).then(response => {
+                if (response.status === 401) {
+                    setIsLoggedIn(false);
+                } else if (response.status === 201) {
+                    setUserAdditionModalOpen(false);
+                } else {
+                    console.log('fetch', response);
+                }
+            });
+        }} />
 
         <FeedbackItemCreationModal is_open={creationModalOpen} set_is_open={setCreationModalOpen} current_feedback_log_id={feedbackLogOwnDetails.feedback_log_id} {...{ setFeedbackLogItems, feedbackLogItems, setIsLoggedIn, user }} />
     </>);
@@ -174,7 +189,7 @@ function FeedbackItemCreationModal({ is_open, set_is_open, setFeedbackLogItems, 
                     auto
                     onPress={async () => {
                         console.log('creating feedback log item', itemHeader);
-                        await axios.post(`http://localhost:8000/feedback_logs/${current_feedback_log_id}`, {
+                        await axios.post(`http://localhost:8000/feedback_logs/${current_feedback_log_id}/new_item`, {
                             content: description,
                             header: itemHeader,
                             status,
@@ -332,7 +347,6 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
     const keyword = React.useMemo(() => searchText.trim().toLowerCase(), [searchText]);
 
     useEffect(() => {
-        console.log('innerItems', innerItems);
         if (!keyword || !searchText) {
             setInnerItems(feedbackLogItems);
             return;
@@ -344,8 +358,6 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
         }, 1000);
         return () => clearTimeout(delayDebounceFn);
     }, [keyword]);
-
-
 
 
     const columns = [

@@ -17,6 +17,9 @@ import sql_wrap from '../utils/sql_wrap.js';
 import is_valid_email from '../utils/is_valid_email.js';
 import emailService from '../jobs/emailService.js';
 import validatePassword from '../../frontend/src/utils/validatePassword.mjs';
+import UserService from '../modules/UserService.mjs';
+
+const helper = new UserService();
 
 userRouter.get('/', authenticateToken, async (req, res) => {
 
@@ -196,7 +199,6 @@ userRouter.post('/pre_signed_create_new_user', authenticateToken, async (req, re
 });
 
 userRouter.post('/login', async (req, res) => {
-    console.log('received', req.body);
     if (!req.body?.username) {
         return res.status(401).json({
             message: `Username required.`,
@@ -327,7 +329,8 @@ userRouter.get('/:user_id', authenticateToken, async (req, res) => {
 
 userRouter.put('/:user_id', authenticateToken, async (req, res) => {
 
-    let selected_user_details = await fetchUserDetails(req.params.user_id);
+
+    let selected_user_details = await helper.fetch_by_id(req.params.user_id);
 
     if (!selected_user_details) {
         return res.status(404).json({
@@ -363,13 +366,11 @@ userRouter.put('/:user_id', authenticateToken, async (req, res) => {
         }
     }
 
-    if (changes.to_do_categories)
-
-        if (!Object.values(changes).length) { //this is concerning as it might be giving away the current status
-            return res.status(422).json({
-                message: `No Changes Detected`
-            });
-        }
+    if (!Object.values(changes).length) { //this is concerning as it might be giving away the current status
+        return res.status(422).json({
+            message: `No Changes Detected`
+        });
+    }
 
     if (req.user.id === parseInt(req.params.user_id)) { //self-edit pathway, anyone can do it
 

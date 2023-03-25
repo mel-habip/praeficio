@@ -3,7 +3,8 @@
 }
 
 .nav-menu {
-  height: 100%;
+  height: 100vh;
+  top: 0;
   width: auto;
   color: var(--text-primary);
   backdrop-filter: blur(8px);

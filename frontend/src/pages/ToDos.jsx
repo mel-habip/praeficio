@@ -100,7 +100,7 @@ function ToDos() {
         <NavMenu />
         {!toDoList.length && <> <h2>No To-Do's Yet! Let's create one now! XD </h2> </>}
 
-        <Grid.Container gap={1} justify="center">
+        <Grid.Container gap={1} justify="center" >
             {Object.entries(toDoMap).map(([category, items]) =>
                 <Grid key={category}>
                     <ToDoCategoryCard

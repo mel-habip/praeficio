@@ -1,7 +1,7 @@
 import query from '../utils/db_connection.js';
 
 
-const recordTypeMap = {
+export const recordTypeMap = {
     table_names: {
         Position: 'positions',
         Alert: 'alerts',

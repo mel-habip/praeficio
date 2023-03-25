@@ -109,7 +109,7 @@ feedbackLogRouter.get('/:feedback_log_id', async (req, res) => {
 });
 
 //create an item in a log 
-feedbackLogRouter.post('/:feedback_log_id', async (req, res) => {
+feedbackLogRouter.post('/:feedback_log_id/new_item', async (req, res) => {
 
     let feedback_log_exists = await helper.fetch_by_id(req.params.feedback_log_id);
 
@@ -188,6 +188,32 @@ feedbackLogRouter.put('/:feedback_log_id', async (req, res) => {
     });
 });
 
+
+feedbackLogRouter.post('/:feedback_log_id/add_user', async (req, res) => {
+
+    if (!req.body.user_id) {
+        return res.status(400).send('user_id is required');
+    }
+
+    if (['basic_client', 'pro_client'].includes(req.user.permissions) || !req.user.feedback_logs.includes(parseInt(req.params.feedback_log_id))) {
+        return res.status(403).send(`Forbidden: You do not have access to adding users to this Feedback Log.`);
+    }
+
+    let feedback_log_details = await helper.fetch_by_id(req.params.feedback_log_id);
+
+    if (!feedback_log_details) {
+        return res.status(404).send(`Feedback Log ${req.params.feedback_log_id} Not Found.`);
+    }
+
+    let association_result = await query(`INSERT into feedback_log_user_associations (feedback_log_id, user_id) VALUES ( ?, ? )`, feedback_log_details.feedback_log_id, req.body.user_id);
+
+    if (!association_result || !association_result?.affectedRows) return res.status(422).json({
+        message: `Something went wrong while creating associating user to Feedback Log`,
+        details: association_result,
+    });
+
+    return res.status(201).json(association_result);
+});
 
 
 export default feedbackLogRouter;
