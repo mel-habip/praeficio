@@ -446,7 +446,6 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
                                             <Spacer x={0.5} />
                                             <StatusDropdown user={user} default_value={item.status} />
                                         </Row>
-
                                     </Table.Cell>
                                 } else if (['created_on'].includes(columnKey)) {
                                     return <Table.Cell> {item[columnKey] ? item[columnKey].substring(0, 10) : ' - '} </Table.Cell>
@@ -533,7 +532,7 @@ function ThreadsModal({ user, item_id, is_open, set_is_open, setIsLoggedIn }) {
     const textLimit = 300;
 
     useEffect(() => {
-        if (!item_id) return;
+        if (!item_id || !is_open) return;
         setMessageList(null);
         axios.get(`http://localhost:8000/feedback_log_item_messages/${item_id}`).then(response => {
             console.log('response:', response.data);
@@ -547,7 +546,7 @@ function ThreadsModal({ user, item_id, is_open, set_is_open, setIsLoggedIn }) {
                 console.log(response);
             }
         });
-    }, [item_id]);
+    }, [item_id, is_open]);
 
 
     if (!messageList) return (<Modal
