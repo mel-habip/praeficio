@@ -36,8 +36,12 @@ export default class RecordService {
 
     /**
      * @param {Number} record_id - the record to be fetched
+     * @param {{any?:any}} constraints - will return empty array if doesn't meet constraints
+     * @param {{users?: boolean, feedback_log_items?:boolean, items?:boolean, workspaces?:boolean, positions?:boolean }} inclusions to include data otherwise not provided
      * @returns {Promise<{to_do_id?: number, user_id?: number, position_id?:number, content?:string, notes?:string[], completed?:boolean, archived?:boolean, deleted?:boolean, active?:boolean}>}
      */
+
+
     async fetch_by_id(record_id, constraints = {}, inclusions = {}) {
         if (!this.record_type) {
             console.error(`No Record Type specified`);
@@ -80,7 +84,7 @@ export default class RecordService {
                 return user;
             }
             case 'Workspace': {
-                const sql = `SELECT * FROM workspaces WHERE workspace_id = ?`;
+                const sql = `SELECT * FROM workspaces WHERE workspace_id = ? ${constraint_stringifier(constraints)} LIMIT 1;`;
                 const [workspace] = await query(sql, record_id);
                 if (!workspace) return null;
                 if (inclusions.users) {
@@ -96,7 +100,7 @@ export default class RecordService {
                 return workspace;
             }
             case 'FeedbackLog': {
-                const sql = `SELECT * FROM feedback_logs WHERE feedback_log_id = ?`;
+                const sql = `SELECT * FROM feedback_logs WHERE feedback_log_id = ? ${constraint_stringifier(constraints)} LIMIT 1;`;
                 const [feedbackLog] = await query(sql, record_id);
                 if (!feedbackLog) return null;
                 if (inclusions.users) {
@@ -105,8 +109,24 @@ export default class RecordService {
                     });
                 }
                 if (inclusions.feedback_log_items || inclusions.items) {
-                    await query(`SELECT * FROM feedback_log_items WHERE feedback_log_id = ?`, record_id).then(response => {
-                        feedbackLog.feedback_log_items = response.map(x => x.feedback_log_item_id);
+                    /**
+                     * source-- > https: //stackoverflow.com/questions/1313120/retrieving-the-last-record-in-each-group-mysql
+                     * returns all items in log and adds `created_by_username` through a LEFT JOIN
+                     * the complex part is that it partitions the `feedback_log_item_messages` table by their parent's id's and finds the `sent_by` value of the last item in that partition
+                     */
+                    const new_sql = ` 
+                    WITH ranked_messages AS(
+                        SELECT m.*, ROW_NUMBER() OVER(PARTITION BY feedback_log_item_id ORDER BY feedback_log_item_message_id DESC) AS rn FROM feedback_log_item_messages AS m
+                    ) SELECT feedback_log_items.*, sent_by AS last_message_sent_by, users.username AS created_by_username
+                        FROM feedback_log_items 
+                        LEFT JOIN users 
+                            ON created_by = users.user_id
+                        LEFT JOIN ranked_messages
+                            ON ranked_messages.feedback_log_item_id = feedback_log_items.feedback_log_item_id
+                        WHERE (rn = 1 OR rn IS NULL) AND feedback_log_id = ? ;
+                    `;
+                    await query(new_sql, record_id).then(response => {
+                        feedbackLog.feedback_log_items = response;
                     });
                 }
                 return feedbackLog;
@@ -157,13 +177,12 @@ export default class RecordService {
      * @param {Number} record_ids one or more of the primary keys for the record
      */
     async hard_delete(...record_ids) {
-        const table_name = recordTypeMap.table_names[this.record_type];
+        const table_name = this.table_name || recordTypeMap.table_names[this.record_type];
 
-        if (!table_name) throw Error(`${this.record_type} not recognized`);
 
-        const primary_keys = recordTypeMap.simple_primary_key[this.record_type] || recordTypeMap.complex_primary_key[this.record_type];
+        const primary_keys = this.primary_key || recordTypeMap.simple_primary_key[this.record_type] || recordTypeMap.complex_primary_key[this.record_type];
 
-        if (!primary_keys) throw Error(`${this.record_type} not recognized`);
+        if (!primary_keys || !table_name) throw Error(`${this.record_type} not recognized`);
 
         let result;
 
@@ -184,13 +203,40 @@ export default class RecordService {
     }
 
     /**
+     * @method update_single
      * @param {Number} record_ids one or more of the primary keys for the record
      */
-    async update(data, ...record_ids) {
+    async update_single(data, ...record_ids) {
+        const table_name = this.table_name || recordTypeMap.table_names[this.record_type];
 
+        const primary_key = this.primary_key || recordTypeMap.simple_primary_key[this.record_type];
+
+        if (!table_name || !primary_key) throw Error(`${this.record_type} not recognized`);
+
+        let keys = Object.keys(data);
+
+        const sql = `UPDATE ${table_name} SET  ${keys.map(a=> a+ ' = ?').join(', ')}  WHERE ( ${(typeof primary_key === 'string' ? [primary_key] : primary_key).map(a=>a+' = ?').join(' AND ')});`;
+        const update = await query(sql, ...keys.map(key => data[key]).concat(record_ids));
+
+        if (!update || !update?.affectedRows) {
+            return {
+                success: false,
+                message: update?.affectedRows ? 'deleted' : 'failed',
+                details: update
+            };
+        }
+
+        let new_record_details = await this.fetch_by_id([record_ids]);
+
+        return {
+            success: !!new_record_details,
+            message: new_record_details ? 'created' : 'failed',
+            details: new_record_details
+        };
     }
 
     /**
+     * @method create_single Inserts 1 record with the provided data into the DB
      * @param {{any:string|number|boolean}} data details of the new record
      */
     async create_single(data) {
