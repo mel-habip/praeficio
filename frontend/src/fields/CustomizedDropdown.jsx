@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Dropdown } from '@nextui-org/react';
 
 
-export default function CustomizedDropdown({ optionsList = [], outerUpdater = () => { }, default_value = '' }, title = '', selectionMode = 'single', disabled = false) {
+export default function CustomizedDropdown({optionsList = [], outerUpdater = () => { }, default_value = '', title = '', selectionMode = 'single', disabled = false}) {
 
     const optionsMap = optionsList.reduce((acc, cur) => ({ ...acc, [cur.key]: cur }), {});
 
@@ -21,9 +21,9 @@ export default function CustomizedDropdown({ optionsList = [], outerUpdater = ()
     }, [innerSelected]);
 
     return (
-        <Dropdown>
+        <Dropdown isDisabled={!!disabled}>
             <Dropdown.Button
-                disabled={disabled}
+                isDisabled={!!disabled}
                 shadow
                 css={optionsMap[selectedValue]?.color === 'default' ? { 'background': 'grey', 'box-shadow': '0 4px 14px grey' } : {}} //this provides the "default" option, NextUI doesn't have gray buttons
                 color={optionsMap[selectedValue]?.color || 'default'}

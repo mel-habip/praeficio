@@ -99,6 +99,7 @@ export default class RecordService {
                 }
                 return workspace;
             }
+            //FeedbackLogs handled specially in their own Service
             case 'FeedbackLogFilter': {
                 const sql = `SELECT * FROM feedback_log_filters WHERE feedback_log_filter_id = ? ${constraint_stringifier(constraints)} LIMIT 1;`;
                 const [FeedbackLogFilter] = await query(sql, record_id);

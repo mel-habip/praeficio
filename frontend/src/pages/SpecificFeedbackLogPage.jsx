@@ -212,7 +212,7 @@ function FeedbackItemCreationModal({ is_open, set_is_open, setFeedbackLogItems, 
 };
 
 
-function FeedbackItemUpdateModal({ is_open, set_is_open, updateCachedItems, setIsLoggedIn, user, item_id, updateDetails }) {
+function FeedbackItemUpdateModal({ is_open, set_is_open, updateCachedItems, setIsLoggedIn, user, item_id, updateDetails, archived }) {
     const [itemHeader, setItemHeader] = useState('');
     const [description, setDescription] = useState('');
     const [status, setStatus] = useState('');
@@ -277,6 +277,7 @@ function FeedbackItemUpdateModal({ is_open, set_is_open, updateCachedItems, setI
                     helperColor={itemHeader?.length < 50 ? 'default' : 'error'}
                     helperText={`${itemHeader?.length}/50`}
                     bordered
+                    disabled={archived}
                     clearable
                     onChange={(e) => setItemHeader(e.target.value)}
                     value={itemHeader}
@@ -285,6 +286,7 @@ function FeedbackItemUpdateModal({ is_open, set_is_open, updateCachedItems, setI
                 <Textarea
                     labelPlaceholder="Detailed Description"
                     bordered
+                    disabled={archived}
                     minRows={6}
                     rows={8}
                     maxRows={60}
@@ -299,10 +301,10 @@ function FeedbackItemUpdateModal({ is_open, set_is_open, updateCachedItems, setI
                 <h3>Attached upload goes here 👁️👄👁️ </h3>
                 <Spacer y={0.5} />
 
-                <StatusDropdown user={user} update_func={setStatus} default_value={status} />
+                <StatusDropdown disabled={archived} user={user} update_func={setStatus} default_value={status} />
 
                 <Button
-                    disabled={!description || description?.length < 50}
+                    disabled={!description || description?.length < 50 || archived}
                     shadow
                     auto
                     onPress={async () => {
@@ -331,7 +333,7 @@ function FeedbackItemUpdateModal({ is_open, set_is_open, updateCachedItems, setI
 
 
 
-function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setIsLoggedIn, feedbackLogOwnDetails }) {
+function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setIsLoggedIn, feedbackLogOwnDetails, archived }) {
     const [innerItems, setInnerItems] = useState([]);
     const [selected, SetSelected] = useState(null);
     const [notesModalOpen, setNotesModalOpen] = useState(false);
@@ -445,13 +447,13 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
                                             <Tooltip content="Details" placement="top" shadow enterDelay={delay}>
                                                 <CustomButton buttonStyle="btn--transparent" onClick={() => setUpdateDetails({ ...updateDetails, notes: item.notes, internal_notes: item.internal_notes || [] }) || setNotesModalOpen(true)}><i className="fa-solid fa-list-ul"></i></CustomButton>
                                             </Tooltip>
-                                            <Tooltip content="Thread" placement="right" shadow enterDelay={delay}>
+                                            <Tooltip content="Threads" placement="right" shadow enterDelay={delay}>
                                                 <Badge isInvisible={!item.last_message_sent_by || item.last_message_sent_by === user.id} color="warning" content="!" shape="circle" >
                                                     <CustomButton buttonStyle="btn--transparent" onClick={() => { setThreadsModalOpen(true) }}><i className="fa-regular fa-comments"></i></CustomButton>
                                                 </Badge>
                                             </Tooltip>
                                             <Spacer x={0.5} />
-                                            <StatusDropdown user={user} default_value={item.status} update_func={(stat => {
+                                            <StatusDropdown disabled={archived} user={user} default_value={item.status} update_func={(stat => {
                                                 axios.put(`http://localhost:8000/feedback_log_items/${item.feedback_log_item_id}`, {
                                                     status: stat
                                                 }).then(response => {
@@ -491,9 +493,9 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
             </Modal>
 
 
-            <FeedbackItemUpdateModal is_open={updateModalOpen} set_is_open={setUpdateModalOpen} {...{ user, setIsLoggedIn, updateCachedItems, updateDetails }} item_id={selected} />
+            <FeedbackItemUpdateModal is_open={updateModalOpen} set_is_open={setUpdateModalOpen} {...{ archived, user, setIsLoggedIn, updateCachedItems, updateDetails }} item_id={selected} />
 
-            <ThreadsModal is_open={threadsModalOpen} set_is_open={setThreadsModalOpen} {...{ user, setIsLoggedIn }} item_id={selected} />
+            <ThreadsModal disabled={archived} is_open={threadsModalOpen} set_is_open={setThreadsModalOpen} {...{ archived, user, setIsLoggedIn }} item_id={selected} />
 
             <Modal
                 scroll
@@ -546,7 +548,7 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
 }
 
 
-function ThreadsModal({ user, item_id, is_open, set_is_open, setIsLoggedIn }) {
+function ThreadsModal({ user, item_id, is_open, set_is_open, setIsLoggedIn, disabled }) {
     const [messageList, setMessageList] = useState(null);
     const [newMessageText, setNewMessageText] = useState('');
 
@@ -620,6 +622,7 @@ function ThreadsModal({ user, item_id, is_open, set_is_open, setIsLoggedIn }) {
             <Row css={{ 'margin-top': '15px' }} justify='space-evenly' >
                 <Textarea
                     bordered
+                    disabled={disabled}
                     minRows={3}
                     maxRows={10}
                     value={newMessageText}
@@ -632,8 +635,8 @@ function ThreadsModal({ user, item_id, is_open, set_is_open, setIsLoggedIn }) {
                     buttonStyle="btn--transparent"
                     aria-label="send message button"
                     rounded
+                    disabled={disabled}
                     shadow
-                    disabled={!newMessageText || newMessageText.length > textLimit}
                     onClick={() => {
                         console.log('sending message', newMessageText);
                         axios.post(`http://localhost:8000/feedback_log_item_messages/${item_id}`, {
@@ -668,7 +671,7 @@ function ThreadsModal({ user, item_id, is_open, set_is_open, setIsLoggedIn }) {
 
 
 
-function StatusDropdown({ update_func, user, default_value }) {
+function StatusDropdown({ disabled, update_func, user, default_value }) {
     const statusList = [
         {
             key: 'submitted',
@@ -707,6 +710,6 @@ function StatusDropdown({ update_func, user, default_value }) {
     ];
 
     return (
-        <CustomizedDropdown default_value={default_value || 'submitted'} optionsList={statusList} outerUpdater={update_func} />
+        <CustomizedDropdown disabled={disabled}  default_value={default_value || 'submitted'} optionsList={statusList} outerUpdater={update_func} />
     );
 }
