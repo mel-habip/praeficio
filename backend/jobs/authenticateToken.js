@@ -50,6 +50,8 @@ export default async function authenticateToken(req, res, next) { //this is midd
 
         await query(`SELECT workspace_id, role FROM workspace_user_associations WHERE user_id = ?;`, user.id).then(response => req.user.workspaces = response);
 
+        await query(`SELECT feedback_log_id FROM feedback_log_user_associations WHERE user_id = ?;`, req.user.id).then(response => req.user.feedback_logs = response.map(a => a.feedback_log_id));
+
         next();
     }));
 }

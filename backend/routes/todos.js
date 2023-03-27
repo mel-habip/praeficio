@@ -46,7 +46,7 @@ todosRouter.post(`/`, async (req, res) => {
 
 //edit a ToDo
 todosRouter.put('/:to_do_id/', async (req, res) => {
-    let match = await helper.fetch_by_id(req.params.to_do_id);
+    let match = await helper.fetch_by_id([req.params.to_do_id]);
 
     if (!match) return res.status(404).send(`ToDo not found.`);
 
@@ -72,7 +72,7 @@ todosRouter.put('/:to_do_id/', async (req, res) => {
     let result = await query(update_sql, props.map(prop => (req.body[prop] == null) ? match[prop] : req.body[prop] || propDefaults[prop]).concat(req.params.to_do_id));
 
     if (result?.affectedRows) {
-        let data = await helper.fetch_by_id(req.params.to_do_id);
+        let data = await helper.fetch_by_id([req.params.to_do_id]);
 
         return res.status(200).json({
             success: true,
@@ -90,7 +90,7 @@ todosRouter.put('/:to_do_id/', async (req, res) => {
 
 //delete a ToDo
 todosRouter.delete('/:to_do_id/', async (req, res) => {
-    let match = await helper.fetch_by_id(req.params.to_do_id, {
+    let match = await helper.fetch_by_id([req.params.to_do_id], {
         archived: false
     });
 

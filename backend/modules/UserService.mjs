@@ -5,6 +5,8 @@ export default class UserService extends RecordService {
     constructor() {
         super();
         this.record_type = 'User';
+        this.table_name = 'users';
+        this.primary_key = 'user_id';
     }
 
     async un_soft_delete(user_id) {
@@ -13,7 +15,7 @@ export default class UserService extends RecordService {
         let result = await query(sql, user_id);
         
         if (result?.affectedRows) {
-            let data = await this.fetch_by_id(user_id);
+            let data = await this.fetch_by_id([user_id]);
             return {
                 success: true,
                 message: 'recovered',
@@ -36,7 +38,7 @@ export default class UserService extends RecordService {
 
         if (result?.affectedRows) {
 
-            let data = await this.fetch_by_id(user_id);
+            let data = await this.fetch_by_id([user_id]);
 
             return {
                 success: true,

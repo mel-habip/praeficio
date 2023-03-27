@@ -11,7 +11,6 @@ const itemsHelper = new FeedbackLogItemService();
 const logsHelper = new FeedbackLogService();
 
 feedbackLogItemRouter.use(authenticateToken);
-feedbackLogItemRouter.use(fetchUserFeedbackLogs);
 
 feedbackLogItemRouter.get('/test', async (req, res) => {
     res.status(200).send('Hello World from the Feedback Log Items!');
@@ -20,7 +19,7 @@ feedbackLogItemRouter.get('/test', async (req, res) => {
 //fetch a feedback log item
 feedbackLogItemRouter.get('/:feedback_log_item_id', async (req, res) => {
 
-    let [feedback_log_item] = await itemsHelper.fetch_by_id(req.params.feedback_log_item_id);
+    let [feedback_log_item] = await itemsHelper.fetch_by_id([req.params.feedback_log_item_id]);
 
     if (!feedback_log_item) {
         return res.status(404).send(`Feedback Log Item ${req.params.feedback_log_item_id} Not Found.`);
@@ -36,7 +35,7 @@ feedbackLogItemRouter.get('/:feedback_log_item_id', async (req, res) => {
 //edit a feedback log item INCOMPLETE
 feedbackLogItemRouter.put('/:feedback_log_item_id', async (req, res) => {
     
-    let feedback_log_item = await itemsHelper.fetch_by_id(req.params.feedback_log_item_id);
+    let feedback_log_item = await itemsHelper.fetch_by_id([req.params.feedback_log_item_id]);
 
     if (!feedback_log_item) {
         return res.status(404).send(`Feedback Log Item ${req.params.feedback_log_item_id} Not Found.`);
@@ -69,7 +68,7 @@ feedbackLogItemRouter.put('/:feedback_log_item_id', async (req, res) => {
         });
     }
 
-    feedback_log_item = await itemsHelper.fetch_by_id(req.params.feedback_log_item_id);
+    feedback_log_item = await itemsHelper.fetch_by_id([req.params.feedback_log_item_id]);
 
     return res.status(200).json(feedback_log_item);
 });

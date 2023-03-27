@@ -11,7 +11,6 @@ const itemsHelper = new FeedbackLogItemService();
 const messagesHelper = new FeedbackLogItemMessageService();
 
 feedbackLogItemMessageRouter.use(authenticateToken);
-feedbackLogItemMessageRouter.use(fetchUserFeedbackLogs);
 
 feedbackLogItemMessageRouter.get('/test', async (req, res) => {
     res.status(200).send('Hello World from the Feedback Log Items!');
@@ -20,7 +19,7 @@ feedbackLogItemMessageRouter.get('/test', async (req, res) => {
 //fetch messages of a feedback log item
 feedbackLogItemMessageRouter.get('/:feedback_log_item_id', async (req, res) => {
 
-    let feedback_log_item = await itemsHelper.fetch_by_id(req.params.feedback_log_item_id);
+    let feedback_log_item = await itemsHelper.fetch_by_id([req.params.feedback_log_item_id]);
 
     if (!feedback_log_item) {
         return res.status(404).send(`Feedback Log Item ${req.params.feedback_log_item_id} Not Found.`);
@@ -44,7 +43,10 @@ feedbackLogItemMessageRouter.get('/:feedback_log_item_id', async (req, res) => {
 //add new message to a feedback log item
 feedbackLogItemMessageRouter.post('/:feedback_log_item_id', async (req, res) => {
 
-    let feedback_log_item = await itemsHelper.fetch_by_id(req.params.feedback_log_item_id);
+    if (!req.body.content) {
+        return res.status(400).send(`Content must be provided`);
+    }
+    let feedback_log_item = await itemsHelper.fetch_by_id([req.params.feedback_log_item_id]);
 
     if (!feedback_log_item) {
         return res.status(404).send(`Feedback Log Item ${req.params.feedback_log_item_id} Not Found.`);
@@ -62,9 +64,6 @@ feedbackLogItemMessageRouter.post('/:feedback_log_item_id', async (req, res) => 
         return res.status(403).send(`Forbidden: Feedback Log Item ${req.params.feedback_log_item_id} has been completed.`);
     }
 
-    if (!req.body.content) {
-        return res.status(400).send(`Content must be provided`);
-    }
 
     let creation = await messagesHelper.create_single({
         content: req.body.content,

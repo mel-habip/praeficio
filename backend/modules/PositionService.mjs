@@ -5,6 +5,8 @@ export default class PositionService extends RecordService {
     constructor(data) {
         super();
         this.record_type = 'Position';
+        this.table_name = 'positions';
+        this.primary_key = 'position_id';
     }
 
     async un_soft_delete(position_id) {
@@ -13,7 +15,7 @@ export default class PositionService extends RecordService {
         let result = await query(sql, position_id);
         
         if (result?.affectedRows) {
-            let data = await this.fetch_by_id(position_id);
+            let data = await this.fetch_by_id([position_id]);
             return {
                 success: true,
                 message: 'recovered',
@@ -36,7 +38,7 @@ export default class PositionService extends RecordService {
 
         if (result?.affectedRows) {
 
-            let data = await this.fetch_by_id(position_id);
+            let data = await this.fetch_by_id([position_id]);
 
             return {
                 success: true,

@@ -9,7 +9,6 @@ import fetchUserFeedbackLogs from '../jobs/fetchUserFeedbackLogs.js';
 const helper = new FeedbackLogService();
 
 feedbackLogRouter.use(authenticateToken);
-feedbackLogRouter.use(fetchUserFeedbackLogs);
 
 feedbackLogRouter.get('/test', async (_, res) => {
     res.status(200).send('Hello World from the Feedback Logs!');
@@ -84,7 +83,7 @@ feedbackLogRouter.get('/:feedback_log_id', async (req, res) => {
 
     console.log(req.user);
 
-    let feedback_log_exists = await helper.fetch_by_id(req.params.feedback_log_id);
+    let feedback_log_exists = await helper.fetch_by_id([req.params.feedback_log_id]);
 
     if (!feedback_log_exists) {
         return res.status(404).send(`Feedback Log ${req.params.feedback_log_id} Not Found.`);
@@ -133,7 +132,7 @@ feedbackLogRouter.get('/:feedback_log_id', async (req, res) => {
 //create an item in a log 
 feedbackLogRouter.post('/:feedback_log_id/new_item', async (req, res) => {
 
-    let feedback_log_exists = await helper.fetch_by_id(req.params.feedback_log_id);
+    let feedback_log_exists = await helper.fetch_by_id([req.params.feedback_log_id]);
 
     if (!feedback_log_exists) {
         return res.status(404).send(`Feedback Log ${req.params.feedback_log_id} Not Found.`);
@@ -171,7 +170,7 @@ feedbackLogRouter.post('/:feedback_log_id/new_item', async (req, res) => {
 feedbackLogRouter.put('/:feedback_log_id', async (req, res) => {
 
 
-    let feedback_log_details = await helper.fetch_by_id(req.params.feedback_log_id);
+    let feedback_log_details = await helper.fetch_by_id([req.params.feedback_log_id]);
 
     if (!feedback_log_details) {
         return res.status(404).send(`Feedback Log ${req.params.feedback_log_id} Not Found.`);
@@ -201,7 +200,7 @@ feedbackLogRouter.put('/:feedback_log_id', async (req, res) => {
         });
     }
 
-    feedback_log_details = await helper.fetch_by_id(req.params.feedback_log_id);
+    feedback_log_details = await helper.fetch_by_id([req.params.feedback_log_id]);
 
 
     return res.status(200).json({
@@ -221,7 +220,7 @@ feedbackLogRouter.post('/:feedback_log_id/add_user', async (req, res) => {
         return res.status(403).send(`Forbidden: You do not have access to adding users to this Feedback Log.`);
     }
 
-    let feedback_log_details = await helper.fetch_by_id(req.params.feedback_log_id);
+    let feedback_log_details = await helper.fetch_by_id([req.params.feedback_log_id]);
 
     if (!feedback_log_details) {
         return res.status(404).send(`Feedback Log ${req.params.feedback_log_id} Not Found.`);

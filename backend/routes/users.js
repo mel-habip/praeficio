@@ -330,7 +330,7 @@ userRouter.get('/:user_id', authenticateToken, async (req, res) => {
 userRouter.put('/:user_id', authenticateToken, async (req, res) => {
 
 
-    let selected_user_details = await helper.fetch_by_id(req.params.user_id);
+    let selected_user_details = await helper.fetch_by_id([req.params.user_id]);
 
     if (!selected_user_details) {
         return res.status(404).json({

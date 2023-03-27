@@ -2,27 +2,15 @@ import query from '../utils/db_connection.js';
 
 
 export const recordTypeMap = {
-    table_names: {
-        Position: 'positions',
+    table_names: { //phase these out once ready.
         Alert: 'alerts',
-        ToDo: 'todos',
         Workspace: 'workspaces',
         WorkspaceUserAssociation: 'workspace_user_associations',
         WorkspacePositionAssociation: 'workspace_position_associations',
-        User: 'users',
-        FeedbackLog: 'feedback_log',
-        FeedbackLogItem: 'feedback_log_items',
-        FeedbackLogItemMessage: 'feedback_log_item_messages',
     },
     simple_primary_key: {
-        Position: 'position_id',
         Alert: 'alert_id',
-        ToDo: 'to_do_id',
         Workspace: 'workspace_id',
-        User: 'user_id',
-        FeedbackLog: 'feedback_log_id',
-        FeedbackLogItem: 'feedback_log_item_id',
-        FeedbackLogItemMessage: 'feedback_log_item_message_id',
     },
     complex_primary_key: {
         WorkspaceUserAssociation: ['workspace_id', 'user_id'],
@@ -224,7 +212,7 @@ export default class RecordService {
             };
         }
 
-        let new_record_details = await this.fetch_by_id(creation_details.insertId);
+        let new_record_details = await this.fetch_by_id([creation_details.insertId]);
 
         return {
             success: !!new_record_details,

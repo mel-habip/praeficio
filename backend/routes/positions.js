@@ -57,7 +57,7 @@ positionRouter.get('/user/:user_id', async (req, res) => {
 //details of a single position
 positionRouter.get('/:position_id', async (req, res) => {
 
-    let match = await helper.fetch_by_id(req.params.position_id);
+    let match = await helper.fetch_by_id([req.params.position_id]);
 
     if (!match) return res.status(404).send(`Position not found.`);
 
@@ -204,7 +204,7 @@ positionRouter.post('/export', async (req, res) => {
 //soft-delete position
 positionRouter.delete('/:position_id', async (req, res) => {
 
-    let match = await helper.fetch_by_id(req.params.position_id, {
+    let match = await helper.fetch_by_id([req.params.position_id], {
         deleted: false
     });
 
@@ -230,7 +230,7 @@ positionRouter.put('/:position_id/recover', async (req, res) => {
 
 
 
-    let match = await helper.fetch_by_id(req.params.position_id);
+    let match = await helper.fetch_by_id([req.params.position_id]);
 
     if (!match) return res.status(404).send(`Position not found.`);
 
@@ -329,7 +329,7 @@ positionRouter.put('/:position_id/deactivate', async (req, res) => {
 //edit a position
 positionRouter.put('/:position_id/', async (req, res) => {
 
-    let match = await helper.fetch_by_id(req.params.position_id, {
+    let match = await helper.fetch_by_id([req.params.position_id], {
         deleted: false
     });
 
@@ -360,7 +360,7 @@ positionRouter.put('/:position_id/', async (req, res) => {
     }).concat(req.params.position_id));
 
     if (result?.affectedRows) {
-        let data = await helper.fetch_by_id(req.params.position_id);
+        let data = await helper.fetch_by_id([req.params.position_id]);
         return res.status(200).json({
             success: true,
             message: 'updated',
