@@ -331,13 +331,14 @@ function FeedbackItemUpdateModal({ is_open, set_is_open, updateCachedItems, setI
 
 
 
-function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setIsLoggedIn }) {
+function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setIsLoggedIn, feedbackLogOwnDetails }) {
     const [innerItems, setInnerItems] = useState([]);
     const [selected, SetSelected] = useState(null);
     const [notesModalOpen, setNotesModalOpen] = useState(false);
     const [updateModalOpen, setUpdateModalOpen] = useState(false);
     const [threadsModalOpen, setThreadsModalOpen] = useState(false);
     const [updateDetails, setUpdateDetails] = useState(null);
+    const [filterApplied, setFilterApplied] = useState(feedbackLogOwnDetails?.default_filter_id);
 
     //since the items are passed as a prop, it doesn't re-render the child when the parent's State is updated, this should do that
     useEffect(() => {
@@ -393,16 +394,22 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
 
     return (
         <>
-            <Input
-                bordered
-                value={searchText}
-                labelPlaceholder="Search the log"
-                helperText={searchText ? '3 second delay is normal' : ''}
-                css={{ 'margin-top': '10px', 'margin-bottom': '20px', right: '25%' }}
-                width="300px"
-                clearable
-                onChange={(e) => setSearchText(e.target.value)}
-            ></Input>
+            <Row css={{ mb: '10px', 'ml': '30%' }} >
+                <Input
+                    bordered
+                    value={searchText}
+                    labelPlaceholder="Search the log"
+                    helperText={searchText ? '3 second delay is normal' : ''}
+                    css={{ mr: '3px' }}
+                    width="300px"
+                    clearable
+                    onChange={(e) => setSearchText(e.target.value)}
+                />
+                <Badge hidden={!filterApplied} content="✓" color="success" shape="circle">
+                    <CustomButton
+                    ><i className="fa-solid fa-filter fa-lg"></i></CustomButton>
+                </Badge>
+            </Row>
 
             <Table
                 aria-label="Example table with dynamic content"

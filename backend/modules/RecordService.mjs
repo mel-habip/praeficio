@@ -99,37 +99,10 @@ export default class RecordService {
                 }
                 return workspace;
             }
-            case 'FeedbackLog': {
-                const sql = `SELECT * FROM feedback_logs WHERE feedback_log_id = ? ${constraint_stringifier(constraints)} LIMIT 1;`;
-                const [feedbackLog] = await query(sql, record_id);
-                if (!feedbackLog) return null;
-                if (inclusions.users) {
-                    await query(`SELECT * FROM feedback_log_user_associations WHERE feedback_log_id = ?`, record_id).then(response => {
-                        feedbackLog.users = response.map(x => x.user_id);
-                    });
-                }
-                if (inclusions.feedback_log_items || inclusions.items) {
-                    /**
-                     * source-- > https: //stackoverflow.com/questions/1313120/retrieving-the-last-record-in-each-group-mysql
-                     * returns all items in log and adds `created_by_username` through a LEFT JOIN
-                     * the complex part is that it partitions the `feedback_log_item_messages` table by their parent's id's and finds the `sent_by` value of the last item in that partition
-                     */
-                    const new_sql = ` 
-                    WITH ranked_messages AS(
-                        SELECT m.*, ROW_NUMBER() OVER(PARTITION BY feedback_log_item_id ORDER BY feedback_log_item_message_id DESC) AS rn FROM feedback_log_item_messages AS m
-                    ) SELECT feedback_log_items.*, sent_by AS last_message_sent_by, users.username AS created_by_username
-                        FROM feedback_log_items 
-                        LEFT JOIN users 
-                            ON created_by = users.user_id
-                        LEFT JOIN ranked_messages
-                            ON ranked_messages.feedback_log_item_id = feedback_log_items.feedback_log_item_id
-                        WHERE (rn = 1 OR rn IS NULL) AND feedback_log_id = ? ;
-                    `;
-                    await query(new_sql, record_id).then(response => {
-                        feedbackLog.feedback_log_items = response;
-                    });
-                }
-                return feedbackLog;
+            case 'FeedbackLogFilter': {
+                const sql = `SELECT * FROM feedback_log_filters WHERE feedback_log_filter_id = ? ${constraint_stringifier(constraints)} LIMIT 1;`;
+                const [FeedbackLogFilter] = await query(sql, record_id);
+                if (!FeedbackLogFilter) return null;
             }
             case 'FeedbackLogItem': {
                 const sql = `SELECT feedback_log_items.*, users.username AS created_by_username, archived FROM feedback_log_items LEFT JOIN feedback_logs ON feedback_logs.feedback_log_id = feedback_log_items.feedback_log_item_id LEFT JOIN users ON created_by = users.user_id WHERE feedback_log_item_id = ?`;
@@ -151,27 +124,6 @@ export default class RecordService {
             }
         }
     }
-
-    async fetch_by_user_id(user_id, constraints = {}) {
-        switch (this.record_type) {
-            case 'Position': {
-                const sql = `SELECT positions.*, workspace_position_associations.workspace_id  FROM positions LEFT JOIN workspace_position_associations ON positions.position_id = workspace_position_associations.position_id WHERE positions.user_id = ? ${constraint_stringifier(constraints)} ;`;
-                const positions = await query(sql, user_id);
-                return positions;
-            }
-            case 'Alert': {
-                const sql = `SELECT * FROM alerts WHERE user_id = ? ${constraint_stringifier(constraints)}`;
-                const alerts = await query(sql, user_id);
-                return alerts;
-            }
-            case 'FeedbackLog': {
-                const sql = `SELECT feedback_logs.*, feedback_log_user_associations.user_id  FROM feedback_logs LEFT JOIN feedback_log_user_associations ON feedback_logs.feedback_log_id = feedback_log_user_associations.feedback_log_id WHERE feedback_log_user_associations.user_id = ? ${constraint_stringifier(constraints)}`;
-                const feedbackLogs = await query(sql, user_id);
-                return feedbackLogs;
-            }
-        }
-    }
-
 
     /**
      * @param {Number} record_ids one or more of the primary keys for the record
@@ -272,7 +224,7 @@ export default class RecordService {
  * @function constraint_stringifier
  * @return {string} SQL statement for the filters
  */
-function constraint_stringifier(constraints = {}) {
+export function constraint_stringifier(constraints = {}) {
     let t = [];
 
     Object.entries(constraints).forEach(([key, value]) => {
@@ -285,6 +237,8 @@ function constraint_stringifier(constraints = {}) {
             t.push(`AND ${key} IS NULL`);
         } else if (typeof value === 'number') {
             t.push(`AND ${key} = ${value}`);
+        } else if (Array.isArray(value)) {
+            t.push(`AND ${key} IN ( ${value.join(', ')} ) `);
         } else {
             console.log(`Unrecognized case in constraint_stringifier at key "${key}"`, constraints);
         }

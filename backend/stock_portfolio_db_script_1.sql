@@ -113,9 +113,14 @@ CREATE TABLE feedback_logs (
     name VARCHAR(255) NOT NULL,
     archived BOOLEAN DEFAULT FALSE,
     notes JSON,
+    default_filter_id INT,
     created_on DATETIME DEFAULT current_timestamp,
-    updated_on DATETIME DEFAULT NULL ON UPDATE current_timestamp
+    updated_on DATETIME DEFAULT NULL ON UPDATE current_timestamp,
+    FOREIGN KEY (default_filter_id) 
+		REFERENCES feedback_log_filters (feedback_log_filter_id)
+        ON DELETE SET NULL
 );
+
 
 CREATE TABLE feedback_log_user_associations (
 	feedback_log_id INT NOT NULL,
@@ -144,6 +149,24 @@ CREATE TABLE feedback_log_items (
     FOREIGN KEY (feedback_log_id)
         REFERENCES feedback_logs (feedback_log_id)
         ON DELETE CASCADE,
+	FOREIGN KEY (created_by)
+        REFERENCES users (user_id)
+        ON DELETE SET NULL
+);
+
+CREATE TABLE feedback_log_filters (
+	feedback_log_filter_id INT AUTO_INCREMENT PRIMARY KEY,
+    publicity ENUM ("global", "user_all_logs", "user_one_log", "all_users_one_log" ),
+    parent_log_id INT,
+    created_by INT,
+    name VARCHAR(100),
+    description VARCHAR(200),
+    method JSON,
+    created_on DATETIME DEFAULT current_timestamp,
+    updated_on DATETIME DEFAULT NULL ON UPDATE current_timestamp,
+    FOREIGN KEY (parent_log_id)
+        REFERENCES feedback_logs (feedback_log_id)
+        ON DELETE SET NULL,
 	FOREIGN KEY (created_by)
         REFERENCES users (user_id)
         ON DELETE SET NULL

@@ -118,6 +118,4 @@ todosRouter.post(`/archive_all_completed`, async (req, res) => {
     });
 });
 
-//
-
 export default todosRouter;
