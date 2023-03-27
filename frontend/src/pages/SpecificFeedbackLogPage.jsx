@@ -444,7 +444,21 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
                                                 </Badge>
                                             </Tooltip>
                                             <Spacer x={0.5} />
-                                            <StatusDropdown user={user} default_value={item.status} />
+                                            <StatusDropdown user={user} default_value={item.status} update_func={(stat => {
+                                                axios.put(`http://localhost:8000/feedback_log_items/${item.feedback_log_item_id}`, {
+                                                    status: stat
+                                                }).then(response => {
+                                                    console.log('response:', response.data);
+                                                    if ([201].includes(response.status)) {
+                                                        console.log('successful');
+                                                        setUpdateDetails({ ...updateDetails, status: stat });
+                                                    } else if (response.status === 401) {
+                                                        setIsLoggedIn(false);
+                                                    } else {
+                                                        console.log(response);
+                                                    }
+                                                });
+                                            })} />
                                         </Row>
                                     </Table.Cell>
                                 } else if (['created_on'].includes(columnKey)) {
