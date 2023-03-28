@@ -12,6 +12,7 @@ import alertsRouter from './routes/alerts.js';
 import todosRouter from './routes/todos.js';
 import apiRouter from './routes/api.js';
 import feedbackLogRouter from './routes/feedback_logs.js';
+import feedbackLogFilterRouter from './routes/feedback_log_filters.js';
 import feedbackLogItemsRouter from './routes/feedback_log_items.js';
 import feedbackLogItemMessagesRouter from './routes/feedback_log_item_messages.js';
 
@@ -34,6 +35,7 @@ APP.use('/alerts', alertsRouter);
 APP.use('/todos', todosRouter);
 APP.use('/api', apiRouter);
 APP.use('/feedback_logs', feedbackLogRouter);
+APP.use('/feedback_log_filters', feedbackLogFilterRouter);
 APP.use('/feedback_log_items', feedbackLogItemsRouter);
 APP.use('/feedback_log_item_messages', feedbackLogItemMessagesRouter);
 

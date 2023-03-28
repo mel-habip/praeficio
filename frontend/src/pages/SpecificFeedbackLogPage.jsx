@@ -14,12 +14,13 @@ import NavMenu from '../components/NavMenu';
 import NotesModule from '../components/NotesModule';
 import MessengerSection from '../components/Messenger';
 
-import { Button, Modal, Spacer, Text, Input, Tooltip, Row, Table, Textarea, useAsyncList, useCollator, Loading, Badge } from '@nextui-org/react';
+import { Button, Modal, Spacer, Text, Input, Tooltip, Row, Table, Textarea, useAsyncList, useCollator, Loading, Badge, Dropdown } from '@nextui-org/react';
 
 import { CustomButton } from '../fields/CustomButton';
 import CustomizedDropdown from '../fields/CustomizedDropdown';
 
 import UserSearchModal from '../components/UserSearchModal';
+import timestampFormatter from '../utils/timestampFormatter';
 
 export default function SpecificFeedbackLogPage() {
 
@@ -31,6 +32,7 @@ export default function SpecificFeedbackLogPage() {
     axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
 
     const [feedbackLogItems, setFeedbackLogItems] = useState(null);
+    const [feedbackLogFilters, setFeedbackLogFilters] = useState(null);
     const [feedbackLogOwnDetails, setFeedbackLogOwnDetails] = useState({});
     const [creationModalOpen, setCreationModalOpen] = useState(false);
     const [userAdditionModalOpen, setUserAdditionModalOpen] = useState(false);
@@ -49,9 +51,18 @@ export default function SpecificFeedbackLogPage() {
                 console.log('fetch', response);
             }
         });
+        axios.get(`http://localhost:8000/feedback_log_filters/${feedback_log_id}`).then(response => {
+            if (response.status === 401) {
+                setIsLoggedIn(false);
+            } else if (response.status === 200) {
+                setFeedbackLogFilters(response.data.data);
+            } else {
+                console.log('fetch', response);
+            }
+        });
     }, []);
 
-    if (!feedbackLogItems || !user) { return (<LoadingPage />); }
+    if (!feedbackLogItems || !user || !feedbackLogFilters) { return (<LoadingPage />); }
 
     const updateCachedItems = (item_id, updated_details) => {
         setFeedbackLogItems(feedbackLogItems.map(item => {
@@ -74,7 +85,7 @@ export default function SpecificFeedbackLogPage() {
         {(!feedbackLogItems.length && !feedbackLogOwnDetails.archived) && <><h3>No items in this log yet - Go ahead & add some! </h3><hr className="line-primary" /></>}
         {feedbackLogOwnDetails.archived && <><h3> This log has been locked and archived. </h3><hr className="line-primary" /></>}
 
-        {!!feedbackLogItems.length && <FeedbackLogTable archived={feedbackLogOwnDetails.archived} {...{ updateCachedItems, feedbackLogItems, user, setIsLoggedIn }} />}
+        {!!feedbackLogItems.length && <FeedbackLogTable archived={feedbackLogOwnDetails.archived} {...{ feedbackLogFilters, updateCachedItems, feedbackLogItems, user, setIsLoggedIn }} />}
 
         <Spacer y={1} />
         {/*need to handle these, TODO: */}
@@ -333,14 +344,13 @@ function FeedbackItemUpdateModal({ is_open, set_is_open, updateCachedItems, setI
 
 
 
-function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setIsLoggedIn, feedbackLogOwnDetails, archived }) {
+function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setIsLoggedIn, feedbackLogOwnDetails, archived, feedbackLogFilters }) {
     const [innerItems, setInnerItems] = useState([]);
     const [selected, SetSelected] = useState(null);
     const [notesModalOpen, setNotesModalOpen] = useState(false);
     const [updateModalOpen, setUpdateModalOpen] = useState(false);
     const [threadsModalOpen, setThreadsModalOpen] = useState(false);
     const [updateDetails, setUpdateDetails] = useState(null);
-    const [filterApplied, setFilterApplied] = useState(feedbackLogOwnDetails?.default_filter_id);
 
     //since the items are passed as a prop, it doesn't re-render the child when the parent's State is updated, this should do that
     useEffect(() => {
@@ -358,7 +368,7 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
         }
         const delayDebounceFn = setTimeout(() => {
             console.log('Search Triggerred', keyword);
-            setInnerItems(feedbackLogItems.filter(result => result.content.toLowerCase().includes(keyword) || result.header.toLowerCase().includes(keyword))); //consider implementing fuzzy search here
+            setInnerItems(feedbackLogItems.filter(result => [result.content.toLowerCase(), result.header.toLowerCase(), result.created_on, result.updated_on, result.created_by_username].join('').includes(keyword))); //consider implementing fuzzy search here
             //also consider doing some logic so that if there are a lot of items, we ask the BE to do this instead
         }, 1000);
         return () => clearTimeout(delayDebounceFn);
@@ -387,6 +397,11 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
             sortable: true
         },
         {
+            key: "updated_on",
+            label: "Last Update",
+            sortable: true
+        },
+        {
             key: "actions",
             label: "Actions",
         }
@@ -407,10 +422,7 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
                     clearable
                     onChange={(e) => setSearchText(e.target.value)}
                 />
-                <Badge hidden={!filterApplied} content="✓" color="success" shape="circle">
-                    <CustomButton
-                    ><i className="fa-solid fa-filter fa-lg"></i></CustomButton>
-                </Badge>
+                <FiltersDropdown {...{ feedbackLogFilters, feedbackLogOwnDetails }} />
             </Row>
 
             <Table
@@ -472,6 +484,8 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
                                     </Table.Cell>
                                 } else if (['created_on'].includes(columnKey)) {
                                     return <Table.Cell> {item[columnKey] ? item[columnKey].substring(0, 10) : ' - '} </Table.Cell>
+                                } else if (['updated_on'].includes(columnKey)) {
+                                    return <Table.Cell> {item[columnKey] ? timestampFormatter(item[columnKey]) : ' - '} </Table.Cell>
                                 } else {
                                     return <Table.Cell> {item[columnKey]} </Table.Cell>
                                 }
@@ -506,7 +520,7 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
                 closeButton onClose={() => setNotesModalOpen(false)} >
                 <Modal.Body>
 
-                    <NotesModule notes_list={updateDetails?.notes} user={user} title_text="Notes" update_func={(notes) => {
+                    <NotesModule disabled={archived} notes_list={updateDetails?.notes} user={user} title_text="Notes" update_func={(notes) => {
                         console.log('updating feedback log item', selected, notes);
                         axios.put(`http://localhost:8000/feedback_log_items/${selected}`, {
                             notes
@@ -524,6 +538,7 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
                     }} />
                     {user.permissions.endsWith('client') ? undefined : <NotesModule
                         notes_list={updateDetails?.internal_notes} user={user}
+                        disabled={archived}
                         title_text="Internal Notes"
                         update_func={(notes) => {
                             console.log('updating feedback log item', selected, notes);
@@ -660,17 +675,6 @@ function ThreadsModal({ user, item_id, is_open, set_is_open, setIsLoggedIn, disa
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
 function StatusDropdown({ disabled, update_func, user, default_value }) {
     const statusList = [
         {
@@ -710,6 +714,119 @@ function StatusDropdown({ disabled, update_func, user, default_value }) {
     ];
 
     return (
-        <CustomizedDropdown disabled={disabled}  default_value={default_value || 'submitted'} optionsList={statusList} outerUpdater={update_func} />
+        <CustomizedDropdown disabled={disabled} default_value={default_value || 'submitted'} optionsList={statusList} outerUpdater={update_func} />
+    );
+}
+
+function FiltersDropdown({ feedbackLogFilters, feedbackLogOwnDetails, }) {
+    const [filterApplied, setFilterApplied] = useState(feedbackLogOwnDetails?.default_filter_id);
+    const [filterCreationModalOpen, setFilterCreationModalOpen] = useState(false);
+
+    const formattedList = feedbackLogFilters.map(entry => ({ key: entry.feedback_log_filter_id, name: entry.name, description: entry.description }));
+
+    if (!formattedList.length) formattedList.unshift({ key: 'empty_note', name: 'Nothing yet, create one!', disabled: true });
+
+    formattedList.push({ key: 'create_new', name: 'create new', withDivider: true });
+
+    return (
+        <>
+            <CustomizedDropdown disallowEmptySelection={false} trigger={<Button auto color={filterApplied ? 'success' : 'default'} ><i className="fa-solid fa-filter fa-lg"></i></Button>} optionsList={formattedList} outerUpdater={e => { console.log('e', e); if (e === 'create_new') { setFilterCreationModalOpen(true); } else { setFilterApplied(e) } }} />
+            <FilterCreationModal {...{ filterCreationModalOpen, setFilterCreationModalOpen }} />
+        </>
+    );
+}
+
+function FilterCreationModal({ filterCreationModalOpen, setFilterCreationModalOpen }) {
+    const [numParts, setNumParts] = useState(1);
+    const [topOperator, setTopOperator] = useState('AND');
+
+    const operatorOptions = [
+        {
+            key: 'AND',
+            name: 'AND',
+            description: 'all conditions must meet'
+        },
+        {
+            key: 'OR',
+            name: 'OR',
+            description: 'one condition must meet'
+        }
+    ];
+
+    return (
+        <Modal
+            scroll
+            blur
+            aria-labelledby="modal-title"
+            css={{ 'max-width': '550px' }}
+            open={filterCreationModalOpen}
+            closeButton onClose={() => setFilterCreationModalOpen(false)}
+        >
+            <Modal.Header>
+                <Text size={18} >Let's create a new filter, clicked {numParts}</Text>
+            </Modal.Header>
+            <Modal.Body>
+                <CustomizedDropdown title='Operator' optionsList={operatorOptions} outerUpdater={setTopOperator} default_value="AND" />
+                {([...new Array(numParts)]).map((e, i) =>
+
+                    <div style={{ border: '1px solid blue', display: 'flex', 'flexWrap': 'wrap' }}>
+                        <CustomButton onClick={() => setNumParts(numParts - 1)} >X</CustomButton>
+                        <Subform key={i} />
+                    </div>
+                )}
+                <CustomButton onClick={() => setNumParts(numParts + 1)} >+</CustomButton>
+
+            </Modal.Body>
+
+        </Modal>
+    );
+}
+
+function Subform({ }) {
+
+    const operatorOptions = [
+        {
+            key: '<=',
+            name: 'LTE',
+            description: 'less than or equal'
+        },
+        {
+            key: '>=',
+            name: 'GTE',
+            description: 'greater than or equal'
+        },
+        {
+            key: 'not',
+            name: '!=',
+            description: 'less than or equal'
+        },
+        {
+            key: 'is',
+            name: '==',
+            description: 'less than or equal'
+        }
+    ];
+
+    const fieldOptions = [
+        {
+            key: 'created_on',
+            name: 'Created On'
+        },
+        {
+            key: 'updated_on',
+            name: 'Last Update'
+        },
+        {
+            key: 'created_by',
+            name: 'Created by'
+        }
+    ];
+
+    return (
+        <>
+            <CustomizedDropdown optionsList={fieldOptions} default_value="updated_on" />
+            <CustomizedDropdown optionsList={operatorOptions} default_value="is" />
+            <Input fullWidth bordered css={{ mt: '30px' }} labelPlaceholder='value' ></Input>
+        </>
     );
 }

@@ -29,7 +29,7 @@ feedbackLogItemMessageRouter.get('/:feedback_log_item_id', async (req, res) => {
         return res.status(403).send(`Forbidden: You do not have access to this Feedback Log Item.`);
     }
 
-    const sql = `SELECT * FROM feedback_log_item_messages WHERE feedback_log_item_id = ?;`;
+    const sql = `SELECT feedback_log_item_messages.*, users.username AS sent_by_name FROM feedback_log_item_messages LEFT JOIN users ON feedback_log_item_messages.sent_by = users.user_id WHERE feedback_log_item_id = ? ;`;
 
     const messages_in_item = await query(sql, req.params.feedback_log_item_id);
 

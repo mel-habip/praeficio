@@ -8,7 +8,7 @@ const SIZES = ['btn--medium', 'btn--large'];
 
 export const CustomButton = ({
     children,
-    type,
+    type = 'button',
     onClick,
     buttonStyle,
     buttonSize,

@@ -16,7 +16,7 @@ export default function timestampFormatter(date) {
 
     let am_pm = hour > 12 ? (hour -= 12, 'pm') : 'am';
 
-    return `${year}/${month}/${day} ${hour}:${minute}${am_pm}`;
+    return `${year}-${month}-${day} ${hour}:${minute}${am_pm}`;
 };
 
 function twoDig(str) {

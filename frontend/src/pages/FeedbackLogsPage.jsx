@@ -15,6 +15,8 @@ import { Button, Modal, Spacer, Text, Input, Checkbox, Row, Grid, Dropdown, Card
 
 import { CustomButton } from '../fields/CustomButton';
 
+import timestampFormatter from '../utils/timestampFormatter';
+
 export default function FeedbackLogsPage({ archive }) {
 
     const { setIsLoggedIn, accessToken, user } = useContext(IsLoggedInContext);
@@ -166,11 +168,9 @@ function FeedbackLogCard({ id, name, created_on, user, archive, setArchiveModalO
                     <Text h3 color="white" css={{ mt: 0 }}>
                         {name}
                     </Text>
-
-
                 </div>
                 <Text h5 color="white" css={{ mt: 15, mb: 0 }}>
-                    Created On: {created_on}
+                    Created On: {timestampFormatter(created_on)}
                 </Text>
             </Card.Body>
         </Link>

@@ -1,24 +1,5 @@
 import query from '../utils/db_connection.js';
 
-
-export const recordTypeMap = {
-    table_names: { //phase these out once ready.
-        Alert: 'alerts',
-        Workspace: 'workspaces',
-        WorkspaceUserAssociation: 'workspace_user_associations',
-        WorkspacePositionAssociation: 'workspace_position_associations',
-    },
-    simple_primary_key: {
-        Alert: 'alert_id',
-        Workspace: 'workspace_id',
-    },
-    complex_primary_key: {
-        WorkspaceUserAssociation: ['workspace_id', 'user_id'],
-        WorkspacePositionAssociation: ['workspace_id', 'position_id'],
-        FeedbackLogUserAssociation: ['feedback_log_id', 'user_id'],
-    }
-}
-
 /**
  * @module Record polymorphic archetype for different records in the DB
  * @method fetch_by_id provides the record
@@ -40,8 +21,6 @@ export default class RecordService {
      * @param {{users?: boolean, feedback_log_items?:boolean, items?:boolean, workspaces?:boolean, positions?:boolean }} inclusions to include data otherwise not provided
      * @returns {Promise<{to_do_id?: number, user_id?: number, position_id?:number, content?:string, notes?:string[], completed?:boolean, archived?:boolean, deleted?:boolean, active?:boolean}>}
      */
-
-
     async fetch_by_id(record_id, constraints = {}, inclusions = {}) {
         if (!this.record_type) {
             console.error(`No Record Type specified`);
@@ -218,6 +197,28 @@ export default class RecordService {
             message: new_record_details ? 'created' : 'failed',
             details: new_record_details
         };
+    }
+
+    async confirm_exists_by_id(...record_ids) {
+        const table_name = this.table_name || recordTypeMap.table_names[this.record_type];
+
+
+        const primary_keys = this.primary_key || recordTypeMap.simple_primary_key[this.record_type] || recordTypeMap.complex_primary_key[this.record_type];
+
+        if (!primary_keys || !table_name) throw Error(`${this.record_type} not recognized`);
+
+        let result;
+
+        if (typeof primary_keys === 'string') { //simple
+            const sql = `SELECT ${primary_keys} FROM ${table_name} WHERE ${primary_keys} = ?;`;
+            result = await query(sql, primary_record_id);
+        } else { //complex
+            let sql = `SELECT ${primary_keys[0]} FROM ${table_name} WHERE`;
+            sql += primary_keys.map(a => a + ' = ?').join(',');
+            result = await query(sql, record_ids);
+        }
+
+        return !!result?.[0];
     }
 };
 

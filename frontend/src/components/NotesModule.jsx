@@ -7,7 +7,7 @@ import removeIndex from '../utils/removeIndex';
 import deepEqual from '../utils/deepEqual';
 
 
-export default function NotesModule({ field_text = '', title_text = '', notes_list = [], update_func = () => { }, deletable = false, user = {} }) {
+export default function NotesModule({disabled=false, field_text = '', title_text = '', notes_list = [], update_func = () => { }, deletable = false, user = {} }) {
     const textLimit = 100;
 
     const [newNoteText, setNewNoteText] = useState('');
@@ -24,6 +24,7 @@ export default function NotesModule({ field_text = '', title_text = '', notes_li
                 <Text><i className="fa-regular fa-hand-point-right"></i>  &nbsp;&nbsp;&nbsp; {catName}</Text>
                 <Spacer x={0.2}/>
                 {deletable ? <CustomButton
+                    disabled={disabled}
                     buttonStyle="btn--transparent"
                     onClick={() => { setNotesList(removeIndex(notesList, index)) }} >
                     <i className="fa-regular fa-trash-can"></i>
@@ -33,6 +34,7 @@ export default function NotesModule({ field_text = '', title_text = '', notes_li
         <Row css={{ 'margin-top': '15px' }}>
             <Input
                 bordered
+                disabled={disabled}
                 shadow
                 color={newNoteText.length > textLimit ? 'error' : "primary"}
                 helperColor={newNoteText.length > textLimit ? 'error' : "default"}
@@ -43,14 +45,14 @@ export default function NotesModule({ field_text = '', title_text = '', notes_li
                 aria-label="temporary save button"
                 rounded
                 shadow
-                disabled={!newNoteText || newNoteText.length > textLimit}
+                disabled={!newNoteText || newNoteText.length > textLimit || disabled}
                 onClick={() => console.log('clicked') || setNotesList(notesList.concat(newNoteText)) || setNewNoteText('')} ><i className="fa-regular fa-hand-point-up"></i></CustomButton>
         </Row>
         <Spacer y={1} />
         <Row justify='space-evenly' >
             <Button
                 auto
-                disabled={!differencesMade}
+                disabled={!differencesMade || disabled}
                 shadow 
                 color="inverse"
                 onPress={() => setNotesList(notes_list)}>{differencesMade} Cancel&nbsp;<i className="fa-solid fa-person-walking-arrow-loop-left"></i>

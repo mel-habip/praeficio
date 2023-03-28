@@ -3,7 +3,7 @@ import query from '../utils/db_connection.js';
 
 
 export default class FeedbackLogFilterService extends RecordService {
-    constructor(data) {
+    constructor() {
         super();
         this.record_type = 'FeedbackLogFilter';
         this.table_name = 'feedback_log_filters';
@@ -59,12 +59,12 @@ export default class FeedbackLogFilterService extends RecordService {
         if (!condition) return "";
 
         if (condition.OR) {
-            const or = condition.OR.map(v2).filter(Boolean).join(" OR ");
+            const or = condition.OR.map(stringify_condition_v2).filter(Boolean).join(" OR ");
             return or ? `(${or})` : "";
         }
 
         if (condition.AND) {
-            const and = condition.AND.map(v2).filter(Boolean).join(" AND ");
+            const and = condition.AND.map(stringify_condition_v2).filter(Boolean).join(" AND ");
             return and ? `(${and})` : "";
         }
 

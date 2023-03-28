@@ -6,11 +6,32 @@ import authenticateToken from '../jobs/authenticateToken.js';
 import * as random from '../utils/random_value_generators.js';
 import query from '../utils/db_connection.js';
 
-import {
-    recordTypeMap
-} from '../modules/RecordService.mjs';
-
 import fuzzySearch from '../utils/fuzzy_search.js';
+
+const recordTypeMap = {
+    table_names: { //phase these out once ready.
+        Alert: 'alerts',
+        Position: 'positions',
+        User: 'users',
+        Workspace: 'workspaces',
+        FeedbackLog: 'feedback_logs',
+        WorkspaceUserAssociation: 'workspace_user_associations',
+        WorkspacePositionAssociation: 'workspace_position_associations',
+    },
+    simple_primary_key: {
+        Users: 'user_id',
+        Position: 'position_id',
+        Alert: 'alert_id',
+        Workspace: 'workspace_id',
+        FeedbackLog: 'feedback_log_id',
+        FeedbackLogItem: 'feedback_log_item',
+    },
+    complex_primary_key: {
+        WorkspaceUserAssociation: ['workspace_id', 'user_id'],
+        WorkspacePositionAssociation: ['workspace_id', 'position_id'],
+        FeedbackLogUserAssociation: ['feedback_log_id', 'user_id'],
+    }
+}
 
 const log = console.log;
 

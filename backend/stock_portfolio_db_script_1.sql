@@ -154,6 +154,24 @@ CREATE TABLE feedback_log_items (
         ON DELETE SET NULL
 );
 
+CREATE TRIGGER update_last_activity_date
+AFTER INSERT ON feedback_log_items
+FOR EACH ROW
+UPDATE feedback_log SET updated_on = NOW()
+WHERE feedback_log.feedback_log_id = NEW.feedback_log_id;
+
+CREATE TRIGGER update_last_activity_date_2
+AFTER UPDATE ON feedback_log_items
+FOR EACH ROW
+UPDATE feedback_log SET updated_on = NOW()
+WHERE feedback_log.feedback_log_id = NEW.feedback_log_id OR feedback_log.feedback_log_id = OLD.feedback_log_id;
+
+CREATE TRIGGER update_last_activity_date_3
+AFTER DELETE ON feedback_log_items
+FOR EACH ROW
+UPDATE feedback_log SET updated_on = NOW()
+WHERE feedback_log.feedback_log_id = OLD.feedback_log_id;
+
 CREATE TABLE feedback_log_filters (
 	feedback_log_filter_id INT AUTO_INCREMENT PRIMARY KEY,
     publicity ENUM ("global", "user_all_logs", "user_one_log", "all_users_one_log" ),
