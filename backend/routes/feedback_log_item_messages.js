@@ -64,7 +64,6 @@ feedbackLogItemMessageRouter.post('/:feedback_log_item_id', async (req, res) => 
         return res.status(403).send(`Forbidden: Feedback Log Item ${req.params.feedback_log_item_id} has been completed.`);
     }
 
-
     let creation = await messagesHelper.create_single({
         content: req.body.content,
         sent_by: req.user.id,
