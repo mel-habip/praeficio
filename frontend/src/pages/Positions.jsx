@@ -248,7 +248,7 @@ function Positions() {
             >
                 <Table.Header columns={columns}>
                     {(column) => (
-                        <Table.Column allowsSorting key={column.key} css={{ padding: '20px' }} >{column.label}</Table.Column>
+                        <Table.Column key={column.key} css={{ padding: '20px' }} >{column.label}</Table.Column>
                     )}
                 </Table.Header>
                 <Table.Body items={positions} css={{ 'text-align': 'left' }}>
