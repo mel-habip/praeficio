@@ -353,15 +353,43 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
     const [updateDetails, setUpdateDetails] = useState(null);
 
     //since the items are passed as a prop, it doesn't re-render the child when the parent's State is updated, this should do that
+    let load = async () => ({ items: feedbackLogItems }); //this can normally be an async function that fetches the data, but normally we hold the whole page off while it is loading
     useEffect(() => {
         setInnerItems(feedbackLogItems);
+        load = async () => ({ items: innerItems });
     }, [feedbackLogItems]);
 
-    // search mechanism from https://stackoverflow.com/questions/42217121/how-to-start-search-only-when-user-stops-typing
+    //This section is what supports sorting
+    const collator = useCollator({ numeric: true });
+    async function sort({ items, sortDescriptor }) {
+        return {
+            items: items.sort((a, b) => {
+                let first = a[sortDescriptor.column];
+                let second = b[sortDescriptor.column];
+                let cmp = collator.compare(first, second);
+                if (sortDescriptor.direction === "descending") {
+                    cmp *= -1;
+                }
+                return cmp;
+            }),
+        };
+    };
+
+    
+    const list = useAsyncList({ load, sort });
+    //This section is what supports sorting
+    
+    console.log(list);
+
+    
+
+
+    // search Debounce mechanism from https://stackoverflow.com/questions/42217121/how-to-start-search-only-when-user-stops-typing
     const [searchText, setSearchText] = useState('');
     const keyword = React.useMemo(() => searchText.trim().toLowerCase(), [searchText]);
 
     useEffect(() => {
+        
         if (!keyword || !searchText) {
             setInnerItems(feedbackLogItems);
             return;
@@ -370,7 +398,7 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
             console.log('Search Triggerred', keyword);
             setInnerItems(feedbackLogItems.filter(result => [result.content.toLowerCase(), result.header.toLowerCase(), result.created_on, result.updated_on, result.created_by_username].join('').includes(keyword))); //consider implementing fuzzy search here
             //also consider doing some logic so that if there are a lot of items, we ask the BE to do this instead
-        }, 1000);
+        }, 500);
         return () => clearTimeout(delayDebounceFn);
     }, [keyword]);
 
@@ -432,6 +460,8 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
                 selectionMode='single'
                 onSelectionChange={e => SetSelected(parseInt(e.currentKey))}
                 compact
+                sortDescriptor={list.sortDescriptor}
+                onSortChange={list.sort}
                 shadow
                 color="primary"
                 containerCss={{
@@ -442,10 +472,10 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
             >
                 <Table.Header columns={columns}>
                     {(column) => (
-                        <Table.Column key={column.key} css={{ padding: '20px' }} >{column.label}</Table.Column>
+                        <Table.Column allowsSorting={column.sortable} key={column.key} css={{ padding: '20px' }} >{column.label}</Table.Column>
                     )}
                 </Table.Header>
-                <Table.Body items={innerItems} css={{ 'text-align': 'left' }}>
+                <Table.Body items={list.items} css={{ 'text-align': 'left' }} loadingState={list.loadingState}>
                     {(item) => (
                         <Table.Row key={item.feedback_log_item_id} className="position-table-row">
                             {columnKey => {
@@ -731,56 +761,56 @@ function FiltersDropdown({ feedbackLogFilters, feedbackLogOwnDetails, }) {
     return (
         <>
             <CustomizedDropdown disallowEmptySelection={false} trigger={<Button auto color={filterApplied ? 'success' : 'default'} ><i className="fa-solid fa-filter fa-lg"></i></Button>} optionsList={formattedList} outerUpdater={e => { console.log('e', e); if (e === 'create_new') { setFilterCreationModalOpen(true); } else { setFilterApplied(e) } }} />
-            <FilterCreationModal {...{ filterCreationModalOpen, setFilterCreationModalOpen }} />
+            {/* <FilterCreationModal {...{ filterCreationModalOpen, setFilterCreationModalOpen }} /> */}
         </>
     );
 }
 
-function FilterCreationModal({ filterCreationModalOpen, setFilterCreationModalOpen }) {
-    const [numParts, setNumParts] = useState(1);
-    const [topOperator, setTopOperator] = useState('AND');
+// function FilterCreationModal({ filterCreationModalOpen, setFilterCreationModalOpen }) {
+//     const [numParts, setNumParts] = useState(1);
+//     const [topOperator, setTopOperator] = useState('AND');
 
-    const operatorOptions = [
-        {
-            key: 'AND',
-            name: 'AND',
-            description: 'all conditions must meet'
-        },
-        {
-            key: 'OR',
-            name: 'OR',
-            description: 'one condition must meet'
-        }
-    ];
+//     const operatorOptions = [
+//         {
+//             key: 'AND',
+//             name: 'AND',
+//             description: 'all conditions must meet'
+//         },
+//         {
+//             key: 'OR',
+//             name: 'OR',
+//             description: 'one condition must meet'
+//         }
+//     ];
 
-    return (
-        <Modal
-            scroll
-            blur
-            aria-labelledby="modal-title"
-            css={{ 'max-width': '550px' }}
-            open={filterCreationModalOpen}
-            closeButton onClose={() => setFilterCreationModalOpen(false)}
-        >
-            <Modal.Header>
-                <Text size={18} >Let's create a new filter, clicked {numParts}</Text>
-            </Modal.Header>
-            <Modal.Body>
-                <CustomizedDropdown title='Operator' optionsList={operatorOptions} outerUpdater={setTopOperator} default_value="AND" />
-                {([...new Array(numParts)]).map((e, i) =>
+//     return (
+//         <Modal
+//             scroll
+//             blur
+//             aria-labelledby="modal-title"
+//             css={{ 'max-width': '550px' }}
+//             open={filterCreationModalOpen}
+//             closeButton onClose={() => setFilterCreationModalOpen(false)}
+//         >
+//             <Modal.Header>
+//                 <Text size={18} >Let's create a new filter, clicked {numParts}</Text>
+//             </Modal.Header>
+//             <Modal.Body>
+//                 <CustomizedDropdown title='Operator' optionsList={operatorOptions} outerUpdater={setTopOperator} default_value="AND" />
+//                 {([...new Array(numParts)]).map((e, i) =>
 
-                    <div style={{ border: '1px solid blue', display: 'flex', 'flexWrap': 'wrap' }}>
-                        <CustomButton onClick={() => setNumParts(numParts - 1)} >X</CustomButton>
-                        <Subform key={i} />
-                    </div>
-                )}
-                <CustomButton onClick={() => setNumParts(numParts + 1)} >+</CustomButton>
+//                     <div style={{ border: '1px solid blue', display: 'flex', 'flexWrap': 'wrap' }}>
+//                         <CustomButton onClick={() => setNumParts(numParts - 1)} >X</CustomButton>
+//                         <Subform key={i} />
+//                     </div>
+//                 )}
+//                 <CustomButton onClick={() => setNumParts(numParts + 1)} >+</CustomButton>
 
-            </Modal.Body>
+//             </Modal.Body>
 
-        </Modal>
-    );
-}
+//         </Modal>
+//     );
+// }
 
 function Subform({ }) {
 

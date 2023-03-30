@@ -90,7 +90,7 @@ function App() {
     <NextUIProvider theme={isDark ? darkTheme : lightTheme}>
       <IsLoggedInContext.Provider value={{ isLoggedIn, setIsLoggedIn,  setUserId, accessToken, setAccessToken, toDoCategories, setToDoCategories, user, setUser }}>
         <ThemeContext.Provider value={{ isDark, toggleTheme }}> {/*this controls everything custom */}
-          <div className="App" style={{ height: "100vh" }}>
+          <div className="App">
             <Router >
               <Routes>
                 <Route path='/' element={isLoggedIn ? <Portal /> : <LoginPage />} exact />

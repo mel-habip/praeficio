@@ -4,12 +4,16 @@ import { Dropdown, Button, Badge } from '@nextui-org/react';
 import { CustomButton } from './CustomButton';
 
 
-export default function CustomizedDropdown({ optionsList = [], outerUpdater = () => { }, default_value, title = '', selectionMode = 'single', disabled = false, trigger, disallowEmptySelection = true }) {
+export default function CustomizedDropdown({ optionsList = [], outerUpdater = () => { }, default_value, title = '', selectionMode = 'single', disabled = false, trigger, disallowEmptySelection = true, mountDirectly = false }) {
 
     const optionsMap = optionsList.reduce((acc, cur) => ({ ...acc, [cur.key]: cur }), {});
 
     const [innerSelected, setInnerSelected] = useState(default_value ? new Set([default_value]) : new Set());
     const [isMounted, setIsMounted] = useState(0);
+
+    useEffect(() => {
+        if (mountDirectly) setIsMounted(2);
+    }, [mountDirectly]);
 
     const selectedValue = React.useMemo(() => {
 
@@ -35,7 +39,7 @@ export default function CustomizedDropdown({ optionsList = [], outerUpdater = ()
     useEffect(() => {
         if (default_value) {
             setInnerSelected(new Set([default_value]));
-            if (isMounted>1) outerUpdater(selectedValue);
+            if (isMounted > 1) outerUpdater(selectedValue);
         }
     }, [default_value]);
 

@@ -8,7 +8,6 @@
   --border_color: darkgrey;
   overflow-x: hidden;
   overflow-y: auto;
-  height: 100vh;
   --nextui-colors-accents0: lightgrey;
 }
 
@@ -46,6 +45,7 @@ a {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  min-height: 100vh;
 }
 
 .AnimatedButtonBox {

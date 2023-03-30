@@ -28,7 +28,7 @@ export default function Settings() {
     return (
         <>
             <NavMenu ></NavMenu>
-            <Text h1 css={{ top: 0, 'margin-top': '10%' }} >{user.first_name ? `${user.first_name}'s` : 'Your'} Settings </Text>
+            <Text h1 css={{ 'margin-top': '4%' }} >{user.first_name ? `${user.first_name}'s` : 'Your'} Settings </Text>
             <hr className="line-primary"></hr>
             <ToDoCategoriesSection />
             <hr className="line-primary"></hr>
@@ -37,7 +37,7 @@ export default function Settings() {
 
 
             <PersonalSettingsSection user={user} setUser={setUser} />
-            <hr className="line-primary"></hr>
+            <hr style={{ 'margin-bottom': '4%' }}></hr>
         </>
     );
 };

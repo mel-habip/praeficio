@@ -69,7 +69,7 @@ export default function UserSearchModal({ is_open, user, set_is_open, add_button
                 setTableLoading(false);
             });
 
-        }, 2000);
+        }, 500);
         return () => clearTimeout(delayDebounceFn);
     }, [keyword]);
 
