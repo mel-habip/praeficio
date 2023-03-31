@@ -178,18 +178,6 @@ body {
   padding: 1rem;
 }
 
-h1 {
-  font-weight: normal;
-  margin-bottom: 0.5rem;
-}
-
-h2 {
-  border-bottom: 1px solid #e5e5ea;
-  color: #666;
-  font-weight: normal;
-  margin-top: 0;
-  padding-bottom: 1.5rem;
-}
 
 .comment {
   color: #222;

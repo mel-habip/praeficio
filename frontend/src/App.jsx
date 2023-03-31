@@ -98,6 +98,7 @@ function App() {
                 <Route path='/positions' element={isLoggedIn ? <Positions /> : <LoginPage />} exact />
                 <Route path='/alerts' element={isLoggedIn ? <Alerts /> : <LoginPage />} exact />
                 <Route path='/todos' element={isLoggedIn ? <ToDos /> : <LoginPage />} exact />
+                <Route path='/todos/archive' element={isLoggedIn ? <ToDos archive /> : <LoginPage />} exact />
                 <Route path='/settings' element={isLoggedIn ? <Settings /> : <LoginPage />} exact />
                 <Route path='/feedback_logs' element={isLoggedIn ? <FeedbackLogsPage /> : <LoginPage />} exact />
                 <Route path='/feedback_logs/archive' element={isLoggedIn ? <FeedbackLogsPage archive /> : <LoginPage />} exact />
