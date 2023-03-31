@@ -89,7 +89,7 @@ feedbackLogRouter.get('/:feedback_log_id', async (req, res) => {
         feedback_log_items,
         ...feedback_log_details
     } = await helper.fetch_by_id([req.params.feedback_log_id], {}, {
-        users: !['basic_client', 'pro_client'].includes(req.user.permissions),
+        users: true,
         items: true,
     }) || {};
 

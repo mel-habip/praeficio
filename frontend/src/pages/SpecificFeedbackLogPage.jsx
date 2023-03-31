@@ -19,6 +19,8 @@ import { Button, Modal, Spacer, Text, Input, Tooltip, Row, Table, Textarea, useA
 import { CustomButton } from '../fields/CustomButton';
 import CustomizedDropdown from '../fields/CustomizedDropdown';
 
+
+import FilterCreationModal from '../components/FilterCreationModal'
 import UserSearchModal from '../components/UserSearchModal';
 import timestampFormatter from '../utils/timestampFormatter';
 
@@ -48,7 +50,7 @@ export default function SpecificFeedbackLogPage() {
                 setFeedbackLogOwnDetails(rest);
                 setFeedbackLogItems(items ?? []);
             } else {
-                console.log('fetch', response);
+                console.warn('fetch', response);
             }
         });
         axios.get(`http://localhost:8000/feedback_log_filters/${feedback_log_id}`).then(response => {
@@ -57,7 +59,7 @@ export default function SpecificFeedbackLogPage() {
             } else if (response.status === 200) {
                 setFeedbackLogFilters(response.data.data);
             } else {
-                console.log('fetch', response);
+                console.warn('fetch', response);
             }
         });
     }, []);
@@ -67,7 +69,6 @@ export default function SpecificFeedbackLogPage() {
     const updateCachedItems = (item_id, updated_details) => {
         setFeedbackLogItems(feedbackLogItems.map(item => {
             if (item.feedback_log_item_id === item_id) {
-                // console.log('triggy', updated_details, item_id);
                 return updated_details;
             } else {
                 return item;
@@ -85,7 +86,7 @@ export default function SpecificFeedbackLogPage() {
         {(!feedbackLogItems.length && !feedbackLogOwnDetails.archived) && <><h3>No items in this log yet - Go ahead & add some! </h3><hr className="line-primary" /></>}
         {feedbackLogOwnDetails.archived && <><h3> This log has been locked and archived. </h3><hr className="line-primary" /></>}
 
-        {!!feedbackLogItems.length && <FeedbackLogTable archived={feedbackLogOwnDetails.archived} {...{ feedbackLogFilters, updateCachedItems, feedbackLogItems, user, setIsLoggedIn }} />}
+        {!!feedbackLogItems.length && <FeedbackLogTable archived={feedbackLogOwnDetails.archived} {...{ feedbackLogOwnDetails, feedbackLogFilters, updateCachedItems, feedbackLogItems, user, setIsLoggedIn }} />}
 
         <Spacer y={1} />
         {/*need to handle these, TODO: */}
@@ -106,7 +107,7 @@ export default function SpecificFeedbackLogPage() {
                 } else if (response.status === 201) {
                     setUserAdditionModalOpen(false);
                 } else {
-                    console.log('fetch', response);
+                    console.warn('fetch', response);
                 }
             });
         }} />
@@ -342,8 +343,6 @@ function FeedbackItemUpdateModal({ is_open, set_is_open, updateCachedItems, setI
 };
 
 
-
-
 function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setIsLoggedIn, feedbackLogOwnDetails, archived, feedbackLogFilters }) {
     const [innerItems, setInnerItems] = useState([]);
     const [selected, SetSelected] = useState(null);
@@ -375,13 +374,8 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
         };
     };
 
-    
     const list = useAsyncList({ load, sort });
     //This section is what supports sorting
-    
-    console.log(list);
-
-    
 
 
     // search Debounce mechanism from https://stackoverflow.com/questions/42217121/how-to-start-search-only-when-user-stops-typing
@@ -389,7 +383,7 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
     const keyword = React.useMemo(() => searchText.trim().toLowerCase(), [searchText]);
 
     useEffect(() => {
-        
+
         if (!keyword || !searchText) {
             setInnerItems(feedbackLogItems);
             return;
@@ -506,7 +500,7 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
                                                     } else if (response.status === 401) {
                                                         setIsLoggedIn(false);
                                                     } else {
-                                                        console.log(response);
+                                                        console.warn(response);
                                                     }
                                                 });
                                             })} />
@@ -541,10 +535,11 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
 
             <ThreadsModal disabled={archived} is_open={threadsModalOpen} set_is_open={setThreadsModalOpen} {...{ archived, user, setIsLoggedIn }} item_id={selected} />
 
+
             <Modal
                 scroll
                 blur
-                aria-labelledby="modal-title"
+                aria-labelledby="log item notes modal"
                 css={{ 'max-width': '550px' }}
                 open={notesModalOpen}
                 closeButton onClose={() => setNotesModalOpen(false)} >
@@ -562,7 +557,7 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
                             } else if (response.status === 401) {
                                 setIsLoggedIn(false);
                             } else {
-                                console.log(response);
+                                console.warn(response);
                             }
                         });
                     }} />
@@ -581,7 +576,7 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
                                 } else if (response.status === 401) {
                                     setIsLoggedIn(false);
                                 } else {
-                                    console.log(response);
+                                    console.warn(response);
                                 }
                             });
                         }} />}
@@ -611,7 +606,7 @@ function ThreadsModal({ user, item_id, is_open, set_is_open, setIsLoggedIn, disa
             } else if (response.status === 401) {
                 setIsLoggedIn(false);
             } else {
-                console.log(response);
+                console.warn(response);
             }
         });
     }, [item_id, is_open]);
@@ -656,7 +651,7 @@ function ThreadsModal({ user, item_id, is_open, set_is_open, setIsLoggedIn, disa
                         } else if (response.status === 401) {
                             setIsLoggedIn(false);
                         } else {
-                            console.log(response);
+                            console.warn(response);
                         }
                     });
                 }}
@@ -695,7 +690,7 @@ function ThreadsModal({ user, item_id, is_open, set_is_open, setIsLoggedIn, disa
                             } else if (response.status === 401) {
                                 setIsLoggedIn(false);
                             } else {
-                                console.log(response);
+                                console.warn(response);
                             }
                         });
                     }} ><i className="fa-solid fa-dove"></i></CustomButton>
@@ -760,103 +755,8 @@ function FiltersDropdown({ feedbackLogFilters, feedbackLogOwnDetails, }) {
 
     return (
         <>
-            <CustomizedDropdown disallowEmptySelection={false} trigger={<Button auto color={filterApplied ? 'success' : 'default'} ><i className="fa-solid fa-filter fa-lg"></i></Button>} optionsList={formattedList} outerUpdater={e => { console.log('e', e); if (e === 'create_new') { setFilterCreationModalOpen(true); } else { setFilterApplied(e) } }} />
-            {/* <FilterCreationModal {...{ filterCreationModalOpen, setFilterCreationModalOpen }} /> */}
-        </>
-    );
-}
-
-// function FilterCreationModal({ filterCreationModalOpen, setFilterCreationModalOpen }) {
-//     const [numParts, setNumParts] = useState(1);
-//     const [topOperator, setTopOperator] = useState('AND');
-
-//     const operatorOptions = [
-//         {
-//             key: 'AND',
-//             name: 'AND',
-//             description: 'all conditions must meet'
-//         },
-//         {
-//             key: 'OR',
-//             name: 'OR',
-//             description: 'one condition must meet'
-//         }
-//     ];
-
-//     return (
-//         <Modal
-//             scroll
-//             blur
-//             aria-labelledby="modal-title"
-//             css={{ 'max-width': '550px' }}
-//             open={filterCreationModalOpen}
-//             closeButton onClose={() => setFilterCreationModalOpen(false)}
-//         >
-//             <Modal.Header>
-//                 <Text size={18} >Let's create a new filter, clicked {numParts}</Text>
-//             </Modal.Header>
-//             <Modal.Body>
-//                 <CustomizedDropdown title='Operator' optionsList={operatorOptions} outerUpdater={setTopOperator} default_value="AND" />
-//                 {([...new Array(numParts)]).map((e, i) =>
-
-//                     <div style={{ border: '1px solid blue', display: 'flex', 'flexWrap': 'wrap' }}>
-//                         <CustomButton onClick={() => setNumParts(numParts - 1)} >X</CustomButton>
-//                         <Subform key={i} />
-//                     </div>
-//                 )}
-//                 <CustomButton onClick={() => setNumParts(numParts + 1)} >+</CustomButton>
-
-//             </Modal.Body>
-
-//         </Modal>
-//     );
-// }
-
-function Subform({ }) {
-
-    const operatorOptions = [
-        {
-            key: '<=',
-            name: 'LTE',
-            description: 'less than or equal'
-        },
-        {
-            key: '>=',
-            name: 'GTE',
-            description: 'greater than or equal'
-        },
-        {
-            key: 'not',
-            name: '!=',
-            description: 'less than or equal'
-        },
-        {
-            key: 'is',
-            name: '==',
-            description: 'less than or equal'
-        }
-    ];
-
-    const fieldOptions = [
-        {
-            key: 'created_on',
-            name: 'Created On'
-        },
-        {
-            key: 'updated_on',
-            name: 'Last Update'
-        },
-        {
-            key: 'created_by',
-            name: 'Created by'
-        }
-    ];
-
-    return (
-        <>
-            <CustomizedDropdown optionsList={fieldOptions} default_value="updated_on" />
-            <CustomizedDropdown optionsList={operatorOptions} default_value="is" />
-            <Input fullWidth bordered css={{ mt: '30px' }} labelPlaceholder='value' ></Input>
+            <CustomizedDropdown mountDirectly disallowEmptySelection={false} trigger={<Button auto color={filterApplied ? 'success' : 'default'} ><i className="fa-solid fa-filter fa-lg"></i></Button>} optionsList={formattedList} outerUpdater={e => { console.log('e', e); if (e === 'create_new') { setFilterCreationModalOpen(true); } else { setFilterApplied(e) } }} />
+            <FilterCreationModal {...{ filterCreationModalOpen, setFilterCreationModalOpen, }} createdByOptions={feedbackLogOwnDetails.users} />
         </>
     );
 }

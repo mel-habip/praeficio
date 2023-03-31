@@ -25,14 +25,12 @@ export default class FeedbackLogService extends RecordService {
         const sql = `SELECT * FROM feedback_logs WHERE feedback_log_id = ? ${constraint_stringifier(constraints)} LIMIT 1;`;
         const [feedbackLog] = await query(sql, record_id);
         if (!feedbackLog) return null;
-        if (inclusions.users) {
-            await query(`SELECT * FROM feedback_log_user_associations WHERE feedback_log_id = ?`, record_id).then(response => {
-                feedbackLog.users = response.map(x => x.user_id);
-            });
-        }
+        await query(`SELECT feedback_log_user_associations.*, users.username FROM feedback_log_user_associations LEFT JOIN users ON feedback_log_user_associations.user_id = users.user_id WHERE feedback_log_id = ?`, record_id).then(response => {
+            feedbackLog.users = response;
+        });
         if (inclusions.feedback_log_items || inclusions.items) {
 
-            let additional_filter='';
+            let additional_filter = '';
 
             if (feedbackLog.default_filter_id && !inclusions.all && inclusions.all_items) {
                 const filter_details = await filterHelper.fetch_by_id(feedbackLog.default_filter_id);
