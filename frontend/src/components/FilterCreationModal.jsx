@@ -15,7 +15,7 @@ export default function FilterCreationModal({ filterCreationModalOpen, setFilter
     const [publicity, setPublicity] = useState('user_one_log');
     const [showResult, setShowResult] = useState(false);
     const [data, setData] = useState([
-        { id: 1, value: "", operation: "" }
+        { id: 1, value: "", }
     ]);
 
     const operatorOptions = [

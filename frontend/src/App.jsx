@@ -8,6 +8,7 @@ import Portal from './pages/Portal.jsx';
 import Positions from './pages/Positions.jsx';
 import Settings from './pages/Settings.jsx';
 import Alerts from './pages/Alerts.jsx';
+import Workspaces from './pages/Workspaces.jsx';
 import ToDos from './pages/ToDos.jsx';
 import TestZone from './pages/TestZone';
 import FeedbackLogsPage from './pages/FeedbackLogsPage.jsx';
@@ -88,7 +89,7 @@ function App() {
 
   return (
     <NextUIProvider theme={isDark ? darkTheme : lightTheme}>
-      <IsLoggedInContext.Provider value={{ isLoggedIn, setIsLoggedIn,  setUserId, accessToken, setAccessToken, toDoCategories, setToDoCategories, user, setUser }}>
+      <IsLoggedInContext.Provider value={{ isLoggedIn, setIsLoggedIn, setUserId, accessToken, setAccessToken, toDoCategories, setToDoCategories, user, setUser }}>
         <ThemeContext.Provider value={{ isDark, toggleTheme }}> {/*this controls everything custom */}
           <div className="App">
             <Router >
@@ -97,6 +98,7 @@ function App() {
                 <Route path='/login' element={<LoginPage />} />
                 <Route path='/positions' element={isLoggedIn ? <Positions /> : <LoginPage />} exact />
                 <Route path='/alerts' element={isLoggedIn ? <Alerts /> : <LoginPage />} exact />
+                <Route path='/workspaces' element={isLoggedIn ? <Workspaces /> : <LoginPage />} exact />
                 <Route path='/todos' element={isLoggedIn ? <ToDos /> : <LoginPage />} exact />
                 <Route path='/todos/archive' element={isLoggedIn ? <ToDos archive /> : <LoginPage />} exact />
                 <Route path='/settings' element={isLoggedIn ? <Settings /> : <LoginPage />} exact />
