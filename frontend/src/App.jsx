@@ -91,6 +91,8 @@ function App() {
     }
   }, [isLoggedIn]);
 
+  // if (![true, false].includes(isLoggedIn)) { return (<LoadingPage />); }
+
   return (
     <NextUIProvider theme={isDark ? darkTheme : lightTheme}>
       <IsLoggedInContext.Provider value={{ isLoggedIn, setIsLoggedIn, setUserId, accessToken, setAccessToken, toDoCategories, setToDoCategories, user, setUser }}>
