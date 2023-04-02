@@ -23,10 +23,12 @@ import CustomizedDropdown from '../fields/CustomizedDropdown';
 import FilterCreationModal from '../components/FilterCreationModal'
 import UserSearchModal from '../components/UserSearchModal';
 import timestampFormatter from '../utils/timestampFormatter';
+import useHandleError from '../utils/handleError';
 
 export default function SpecificFeedbackLogPage() {
 
     const { feedback_log_id } = useParams();
+    const handleError = useHandleError();
 
     console.log('routeParams', feedback_log_id);
 
@@ -43,16 +45,14 @@ export default function SpecificFeedbackLogPage() {
     //fetch the data
     useEffect(() => {
         axios.get(`http://localhost:8000/feedback_logs/${feedback_log_id}`).then(response => {
-            if (response.status === 401) {
-                setIsLoggedIn(false);
-            } else if (response.status === 200) {
+            if (response.status === 200) {
                 let { data: items, ...rest } = response.data;
                 setFeedbackLogOwnDetails(rest);
                 setFeedbackLogItems(items ?? []);
             } else {
                 console.warn('fetch', response);
             }
-        });
+        }).catch(handleError);
         axios.get(`http://localhost:8000/feedback_log_filters/${feedback_log_id}`).then(response => {
             if (response.status === 401) {
                 setIsLoggedIn(false);
@@ -344,19 +344,17 @@ function FeedbackItemUpdateModal({ is_open, set_is_open, updateCachedItems, setI
 
 
 function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setIsLoggedIn, feedbackLogOwnDetails, archived, feedbackLogFilters }) {
-    const [innerItems, setInnerItems] = useState([]);
+
     const [selected, SetSelected] = useState(null);
     const [notesModalOpen, setNotesModalOpen] = useState(false);
     const [updateModalOpen, setUpdateModalOpen] = useState(false);
     const [threadsModalOpen, setThreadsModalOpen] = useState(false);
     const [updateDetails, setUpdateDetails] = useState(null);
 
-    //since the items are passed as a prop, it doesn't re-render the child when the parent's State is updated, this should do that
-    let load = async () => ({ items: feedbackLogItems }); //this can normally be an async function that fetches the data, but normally we hold the whole page off while it is loading
-    useEffect(() => {
-        setInnerItems(feedbackLogItems);
-        load = async () => ({ items: innerItems });
-    }, [feedbackLogItems]);
+
+
+    let load = async ({ filterText }) => ({ items: filterText ? feedbackLogItems.filter(result => [result.content.toLowerCase(), result.header.toLowerCase(), result.created_on, result.updated_on, result.created_by_username].join('').includes(filterText)) : feedbackLogItems }); //this can normally be an async function that fetches the data, but already we hold the whole page off while it is loading
+
 
     //This section is what supports sorting
     const collator = useCollator({ numeric: true });
@@ -385,14 +383,13 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
     useEffect(() => {
 
         if (!keyword || !searchText) {
-            setInnerItems(feedbackLogItems);
+            list.setFilterText('');
             return;
         }
         const delayDebounceFn = setTimeout(() => {
             console.log('Search Triggerred', keyword);
-            setInnerItems(feedbackLogItems.filter(result => [result.content.toLowerCase(), result.header.toLowerCase(), result.created_on, result.updated_on, result.created_by_username].join('').includes(keyword))); //consider implementing fuzzy search here
-            //also consider doing some logic so that if there are a lot of items, we ask the BE to do this instead
-        }, 500);
+            list.setFilterText(keyword);
+        }, 300);
         return () => clearTimeout(delayDebounceFn);
     }, [keyword]);
 
@@ -438,7 +435,7 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
                     bordered
                     value={searchText}
                     labelPlaceholder="Search the log"
-                    helperText={searchText ? '3 second delay is normal' : ''}
+                    helperText={searchText ? 'a small delay is normal' : ''}
                     css={{ mr: '3px' }}
                     width="300px"
                     clearable

@@ -81,7 +81,7 @@ feedbackLogRouter.post('/', async (req, res) => {
 //fetches details of a feedback log, including the items therein
 feedbackLogRouter.get('/:feedback_log_id', async (req, res) => {
 
-    if (['basic_client', 'pro_client'].includes(req.user.permissions) && !req.user.feedback_logs.includes(parseInt(req.params.feedback_log_id))) {
+    if (!req.user.feedback_logs.includes(parseInt(req.params.feedback_log_id))) {
         return res.status(403).send(`Forbidden: You do not have access to this Feedback Log.`);
     }
 
@@ -93,8 +93,8 @@ feedbackLogRouter.get('/:feedback_log_id', async (req, res) => {
         items: true,
     }) || {};
 
-    if (!feedback_log_details) {
-        return res.status(404).send(`Feedback Log ${req.params.feedback_log_id} Not Found.`);
+    if (!Object.keys(feedback_log_details || {}).length || !feedback_log_items) {
+        return res.status(404).json({message: `Feedback Log ${req.params.feedback_log_id} Not Found.`, not_found: true});
     }
 
     return res.status(200).json({

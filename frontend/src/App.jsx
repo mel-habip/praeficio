@@ -14,6 +14,8 @@ import TestZone from './pages/TestZone';
 import FeedbackLogsPage from './pages/FeedbackLogsPage.jsx';
 import SpecificFeedbackLogPage from './pages/SpecificFeedbackLogPage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
+import ForbiddenPage from './pages/ForbiddenPage.jsx';
+import LoadingPage from './pages/LoadingPage';
 import ThemeContext from './contexts/ThemeContext';
 import IsLoggedInContext from './contexts/IsLoggedInContext';
 import { NextUIProvider, createTheme } from '@nextui-org/react';
@@ -76,6 +78,8 @@ function App() {
           setIsLoggedIn(false);
         }
       });
+    } else {
+      setIsLoggedIn(false);
     }
   }, [localAccessToken]);
 
@@ -106,6 +110,7 @@ function App() {
                 <Route path='/feedback_logs/archive' element={isLoggedIn ? <FeedbackLogsPage archive /> : <LoginPage />} exact />
                 <Route path='/feedback_logs/:feedback_log_id' element={isLoggedIn ? <SpecificFeedbackLogPage /> : <LoginPage />} exact />
                 <Route path='/testzone' element={<TestZone />} exact />
+                <Route path='/403' element={<ForbiddenPage />} exact />
                 <Route path='/*' element={<NotFoundPage />} />
               </Routes>
             </Router>

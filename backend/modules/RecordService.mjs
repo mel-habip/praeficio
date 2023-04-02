@@ -1,5 +1,30 @@
 import query from '../utils/db_connection.js';
 
+export const recordTypeMap = {
+    table_names: { //phase these out once ready.
+        Alert: 'alerts',
+        Position: 'positions',
+        User: 'users',
+        Workspace: 'workspaces',
+        FeedbackLog: 'feedback_logs',
+        WorkspaceUserAssociation: 'workspace_user_associations',
+        WorkspacePositionAssociation: 'workspace_position_associations',
+    },
+    simple_primary_key: {
+        Users: 'user_id',
+        Position: 'position_id',
+        Alert: 'alert_id',
+        Workspace: 'workspace_id',
+        FeedbackLog: 'feedback_log_id',
+        FeedbackLogItem: 'feedback_log_item',
+    },
+    complex_primary_key: {
+        WorkspaceUserAssociation: ['workspace_id', 'user_id'],
+        WorkspacePositionAssociation: ['workspace_id', 'position_id'],
+        FeedbackLogUserAssociation: ['feedback_log_id', 'user_id'],
+    }
+};
+
 /**
  * @module Record polymorphic archetype for different records in the DB
  * @method fetch_by_id provides the record
@@ -172,7 +197,7 @@ export default class RecordService {
      * @param {{any:string|number|boolean}} data details of the new record
      */
     async create_single(data) {
-        const table_name = recordTypeMap.table_names[this.record_type];
+        const table_name = this.table_name || recordTypeMap.table_names[this.record_type];
 
         if (!table_name) throw Error(`${this.record_type} not recognized`);
 
@@ -250,3 +275,5 @@ export function constraint_stringifier(constraints = {}) {
 
     return t.join(' ');
 }
+
+

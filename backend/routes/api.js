@@ -8,30 +8,9 @@ import query from '../utils/db_connection.js';
 
 import fuzzySearch from '../utils/fuzzy_search.js';
 
-const recordTypeMap = {
-    table_names: { //phase these out once ready.
-        Alert: 'alerts',
-        Position: 'positions',
-        User: 'users',
-        Workspace: 'workspaces',
-        FeedbackLog: 'feedback_logs',
-        WorkspaceUserAssociation: 'workspace_user_associations',
-        WorkspacePositionAssociation: 'workspace_position_associations',
-    },
-    simple_primary_key: {
-        Users: 'user_id',
-        Position: 'position_id',
-        Alert: 'alert_id',
-        Workspace: 'workspace_id',
-        FeedbackLog: 'feedback_log_id',
-        FeedbackLogItem: 'feedback_log_item',
-    },
-    complex_primary_key: {
-        WorkspaceUserAssociation: ['workspace_id', 'user_id'],
-        WorkspacePositionAssociation: ['workspace_id', 'position_id'],
-        FeedbackLogUserAssociation: ['feedback_log_id', 'user_id'],
-    }
-}
+import {
+    recordTypeMap
+} from '../modules/RecordService.mjs';
 
 const log = console.log;
 

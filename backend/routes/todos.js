@@ -10,6 +10,8 @@ const helper = new ToDoService();
 
 import query from '../utils/db_connection.js';
 
+import validateAndSanitizeBodyParts from '../jobs/validateAndSanitizeBodyParts.js';
+
 const log = console.log;
 
 todosRouter.use(authenticateToken);
@@ -30,18 +32,26 @@ todosRouter.get(`/my_todos`, async (req, res) => {
 });
 
 //create a ToDo
-todosRouter.post(`/`, async (req, res) => {
-    let result = await query(`INSERT INTO todos (user_id, content, category) VALUES ( ?,  ?,  ?);`, [req.user.id, req.body.content, req.body.category]);
+todosRouter.post(`/`, validateAndSanitizeBodyParts({
+    content: 'string',
+    category: 'string'
+}, ['content', 'category']), async (req, res) => {
 
-    if (result.affectedRows) {
-        let [newly_created] = await query(`SELECT * FROM todos WHERE to_do_id = LAST_INSERT_ID();`);
-        return res.status(201).json(newly_created);
-    } else {
-        return res.status(422).json({
-            success: false,
-            details: result
-        });
+    let creation = await helper.create_single({
+        user_id: req.user.id,
+        content: req.body.content,
+        category: req.body.category,
+    });
+
+    if (creation?.success) {
+        return res.status(201).json(creation.details);
     }
+
+    return res.status(422).json({
+        success: false,
+        details: creation?.details,
+        message: creation?.message
+    });
 });
 
 //edit a ToDo

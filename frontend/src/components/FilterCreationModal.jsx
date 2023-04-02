@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 
 import IsLoggedInContext from '../contexts/IsLoggedInContext';
 
-import { Button, Modal, Spacer, Text, Input, Checkbox, Tooltip, Row, Grid, Dropdown, Card } from '@nextui-org/react';
+import { Modal, Text, Input, Checkbox } from '@nextui-org/react';
 
 import removeIndex from '../utils/removeIndex';
 
@@ -58,7 +58,8 @@ export default function FilterCreationModal({ filterCreationModalOpen, setFilter
             aria-labelledby="modal-title"
             css={{ 'min-width': '550px', 'max-width': '750px', overflowY: 'auto' }}
             open={filterCreationModalOpen}
-            closeButton onClose={() => setFilterCreationModalOpen(false)}
+            closeButton 
+            onClose={() => setFilterCreationModalOpen(false)}
         >
             <Modal.Header>
                 <Text size={18}>Let's create a new filter</Text>
@@ -242,8 +243,11 @@ function SubForm({ outerUpdater = () => true, nested_level = 0, self_data = {}, 
             {subFormData.field === 'created_by' && <CustomizedDropdown mountDirectly selectionMode={subFormData.operator === 'in' ? 'multi' : 'single'} optionsList={createdByOptions_internal} outerUpdater={handleFieldChange('value')} />}
 
             {subFormData.field === 'status' && <CustomizedDropdown mountDirectly selectionMode={subFormData.operator === 'in' ? 'multi' : 'single'} optionsList={statusList} outerUpdater={handleFieldChange('value')} />}
+            
+            {['created_on', 'updated_on'].includes(subFormData.field) && <Checkbox css={{ml: '10px'}} onChange={handleFieldChange('relative')} >Relative</Checkbox> }
 
             {!(subFormData.operator === 'in' || subFormData.field === 'status' || subFormData.field === 'created_by' || showCombination || !subFormData.field) && <Input hidden={subFormData.operator === 'in' || subFormData.field === 'status' || subFormData.field === 'created_by'} type={['created_on', 'updated_on'].includes(subFormData.field) ? 'date' : 'text'} fullWidth bordered css={{ mt: '30px', ml: '10px', mr: '10px', mb: '0px' }} labelPlaceholder='value' onChange={ev => handleFieldChange('value')(ev.target.value)}></Input>}
+
 
 
             {subFormData.operator === 'in' && subFormData.field !== 'status' && subFormData.field !== 'created_by' && <WordListField onListChange={v => setSubFormData({ ...subFormData, value: v })} />}
