@@ -88,10 +88,11 @@ function App() {
       console.log('kicked out');
       localStorage.removeItem('access_token');
       localStorage.removeItem('user_id');
+      setIsLoggedIn(null); //revert to original, or else will be stuck 
     }
   }, [isLoggedIn]);
 
-  // if (![true, false].includes(isLoggedIn)) { return (<LoadingPage />); }
+  if (![true, false].includes(isLoggedIn)) { return (<LoadingPage />); }
 
   return (
     <NextUIProvider theme={isDark ? darkTheme : lightTheme}>
@@ -105,6 +106,7 @@ function App() {
                 <Route path='/positions' element={isLoggedIn ? <Positions /> : <LoginPage />} exact />
                 <Route path='/alerts' element={isLoggedIn ? <Alerts /> : <LoginPage />} exact />
                 <Route path='/workspaces' element={isLoggedIn ? <Workspaces /> : <LoginPage />} exact />
+                <Route path='/workspaces/:workspace_id' element={isLoggedIn ? <Workspaces /> : <LoginPage />} exact />
                 <Route path='/todos' element={isLoggedIn ? <ToDos /> : <LoginPage />} exact />
                 <Route path='/todos/archive' element={isLoggedIn ? <ToDos archive /> : <LoginPage />} exact />
                 <Route path='/settings' element={isLoggedIn ? <Settings /> : <LoginPage />} exact />

@@ -1,0 +1,112 @@
+.comments-list {
+    display: flex;
+    flex-direction: column;
+    width: 500px;
+}
+
+.comment-inner {
+  position: relative;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 1rem;
+  background: var(--background-color);
+}
+
+.comment-inner:hover {
+    filter:brightness(120%);
+    box-shadow: rgb(95, 240, 208, 70%) 0px 0px 50px;;
+    
+}
+
+.comment-header, .comment-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+/* .comment-children { */
+  /* padding-left: 1rem;
+  border-left: 1px solid #ddd; */
+/* } */
+
+.comment-children-container {
+  display: flex;
+  flex-direction: row;
+}
+
+
+.comment-collapse-children {
+    min-height: 100%;
+    background: none;
+    padding-right: 1rem;
+    border-left: 1px solid var(--text-primary);
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
+    margin-bottom: 1rem;
+}
+
+.comment-show-children-container {
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+}
+.comment-show-children {
+  margin-bottom: 1rem;
+  margin-left: 1rem;
+  transition: width 0.7s;
+  border-radius: 35px;
+  width: 35px;
+  height: 35px;
+}
+.comment-show-children:hover {
+  width: 120px;
+  transition: width 0.7s;
+}
+.comment-show-children i {
+  opacity: 1;
+  transition: opacity 0.5s
+}
+.comment-show-children:hover i {
+  opacity: 0;
+  transition: opacity 0.5s
+}
+.comment-show-children .button-text {
+  opacity: 0%;
+  transition: opacity .5s;
+  position: absolute;
+  width: 100%;
+  left: 0;
+ }
+
+.comment-show-children:hover .button-text {
+  opacity: 1;
+  transition: opacity 0.5s
+}
+
+.comment-content {
+    text-align: -webkit-auto;
+}
+
+.comment-reply-container:not(.root) {
+    margin-bottom: 1rem;
+    padding-left: 1rem; 
+    border-left: 1px solid var(--text-primary);
+}
+
+
+label {
+    display: block;
+    text-align: left;
+    font-weight: var(--nextui-fontWeights-normal);
+    color: var(--nextui--inputLabelColor);
+    padding: 0 0 0 var(--nextui-space-2);
+    margin-bottom: var(--nextui-space-3);
+    font-size: var(--nextui--inputFontSize);
+    line-height: var(--nextui-lineHeights-md);
+    user-select: none;
+}

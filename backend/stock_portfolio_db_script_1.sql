@@ -50,6 +50,7 @@ CREATE TABLE positions (
 CREATE TABLE workspaces (
     workspace_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
+    publicity ENUM('hidden', 'discoverable', 'public'),
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP
 );
@@ -57,6 +58,7 @@ CREATE TABLE workspace_user_associations (
     user_id INT NOT NULL,
     workspace_id INT NOT NULL,
     role VARCHAR(255) NOT NULL,
+    starred BOOLEAN DEFAULT FALSE,
     invitation_accepted BOOLEAN DEFAULT FALSE,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
@@ -80,6 +82,54 @@ CREATE TABLE workspace_position_associations (
         REFERENCES workspaces (workspace_id)
         ON DELETE CASCADE
 );
+
+CREATE TABLE workspace_favourites (
+	workspace_id INT NOT NULL,
+    user_id INT NOT NULL,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (workspace_id, user_id),
+    FOREIGN KEY (workspace_id)
+		REFERENCES workspaces (workspace_id)
+        ON DELETE CASCADE,
+	FOREIGN KEY (user_id)
+		REFERENCES users (user_id)
+        ON DELETE CASCADE
+);
+
+CREATE TABLE workspace_messages (
+	workspace_message_id INT AUTO_INCREMENT PRIMARY KEY,
+    workspace_id INT NOT NULL,
+    content VARCHAR(400),
+    sent_by INT NOT NULL,
+    deleted BOOLEAN DEFAULT FALSE,
+    starred BOOLEAN DEFAULT FALSE,
+    parent_workspace_message_id INT,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_on DATETIME DEFAULT NULL ON UPDATE current_timestamp,
+    FOREIGN KEY (workspace_id)
+        REFERENCES workspaces (workspace_id)
+        ON DELETE CASCADE,
+	FOREIGN KEY (parent_workspace_message_id)
+		REFERENCES workspace_messages (workspace_message_id)
+        ON DELETE CASCADE,
+	FOREIGN KEY (sent_by)
+		REFERENCES users (user_id)
+        ON DELETE CASCADE
+);
+
+CREATE TABLE workspace_message_likes (
+	workspace_message_id INT NOT NULL,
+    user_id INT NOT NULL,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (workspace_message_id, user_id),
+    FOREIGN KEY (workspace_message_id)
+		REFERENCES workspace_messages (workspace_message_id)
+        ON DELETE CASCADE,
+	FOREIGN KEY (user_id)
+		REFERENCES users (user_id)
+        ON DELETE CASCADE
+);
+
 CREATE TABLE alerts (
 	alert_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,

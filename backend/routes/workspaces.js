@@ -8,49 +8,36 @@ import {
 import query from '../utils/db_connection.js';
 import emailService from '../jobs/emailService.js';
 
+import WorkspaceService from '../modules/WorkspaceService.mjs';
+
+const workspaceHelper = new WorkspaceService();
+
 workspacesRouter.use(authenticateToken);
 
+//fetch all WSs that user has access to
 workspacesRouter.get('/', async (req, res) => {
     if (positions.devs.includes(req.user.permissions)) {
-        let sql_1 = `SELECT * FROM workspaces`;
+        let sql_1 = `SELECT workspaces.*, workspace_user_associations.role, workspace_user_associations.created_on as member_since, workspace_user_associations.invitation_accepted, workspace_user_associations.starred  FROM workspaces LEFT JOIN workspace_user_associations ON (workspace_user_associations.workspace_id = workspaces.workspace_id AND workspace_user_associations.user_id = ?);`;
 
-        let workspaces = await query(sql_1);
+        let workspaces = await query(sql_1, req.user.id);
 
-
-        for await (const workspace of workspaces) {
-            await query(`SELECT * FROM workspace_user_associations WHERE workspace_id = ?`, workspace.workspace_id).then(response => {
-                workspace.users = response.map(x => x.user_id);
-            });
-            await query(`SELECT * FROM workspace_position_associations WHERE workspace_id = ?`, workspace.workspace_id).then(response => {
-                workspace.positions = response.map(x => x.position_id);
-            });
-        };
-
-        return res.status(200).json(workspaces);
+        return res.status(200).json({
+            data: workspaces
+        });
 
     } else {
 
-        const user_workspace_map = req.user.workspaces.reduce((map, {
-            workspace_id,
-            role
-        }) => (map[workspace_id] = role) && map, {});
+        let sql_3 = `SELECT workspaces.*, workspace_user_associations.role, workspace_user_associations.created_on AS member_since, workspace_user_associations.invitation_accepted, workspace_user_associations.starred  FROM workspaces LEFT JOIN workspace_user_associations ON workspace_user_associations.workspace_id = workspaces.workspace_id WHERE user_id = ?;`
 
-        let sql = `SELECT * FROM workspaces WHERE workspace_id IN (?)`;
+        let workspaces = await query(sql_3, req.user.id);
 
-        let workspaces = await query(sql, req.user.workspaces.map(x => x.workspace_id).join(', '));
+        // let sql_2 = `SELECT * FROM workspaces WHERE workspace_id IN (?)`;
 
-        for await (const workspace of workspaces) {
-            if (positions.workspace_users.includes(user_workspace_map[workspace.workspace_id])) {
-                await query(`SELECT * FROM workspace_user_associations WHERE workspace_id = ?`, workspace.workspace_id).then(response => {
-                    workspace.users = response.map(x => x.user_id);
-                });
-                await query(`SELECT * FROM workspace_position_associations WHERE workspace_id = ?`, workspace.workspace_id).then(response => {
-                    workspace.positions = response.map(x => x.position_id);
-                });
-            }
-        };
+        // let workspaces = await query(sql_2, req.user.workspaces.map(x => x.workspace_id).join(', '));
 
-        return res.status(201).json(workspaces);
+        return res.status(200).json({
+            data: workspaces
+        });
     }
 
     // if (true) { //TODO: add permissions
@@ -64,6 +51,7 @@ workspacesRouter.get('/', async (req, res) => {
     // }
 });
 
+//create new Workspace
 workspacesRouter.post('/', async (req, res) => {
 
     if (req.user.permissions === 'basic_client') {
@@ -95,7 +83,9 @@ workspacesRouter.post('/', async (req, res) => {
     });
 });
 
+//fetch details of a single workspace, including messages, users and positions
 workspacesRouter.get('/:workspace_id', async (req, res) => {
+
     let detailed;
 
     if (positions.devs.includes(req.user.permissions)) {
@@ -114,28 +104,16 @@ workspacesRouter.get('/:workspace_id', async (req, res) => {
         }
     };
 
-    let workspace = await fetch_one_workspace(detailed, req.params.workspace_id);
+    let workspace = await workspaceHelper.fetch_by_id(req.params.workspace_id, {}, {
+        users: detailed,
+        messages: true
+    });
 
     if (!workspace) {
         return res.status(404).send("Resource not found.");
     };
 
     return res.status(200).json(workspace);
-
-    async function fetch_one_workspace(detailed = false, workspace_id) {
-        const sql = `SELECT * FROM workspaces WHERE workspace_id = ?`;
-        const [workspace] = await query(sql, workspace_id);
-        if (!workspace) return;
-        if (detailed) {
-            await query(`SELECT * FROM workspace_user_associations WHERE workspace_id = ?`, workspace.workspace_id).then(response => {
-                workspace.users = response.map(x => x.user_id);
-            });
-            await query(`SELECT * FROM workspace_position_associations WHERE workspace_id = ?`, workspace.workspace_id).then(response => {
-                workspace.positions = response.map(x => x.position_id);
-            });
-        }
-        return workspace;
-    }
 });
 
 workspacesRouter.post('/add_user', async (req, res) => {

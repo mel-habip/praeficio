@@ -1,5 +1,7 @@
 import query from '../utils/db_connection.js';
 
+import WorkspaceMessagesRelationshipOrganizer from '../jobs/WorkspaceMessagesRelationshipOrganizer.js';
+
 export const recordTypeMap = {
     table_names: { //phase these out once ready.
         Alert: 'alerts',
@@ -43,7 +45,7 @@ export default class RecordService {
     /**
      * @param {Number} record_id - the record to be fetched
      * @param {{any?:any}} constraints - will return empty array if doesn't meet constraints
-     * @param {{users?: boolean, feedback_log_items?:boolean, items?:boolean, workspaces?:boolean, positions?:boolean }} inclusions to include data otherwise not provided
+     * @param {{users?: boolean, feedback_log_items?:boolean, messages?:boolean, items?:boolean, workspaces?:boolean, positions?:boolean }} inclusions to include data otherwise not provided
      * @returns {Promise<{to_do_id?: number, user_id?: number, position_id?:number, content?:string, notes?:string[], completed?:boolean, archived?:boolean, deleted?:boolean, active?:boolean}>}
      */
     async fetch_by_id(record_id, constraints = {}, inclusions = {}) {
@@ -93,13 +95,22 @@ export default class RecordService {
                 if (!workspace) return null;
                 if (inclusions.users) {
                     await query(`SELECT * FROM workspace_user_associations WHERE workspace_id = ?`, record_id).then(response => {
-                        workspace.users = response.map(x => x.user_id);
+                        workspace.users = response;
                     });
                 }
                 if (inclusions.positions) {
                     await query(`SELECT * FROM workspace_position_associations WHERE workspace_id = ?`, record_id).then(response => {
-                        workspace.positions = response.map(x => x.position_id);
+                        workspace.positions = response;
                     });
+                }
+                if (inclusions.messages) {
+                    await query(`SELECT workspace_messages.*, users.username as sent_by_username,
+                                (SELECT COUNT(*) FROM workspace_message_likes WHERE workspace_message_id = workspace_messages.workspace_message_id) as likes_count
+                                FROM workspace_messages LEFT JOIN users ON users.user_id = workspace_messages.sent_by WHERE workspace_id = ? ;
+                                `, record_id)
+                        .then(response => {
+                            workspace.messages = WorkspaceMessagesRelationshipOrganizer(response);
+                        });
                 }
                 return workspace;
             }
@@ -243,7 +254,7 @@ export default class RecordService {
             result = await query(sql, record_ids);
         }
 
-        return !!result?.[0];
+        return !!result?. [0];
     }
 };
 
@@ -275,5 +286,3 @@ export function constraint_stringifier(constraints = {}) {
 
     return t.join(' ');
 }
-
-

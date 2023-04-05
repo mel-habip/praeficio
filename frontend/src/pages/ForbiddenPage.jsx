@@ -25,9 +25,13 @@ export default function ForbiddenPage() {
       <img src={centerpiece} alt="forbidden-no-access" width="500" style={{ 'border-radius': '15px', filter: `drop-shadow(0 -10px 4.5rem ${isDark ? 'blue' : 'orange'})` }} />
       <br></br>
 
-      <Link to='/' className='nav-links' >
+      <div style={{ display: 'flex', flexDirection: 'row', width: '50%' }} >
+        {/* <Link className='nav-links' onClick={() => window.history.back()} > Back</Link> */}
+        <Link className='nav-links' onClick={() => window.history.go(-2)} > <i className="fa-solid fa-backward"></i> &nbsp;Back</Link>
+        <Link to='/' className='nav-links' >
           Let's go home...
-      </Link>
+        </Link>
+      </div>
     </>
   )
 };

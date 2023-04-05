@@ -56,7 +56,7 @@ function cleaner(array = []) {
 
     return array.map(hash => {
         //boolean cleanup
-        ['active', 'deleted', 'invitation_accepted', 'completed', 'archived', 'use_beta_features'].forEach(property => {
+        ['active', 'deleted', 'invitation_accepted', 'completed', 'archived', 'use_beta_features', 'starred'].forEach(property => {
             if (hash.hasOwnProperty(property)) hash[property] = Boolean(hash[property]);
         });
         //array JSON cleanup
