@@ -23,6 +23,7 @@ CREATE TABLE users (
     updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY `username_UNIQUE` (`username`)
 );
+
 CREATE TABLE positions (
     position_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -47,19 +48,41 @@ CREATE TABLE positions (
         REFERENCES users (user_id)
         ON DELETE CASCADE
 );
+
 CREATE TABLE workspaces (
     workspace_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    publicity ENUM('hidden', 'discoverable', 'public'),
+    publicity ENUM('private', 'public') DEFAULT 'public',
+    discovery_token VARCHAR(45) DEFAULT NULL,
+    who_can_accept_application ENUM('workspace_member', 'workspace_supervisor', 'workspace_admin', 'none') DEFAULT 'workspace_supervisor',
+    who_can_invite_users ENUM('everyone','workspace_member', 'workspace_supervisor', 'workspace_admin', 'none') DEFAULT 'workspace_supervisor',
+    who_can_edit_users ENUM('workspace_admin', 'workspace_supervisor') DEFAULT 'workspace_supervisor',
+    who_can_edit_settings ENUM('workspace_admin', 'workspace_supervisor') DEFAULT 'workspace_supervisor', 
+    who_can_edit_positions ENUM('workspace_admin', 'workspace_supervisor', 'workspace_member') DEFAULT 'workspace_supervisor',
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP
 );
+
+CREATE TABLE workspace_topics (
+	workspace_topic_name VARCHAR(45) NOT NULL,
+    workspace_id INT NOT NULL,
+	created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (workspace_topic_name , workspace_id),
+    FOREIGN KEY (workspace_id)
+        REFERENCES workspaces (workspace_id)
+        ON DELETE CASCADE
+);
+
 CREATE TABLE workspace_user_associations (
     user_id INT NOT NULL,
     workspace_id INT NOT NULL,
     role VARCHAR(255) NOT NULL,
     starred BOOLEAN DEFAULT FALSE,
-    invitation_accepted BOOLEAN DEFAULT FALSE,
+    method ENUM('application', 'invitation'),
+    invitation_sent_by INT,
+    application_accepted_by INT,
+    joined BOOLEAN DEFAULT FALSE,
+    joined_on DATETIME DEFAULT NULL,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id , workspace_id),
@@ -68,8 +91,15 @@ CREATE TABLE workspace_user_associations (
         ON DELETE CASCADE,
     FOREIGN KEY (workspace_id)
         REFERENCES workspaces (workspace_id)
-        ON DELETE CASCADE
+        ON DELETE CASCADE,
+	FOREIGN KEY (invitation_sent_by)
+        REFERENCES users (user_id)
+        ON DELETE SET NULL,
+	FOREIGN KEY (application_accepted_by)
+        REFERENCES users (user_id)
+        ON DELETE SET NULL
 );
+
 CREATE TABLE workspace_position_associations (
     position_id INT NOT NULL,
     workspace_id INT NOT NULL,
@@ -80,19 +110,6 @@ CREATE TABLE workspace_position_associations (
         ON DELETE CASCADE,
     FOREIGN KEY (workspace_id)
         REFERENCES workspaces (workspace_id)
-        ON DELETE CASCADE
-);
-
-CREATE TABLE workspace_favourites (
-	workspace_id INT NOT NULL,
-    user_id INT NOT NULL,
-    created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (workspace_id, user_id),
-    FOREIGN KEY (workspace_id)
-		REFERENCES workspaces (workspace_id)
-        ON DELETE CASCADE,
-	FOREIGN KEY (user_id)
-		REFERENCES users (user_id)
         ON DELETE CASCADE
 );
 

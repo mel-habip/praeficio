@@ -60,7 +60,7 @@ function cleaner(array = []) {
             if (hash.hasOwnProperty(property)) hash[property] = Boolean(hash[property]);
         });
         //array JSON cleanup
-        ['to_do_categories', 'notes', 'internal_notes'].forEach(property => {
+        ['to_do_categories', 'notes', 'internal_notes', 'topics'].forEach(property => {
             if (hash.hasOwnProperty(property)) {
                 try {
                     hash[property] = JSON.parse(hash[property]) ?? [];

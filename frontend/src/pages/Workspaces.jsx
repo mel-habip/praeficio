@@ -13,7 +13,7 @@ import LoadingPage from './LoadingPage';
 
 import axios from 'axios';
 
-import { Button, Navbar, Card, Modal, Spacer, Text, Input, Grid, Row, Table, Textarea, useAsyncList, useCollator, Loading, Badge, Dropdown } from '@nextui-org/react';
+import { Button, Navbar, Card, Modal, Spacer, Text, Input, Grid, Row, Table, Textarea, useAsyncList, useCollator, Loading, Badge, Dropdown, Tooltip } from '@nextui-org/react';
 
 import { CustomButton } from '../fields/CustomButton';
 import CustomizedDropdown from '../fields/CustomizedDropdown';
@@ -25,23 +25,27 @@ import timestampFormatter from '../utils/timestampFormatter';
 
 import useHandleError from '../utils/handleError';
 
-export default function Workspaces() {
+export default function Workspaces({ subSection }) {
+
+
+    console.log("subSection", subSection);
 
     const { workspace_id } = useParams();
 
     console.log('params', workspace_id);
 
-    const [selectedSubSection, setSelectedSubSection] = useState(workspace_id ? { id: workspace_id } : { id: 'my_workspaces' });
-
+    const [selectedSubSection, setSelectedSubSection] = useState({});
 
     const { setIsLoggedIn, accessToken, user } = useContext(IsLoggedInContext);
     axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
 
-    const handleError = useHandleError();
-
     const selectedIsOther = React.useMemo(() => {
-        return !['my_favourites', 'find_workspaces', 'my_workspaces', null, undefined].includes(selectedSubSection.id);
-    }, [selectedSubSection.id]);
+        return !['my_favourites', 'discover', 'my_workspaces', null, undefined].includes(subSection) || !!workspace_id;
+    }, [workspace_id, subSection]);
+
+    useEffect(() => {
+        setSelectedSubSection({ name: workspace_id ? selectedSubSection.name : undefined, id: workspace_id, subSection });
+    }, [workspace_id, subSection]);
 
 
 
@@ -70,18 +74,77 @@ export default function Workspaces() {
             <Navbar isBordered variant="static" >
                 <Navbar.Content hideIn="xs" variant="underline-rounded">
                     <div className="empty spacer" style={{ 'width': '50px' }}></div>
-                    <Navbar.Link isActive={selectedSubSection.id === 'my_workspaces'} onPress={() => setSelectedSubSection({ id: 'my_workspaces' })} >My Workpaces</Navbar.Link>
-                    <Navbar.Link isActive={selectedSubSection.id === 'find_workspaces'} onPress={() => setSelectedSubSection({ id: 'find_workspaces' })}>Find Workspaces</Navbar.Link>
-                    <Navbar.Link isActive={selectedSubSection.id === 'my_favourites'} onPress={() => setSelectedSubSection({ id: 'my_favourites' })}>Faves</Navbar.Link>
-                    {/* <Navbar.Link >{selectedSubSection}</Navbar.Link> */}
-                    {selectedIsOther && <Navbar.Link isActive >{selectedSubSection?.name || `#${selectedSubSection?.id}`}</Navbar.Link>}
-                    {/* this shows the current one selected, we might want to make it a separate page instead too though */}
+                    <Link style={{ height: '100%' }} to='/workspaces/my_workspaces'>
+                        <Navbar.Item isActive={selectedSubSection.subSection === 'my_workspaces'}
+                        >My Workpaces</Navbar.Item>
+                    </Link>
+                    <Link style={{ height: '100%' }} to='/workspaces/discover'>
+                        <Navbar.Item isActive={selectedSubSection.subSection === 'discover'}
+                        >Find Workpaces</Navbar.Item>
+                    </Link>
+                    <Link style={{ height: '100%' }} to='/workspaces/my_favourites'>
+                        <Navbar.Item isActive={selectedSubSection.subSection === 'my_favourites'}
+                        >Faves</Navbar.Item>
+                    </Link>
+                    <p>{JSON.stringify([selectedSubSection, selectedIsOther])}</p>
+
+                    {selectedIsOther &&
+
+                        <Dropdown isBordered>
+                            <Navbar.Item isActive >
+                                <Dropdown.Button
+                                    auto
+                                    light
+                                    css={{
+                                        px: 0,
+                                        dflex: "center",
+                                        svg: { pe: "none" },
+                                    }}
+                                    ripple={false}
+                                >
+                                    {selectedSubSection?.name || `#${selectedSubSection?.id}`}
+                                </Dropdown.Button>
+                            </Navbar.Item>
+                            <Dropdown.Menu aria-label="specific workspace section" >
+                                <Dropdown.Item key="chat_thread">
+                                    <Link to={`/workspaces/${selectedSubSection?.id}/messages`}
+                                        style={{ height: 'auto', width: 'auto', display: 'block' }}>
+                                        Chat Threads
+                                    </Link>
+                                </Dropdown.Item>
+
+                                <Dropdown.Item key="positions" >
+                                    <Link to={`/workspaces/${selectedSubSection?.id}/positions`}
+                                        style={{ height: 'auto', width: 'auto', display: 'block' }}>
+                                        Positions
+                                    </Link>
+                                </Dropdown.Item>
+                                <Dropdown.Item key="members">
+                                    <Link to={`/workspaces/${selectedSubSection?.id}/members`}
+                                        style={{ height: 'auto', width: 'auto', display: 'block' }}>
+                                        Members
+                                    </Link>
+                                </Dropdown.Item>
+                                <Dropdown.Item
+                                    key="settings"
+                                >
+                                    <Link to={`/workspaces/${selectedSubSection?.id}/settings`}
+                                        style={{ height: 'auto', width: 'auto', display: 'block' }}>
+                                        Settings
+                                    </Link>
+                                </Dropdown.Item>
+                            </Dropdown.Menu>
+                        </Dropdown>
+                    }
+
                 </Navbar.Content>
 
             </Navbar>
-            {selectedSubSection.id === 'my_workspaces' && <MyWorkspacesSection {...{ setSelectedSubSection }} />}
-            {selectedIsOther && <SpecificWorkspace {...{ user }} />}
-
+            {selectedSubSection.subSection === 'my_workspaces' && <MyWorkspacesSection {...{ setSelectedSubSection }} />}
+            {selectedIsOther && selectedSubSection.subSection === 'messages' && <SpecificWorkspaceMessagesPanel {...{ user, setSelectedSubSection, selectedSubSection }} />}
+            {selectedIsOther && selectedSubSection.subSection === 'settings' && <p> coming soon1</p>}
+            {selectedIsOther && selectedSubSection.subSection === 'members' && <p> coming soon2</p>}
+            {selectedIsOther && selectedSubSection.subSection === 'positions' && <p> coming soon3</p>}
         </>
     );
 }
@@ -89,16 +152,14 @@ export default function Workspaces() {
 
 export function MyWorkspacesSection({ setSelectedSubSection }) {
 
-    const { user } = useContext(IsLoggedInContext);
+    const [creationModalOpen, setCreationModalOpen] = useState(false);
+    const [invitationModalOpen, setInvitationModalOpen] = useState(false);
+    const [selectedWorkspace, setSelectedWorkspace] = useState({});
+
+    const { user, setIsLoggedIn } = useContext(IsLoggedInContext);
     const handleError = useHandleError();
 
     const [userWorkspaces, setUserWorkspaces] = useState([
-        {
-            workspace_id: 1,
-            name: '1st WS',
-            created_on: '2023-03-01',
-            role: 'Admin'
-        }
     ]);
 
     useEffect(() => {
@@ -117,35 +178,47 @@ export function MyWorkspacesSection({ setSelectedSubSection }) {
         <Grid.Container gap={2} justify="center" >
             {userWorkspaces.map(ws =>
                 <Grid key={`${ws.workspace_id}-subpart1`} >
-                    <WorkspaceCard details={ws} {...{ setSelectedSubSection }} />
+                    <WorkspaceCard details={ws} invitationModalOpen={setInvitationModalOpen} setSelectedDetails={setSelectedWorkspace} />
                 </Grid>
             )}
             <Grid >
-                <Button className="gradient-anim" color="gradient" css={{ height: '150px' }} shadow onPress={() => 'true'} > New Workspace </Button>
+                <Button className="gradient-anim" color="gradient" css={{ height: '150px' }} shadow onPress={() => setCreationModalOpen(true)} > New Workspace </Button>
             </Grid>
         </Grid.Container>
+        <WorkspaceCreationModal {...{ modalOpen: creationModalOpen, setModalOpen: setCreationModalOpen, userWorkspaces, setUserWorkspaces, setIsLoggedIn }} />
+        <InvitationAcceptConfirmModal {...{ modalOpen: invitationModalOpen, setModalOpen: setInvitationModalOpen, userWorkspaces, setUserWorkspaces, setIsLoggedIn, user, selectedWorkspace }} />
     </>);
 
 }
 
 
-function WorkspaceCard({ details, setSelectedSubSection }) {
+function WorkspaceCard({ details, invitationModalOpen, setSelectedDetails }) {
     const [innerDetails, setInnerDetails] = useState(details);
+    const { user, setIsLoggedIn } = useContext(IsLoggedInContext);
+    const handleError = useHandleError();
     return (
         <Card css={{ $$cardColor: '$colors$primary', width: '300px', height: '150px' }} key={innerDetails.workspace_id + '-card-inner'} isHoverable isPressable>
             <i
-                onClick={(ev) => { setInnerDetails({ ...innerDetails, starred: !innerDetails.starred }) }}
+                onClick={(ev) => {
+                    axios.put(`http://localhost:8000/workspaces/${innerDetails.workspace_id}/user/${user.id}`, { starred: true }).then(response => {
+                        if (response.status === 200) {
+                            console.log('successful?')
+                        } else {
+                            console.warn('fetch', response);
+                        }
+                    }).catch(handleError);
+                    setInnerDetails({ ...innerDetails, starred: !innerDetails.starred })
+                }}
                 style={{ zIndex: 1000, position: 'absolute', left: '91%', bottom: '85%', color: innerDetails.starred ? 'yellow' : '' }} className="fa-solid fa-star" />
-            {!innerDetails.invitation_accepted &&
-                <div className="scroll-with-star" style={{ zIndex: 1000, position: 'absolute', left: '3%', bottom: '5%', width: '43px', height:'43px' }}  >
-                    <i class="fa-solid fa-scroll" style={{ fontSize: '40px', color: 'white', zIndex: 1000, }} onClick={() => console.log('clicked')} />
-                    <i style={{ fontSize: "11px", color: 'red', position: 'relative', bottom: '45px', left: '14px' }} class="fa-solid fa-certificate" />
-                    <i style={{ fontSize: "6px", color: 'gold', position: 'relative', bottom: '47px', left: '6px' }} class="fa-solid fa-certificate" />
-                    <span style={{ color: 'black', fontFamily: "Times New Roman, serif", position: 'relative', bottom: '39px', right: '13px' }} >I</span>
-                </div>
+            {!innerDetails.joined && innerDetails.method === 'invitation' &&
+                <i
+                    style={{ zIndex: 1000, position: 'absolute', left: '4%', bottom: '16%', borderBottom: 'thick double red', padding: '5px' }}
+                    onClick={() => setSelectedDetails(details) || invitationModalOpen(true)}
+                    className="fa-regular fa-envelope">&nbsp;<i className="fa-solid fa-exclamation"></i></i>
+
             }
 
-            <Link to={`/workspaces/${innerDetails.workspace_id}`} onClick={() => setSelectedSubSection({ id: innerDetails.workspace_id, name: innerDetails.name })}>
+            <Link to={`/workspaces/${innerDetails.workspace_id}`}>
                 <Card.Body >
                     <div style={{ width: '100%', height: '100$', display: 'flex', 'justifyContent': 'flex-start', }}>
                         <Text size={21} color="darkgray" css={{ ml: 0 }}>
@@ -167,13 +240,22 @@ function WorkspaceCard({ details, setSelectedSubSection }) {
                             Role: {innerDetails.role}
                         </Text>
                     </div>
+                    <i
+                        style={{ position: 'absolute', left: '91%', bottom: '15%' }}
+                        className={innerDetails.publicity === 'public' ? "fa-solid fa-people-group" : 'fa-solid fa-lock'}></i>
+                    <Tooltip
+                        style={{ position: 'absolute', left: '91%', bottom: '50%' }}
+                        content={!innerDetails.topics?.length ? <p>No topics yet!</p> : innerDetails.topics.map(({ name }, x) => <p key={name + x}>{name}</p>)}
+                    >
+                        <i className="fa-solid fa-hashtag"></i>
+                    </Tooltip>
                 </Card.Body>
             </Link>
         </Card >
     );
 };
 
-function SpecificWorkspace({ user }) {
+function SpecificWorkspaceMessagesPanel({ user, setSelectedSubSection, selectedSubSection }) {
     const { workspace_id } = useParams();
     const handleError = useHandleError();
 
@@ -184,6 +266,7 @@ function SpecificWorkspace({ user }) {
             if (response.status === 200) {
                 let { users, messages, ...rest } = response.data;
                 setMessages(messages ?? []);
+                setSelectedSubSection({ ...selectedSubSection, name: rest.name });
             } else {
                 console.warn('fetch', response);
             }
@@ -302,3 +385,127 @@ function CommentsList({ messages, role, user }) {
         </div>
     );
 };
+
+function WorkspaceCreationModal({ modalOpen, setModalOpen, setUserWorkspaces, userWorkspaces, setIsLoggedIn }) {
+    const [newWorkspaceDetails, setNewWorkspaceDetails] = useState({});
+
+
+    const publicityOptions = [
+        {
+            key: 'public',
+            name: 'Public',
+            description: 'Visible to everyone'
+        },
+        {
+            key: 'private',
+            name: 'Hidden',
+            description: `Only members can view and add new members`
+        }
+    ];
+
+    return (<Modal
+        closeButton
+        blur
+        aria-labelledby="modal-title"
+        open={modalOpen} onClose={() => setModalOpen(false)} >
+        <Modal.Header css={{ 'z-index': 86, position: 'relative' }}>
+            <Text size={14} > Please enter the information below </Text>
+        </Modal.Header>
+        <Modal.Body>
+            <Spacer y={0.4} />
+            <Input labelPlaceholder="Workspace Name"
+                color="primary"
+                rounded
+                bordered
+                clearable
+                onChange={(e) => setNewWorkspaceDetails({ ...newWorkspaceDetails, name: e.target.value })} ></Input>
+            <CustomizedDropdown
+                optionsList={publicityOptions}
+                disallowEmptySelection
+                mountDirectly
+                selectionMode='single'
+                title='Visibility'
+                outerUpdater={(v) => setNewWorkspaceDetails({ ...newWorkspaceDetails, publicity: v })}
+            ></CustomizedDropdown>
+            <Button
+                disabled={!newWorkspaceDetails}
+                shadow
+                auto
+                onPress={async () => {
+                    console.log('creating workspace', newWorkspaceDetails);
+                    await axios.post(`http://localhost:8000/workspaces/`, {
+                        name: newWorkspaceDetails.name,
+                        publicity: newWorkspaceDetails.publicity,
+                    }).then(response => {
+                        console.log('response:', response.data);
+                        if ([201].includes(response.status)) {
+                            console.log('successful');
+                            setUserWorkspaces(userWorkspaces.concat(response.data));
+                            setModalOpen(false);
+                        } else if (response.status === 401) {
+                            setIsLoggedIn(false);
+                        } else {
+                            console.log(response);
+                        }
+                    });
+                }}> {<>Create workspace&nbsp;&nbsp;<i className="fa-regular fa-square-plus"></i></>} </Button>
+        </Modal.Body>
+    </Modal>);
+};
+
+function InvitationAcceptConfirmModal({ modalOpen, setModalOpen, setUserWorkspaces, userWorkspaces, setIsLoggedIn, user, selectedWorkspace }) {
+
+    return (<Modal
+        closeButton
+        blur
+        aria-labelledby="modal-title"
+        open={modalOpen}
+        onClose={() => setModalOpen(false)} >
+        <Modal.Header css={{ 'z-index': 86, position: 'relative' }}>
+            <Text size={18} > <strong>{selectedWorkspace.invitation_sent_by_username}</strong> invited you to join the Workspace <strong>{selectedWorkspace.name}</strong></Text>
+        </Modal.Header>
+        <Modal.Body>
+            <Row
+                justify='space-evenly'
+            >
+                <Button auto
+                    shadow
+                    color="primary"
+                    onPress={() => setModalOpen(false)}> Return&nbsp;<i className="fa-solid fa-person-walking-arrow-loop-left"></i>
+                </Button>
+                <Button auto
+                    shadow
+                    color="error"
+                    onPress={async () => {
+                        console.log(`deleting invite`);
+                        await axios.delete(`http://localhost:8000/workspaces/${selectedWorkspace.id}/user/${user.id}`).then(response => {
+                            if (response.status === 401) {
+                                setIsLoggedIn(false);
+                            } else if (response.status === 200) {
+                                setModalOpen(false);
+                            } else {
+                                console.log('response:', response.data);
+                            }
+                        });
+                    }}> Reject It!&nbsp;<i className="fa-solid fa-skull-crossbones"></i>
+                </Button>
+                <Button auto
+                    shadow
+                    color="success"
+                    onPress={async () => {
+                        await axios.put(`http://localhost:8000/workspaces/${selectedWorkspace.id}/user/${user.id}`, { invitation_accepted: true }).then(response => {
+                            if (response.status === 401) {
+                                setIsLoggedIn(false);
+                            } else if (response.status === 200) {
+                                setModalOpen(false);
+                            } else {
+                                console.log('response:', response.data);
+                            }
+                        });
+                    }}> Accept It!&nbsp;<i className="fa-solid fa-skull-crossbones"></i>
+                </Button>
+            </Row>
+            <Text size={12} em css={{ 'text-align': 'center' }}> Note: this action is irreversible. </Text>
+        </Modal.Body>
+    </Modal>);
+}

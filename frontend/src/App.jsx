@@ -2,7 +2,7 @@
 // import './App.css';
 import React, { useState, useEffect } from 'react';
 import NavMenu from './components/NavMenu';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useNavigate, useParams } from 'react-router-dom';
 import LoginPage from './pages/LoginPage.jsx';
 import Portal from './pages/Portal.jsx';
 import Positions from './pages/Positions.jsx';
@@ -92,7 +92,7 @@ function App() {
     }
   }, [isLoggedIn]);
 
-  if (![true, false].includes(isLoggedIn)) { return (<LoadingPage />); }
+  // if (![true, false].includes(isLoggedIn)) { return (<LoadingPage />); }
 
   return (
     <NextUIProvider theme={isDark ? darkTheme : lightTheme}>
@@ -105,8 +105,20 @@ function App() {
                 <Route path='/login' element={<LoginPage />} />
                 <Route path='/positions' element={isLoggedIn ? <Positions /> : <LoginPage />} exact />
                 <Route path='/alerts' element={isLoggedIn ? <Alerts /> : <LoginPage />} exact />
-                <Route path='/workspaces' element={isLoggedIn ? <Workspaces /> : <LoginPage />} exact />
-                <Route path='/workspaces/:workspace_id' element={isLoggedIn ? <Workspaces /> : <LoginPage />} exact />
+
+
+                <Route path="/workspaces" element={<Navigate to="/workspaces/my_workspaces" replace />} />
+
+                <Route path="/workspaces/my_workspaces" element={<Workspaces subSection="my_workspaces" />} exact />
+                <Route path="/workspaces/my_favourites" element={<Workspaces subSection="my_favourites" />} exact />
+                <Route path="/workspaces/discover" element={<Workspaces subSection="discover" />} exact />
+                <Route path="/workspaces/:workspace_id" element={<WorkspacesRedirectToMessages />} exact />
+                <Route path="/workspaces/:workspace_id/settings" element={<Workspaces subSection="settings" />} exact />
+                <Route path="/workspaces/:workspace_id/messages" element={<Workspaces subSection="messages" />} exact />
+                <Route path="/workspaces/:workspace_id/members" element={<Workspaces subSection="members" />} exact />
+                <Route path="/workspaces/:workspace_id/positions" element={<Workspaces subSection="positions" />} exact />
+
+
                 <Route path='/todos' element={isLoggedIn ? <ToDos /> : <LoginPage />} exact />
                 <Route path='/todos/archive' element={isLoggedIn ? <ToDos archive /> : <LoginPage />} exact />
                 <Route path='/settings' element={isLoggedIn ? <Settings /> : <LoginPage />} exact />
@@ -126,3 +138,13 @@ function App() {
 }
 
 export default App;
+
+
+const WorkspacesRedirectToMessages = () => {
+  const { workspace_id } = useParams();
+  const navigate = useNavigate();
+  useEffect(() =>
+    navigate(`/workspaces/${workspace_id}/messages`, { replace: true })
+  );
+  return null;
+}

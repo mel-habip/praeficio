@@ -73,6 +73,7 @@ export default function CustomizedDropdown({ optionsList = [], outerUpdater = ()
                         color={disabled ? 'default' : color}
                         withDivider={withDivider}
                         description={description}
+                        showFullDescription
                     >
                         {name}
                     </Dropdown.Item>

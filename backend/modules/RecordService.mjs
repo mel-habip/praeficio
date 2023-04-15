@@ -33,6 +33,8 @@ export const recordTypeMap = {
  * @method fetch_by_user_id functions as a PATCH
  * @const {Hash} data
  * @const {String} record_type - inherit from child
+ * @const {String} table_name - inherit from child
+ * @const {String|Array<String>} primary_key - inherit from child
  */
 export default class RecordService {
     constructor(data) {
@@ -41,14 +43,31 @@ export default class RecordService {
 
     data = {};
     record_type;
+    primary_key;
+    table_name;
 
     /**
-     * @param {Number} record_id - the record to be fetched
+     * @param {Number} record_id_1 - the record to be fetched
      * @param {{any?:any}} constraints - will return empty array if doesn't meet constraints
      * @param {{users?: boolean, feedback_log_items?:boolean, messages?:boolean, items?:boolean, workspaces?:boolean, positions?:boolean }} inclusions to include data otherwise not provided
-     * @returns {Promise<{to_do_id?: number, user_id?: number, position_id?:number, content?:string, notes?:string[], completed?:boolean, archived?:boolean, deleted?:boolean, active?:boolean}>}
+     * @returns {Promise<{to_do_id?: number, 
+     *  workspace_id?:number, 
+     *  feedback_log_id?: number,
+     *  feedback_log_message_id?: number, 
+     *  user_id?: number, position_id?:number, 
+     *  content?:string, 
+     *  notes?:string[], 
+     *  completed?:boolean, 
+     *  archived?:boolean, 
+     *  deleted?:boolean, 
+     *  active?:boolean}>}
      */
-    async fetch_by_id(record_id, constraints = {}, inclusions = {}) {
+    async fetch_by_id(record_ids, constraints = {}, inclusions = {}) {
+
+        if (typeof record_ids === 'string' || typeof record_ids === 'number') record_ids = [record_ids]; //so that you can pass an array or others
+
+        const [record_id_1, record_id_2] = record_ids;
+
         if (!this.record_type) {
             console.error(`No Record Type specified`);
             return null;
@@ -57,49 +76,49 @@ export default class RecordService {
         switch (this.record_type) {
             case 'Position': {
                 const sql = `SELECT positions.*, workspace_position_associations.workspace_id  FROM positions LEFT JOIN workspace_position_associations ON positions.position_id = workspace_position_associations.position_id WHERE positions.position_id = ? ${constraint_stringifier(constraints)} LIMIT 1;`;
-                const [position] = await query(sql, record_id);
+                const [position] = await query(sql, record_id_1);
 
                 if (inclusions.workspaces) {
                     const sql_2 = `SELECT workspace_id FROM workspace_position_associations WHERE position_id = ?;`;
-                    await query(sql_2, record_id).then(response => position.workspaces = response?. [0]?.workspace_id ?? null);
+                    await query(sql_2, record_id_1).then(response => position.workspaces = response?. [0]?.workspace_id ?? null);
                 }
                 return position;
             }
             case 'Alert': {
                 const sql = `SELECT * FROM alerts WHERE alert_id = ? ${constraint_stringifier(constraints)}`;
-                const [alert] = await query(sql, record_id);
+                const [alert] = await query(sql, record_id_1);
                 return alert;
             }
             case 'ToDo': {
                 const sql = `SELECT * FROM todos WHERE to_do_id = ? ${constraint_stringifier(constraints)}`;
-                const [to_do] = await query(sql, record_id);
+                const [to_do] = await query(sql, record_id_1);
                 return to_do;
             }
             case 'User': {
                 const sql_1 = `SELECT user_id, username, last_name, first_name, email, permissions, active, created_on, updated_on, use_beta_features FROM users WHERE user_id = ? ${constraint_stringifier(constraints)} LIMIT 1;`;
 
-                const [user] = await query(sql_1, record_id);
+                const [user] = await query(sql_1, record_id_1);
 
                 if (!user) return null;
 
                 if (inclusions.workspaces) {
                     const sql_2 = `SELECT workspace_id, role FROM workspace_user_associations WHERE user_id = ?;`;
-                    await query(sql_2, record_id).then(response => user.workspaces = response);
+                    await query(sql_2, record_id_1).then(response => user.workspaces = response);
                 }
 
                 return user;
             }
             case 'Workspace': {
                 const sql = `SELECT * FROM workspaces WHERE workspace_id = ? ${constraint_stringifier(constraints)} LIMIT 1;`;
-                const [workspace] = await query(sql, record_id);
+                const [workspace] = await query(sql, record_id_1);
                 if (!workspace) return null;
                 if (inclusions.users) {
-                    await query(`SELECT * FROM workspace_user_associations WHERE workspace_id = ?`, record_id).then(response => {
+                    await query(`SELECT * FROM workspace_user_associations WHERE workspace_id = ?`, record_id_1).then(response => {
                         workspace.users = response;
                     });
                 }
                 if (inclusions.positions) {
-                    await query(`SELECT * FROM workspace_position_associations WHERE workspace_id = ?`, record_id).then(response => {
+                    await query(`SELECT * FROM workspace_position_associations WHERE workspace_id = ?`, record_id_1).then(response => {
                         workspace.positions = response;
                     });
                 }
@@ -107,27 +126,33 @@ export default class RecordService {
                     await query(`SELECT workspace_messages.*, users.username as sent_by_username,
                                 (SELECT COUNT(*) FROM workspace_message_likes WHERE workspace_message_id = workspace_messages.workspace_message_id) as likes_count
                                 FROM workspace_messages LEFT JOIN users ON users.user_id = workspace_messages.sent_by WHERE workspace_id = ? ;
-                                `, record_id)
+                                `, record_id_1)
                         .then(response => {
                             workspace.messages = WorkspaceMessagesRelationshipOrganizer(response);
                         });
                 }
                 return workspace;
             }
+            case 'WorkspaceUserAssociation': {
+                const sql = `SELECT * FROM workspace_user_associations WHERE workspace_id = ? AND user_id = ?`;
+                const [assoc] = await query(sql, record_id_1, record_id_2);
+                if (!assoc) return null;
+                return assoc;
+            }
             //FeedbackLogs handled specially in their own Service
             case 'FeedbackLogFilter': {
                 const sql = `SELECT * FROM feedback_log_filters WHERE feedback_log_filter_id = ? ${constraint_stringifier(constraints)} LIMIT 1;`;
-                const [FeedbackLogFilter] = await query(sql, record_id);
+                const [FeedbackLogFilter] = await query(sql, record_id_1);
                 if (!FeedbackLogFilter) return null;
             }
             case 'FeedbackLogItem': {
                 const sql = `SELECT feedback_log_items.*, users.username AS created_by_username, archived FROM feedback_log_items LEFT JOIN feedback_logs ON feedback_logs.feedback_log_id = feedback_log_items.feedback_log_item_id LEFT JOIN users ON created_by = users.user_id WHERE feedback_log_item_id = ?`;
-                const [feedbackLogItem] = await query(sql, record_id);
+                const [feedbackLogItem] = await query(sql, record_id_1);
                 return feedbackLogItem;
             }
             case 'FeedbackLogItemMessage': {
                 const sql = `SELECT feedback_log_item_messages.*, users.username AS sent_by_username FROM feedback_log_item_messages LEFT JOIN users ON sent_by = users.user_id WHERE feedback_log_item_message_id = ?`;
-                const [feedbackLogItemMessage] = await query(sql, record_id);
+                const [feedbackLogItemMessage] = await query(sql, record_id_1);
                 return feedbackLogItemMessage;
             }
             default: {
@@ -226,13 +251,27 @@ export default class RecordService {
             };
         }
 
-        let new_record_details = await this.fetch_by_id([creation_details.insertId]);
+        console.log(data, this.primary_key, creation_details);
 
-        return {
-            success: !!new_record_details,
-            message: new_record_details ? 'created' : 'failed',
-            details: new_record_details
-        };
+        if (typeof this.primary_key === 'string') { //simple
+            let new_record_details = await this.fetch_by_id(creation_details.insertId);
+            console.log(new_record_details);
+            return {
+                success: !!new_record_details,
+                message: new_record_details ? 'created' : 'failed',
+                details: new_record_details
+            };
+        } else { //complex
+            let new_record_details = await this.fetch_by_id([data[this.primary_key[0]], data[this.primary_key[1]]], {}, {});
+
+            console.log(new_record_details);
+
+            return {
+                success: !!new_record_details,
+                message: new_record_details ? 'created' : 'failed',
+                details: new_record_details
+            };
+        }
     }
 
     async confirm_exists_by_id(...record_ids) {

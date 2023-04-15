@@ -5,6 +5,8 @@ import ThemeContext from '../contexts/ThemeContext';
 import IsLoggedInContext from '../contexts/IsLoggedInContext';
 import { Badge, Row, Text } from '@nextui-org/react';
 
+import praeficio_pronunciation from  '../praeficio_pronunciation.mp3';
+
 import './NavMenu.css';
 
 const permissionsMap = {
@@ -58,8 +60,7 @@ function NavMenu() {
 
                 </Row>
 
-                <Link to='/' className='nav-menu-logo' onClick={closeNavMenu}>
-                    {user?.first_name ? `${user.first_name}'s` : 'Your'} Portfolio Tracker&nbsp;
+                <Link to='/' className='nav-menu-logo' onClick={closeNavMenu}> Præficiō for {user?.first_name || 'You'} &nbsp;
                     <i className="fa-solid fa-user-secret"></i>
                 </Link>
 
@@ -81,7 +82,7 @@ function NavMenu() {
                     </li>
                     <li className='nav-item'>
                         <Link
-                            to='/workspaces'
+                            to='/workspaces/my_workspaces'
                             className='nav-links'
                             onClick={closeNavMenu}
                         >
@@ -143,15 +144,36 @@ function NavMenu() {
                         </Link>
                     </li>
                 </ul>
-                <Text className="nav-menu-permission-badge">Your Tier: &nbsp;<Badge  color={user?.permissions === 'basic_client' ? 'primary' : 'success'}>{permissionsMap[user?.permissions]}</Badge></Text>
-                
-                <Text css={{ 'white-space': 'pre-wrap', bottom: '2%', position: 'absolute', margin: 'revert'}} blockquote size={15} em >
-                    Made with&nbsp; <i className="fa fa-heart fa-1x fa-beat"></i>&nbsp; <i className="fa fa-heart fa-1x fa-beat"></i>&nbsp; {"\n by "} <Link to={'https://github.com/mel-habip'}>{"Mel Habip :) "} <i className="fa-brands fa-github"></i>{" \n \n "}</Link>
-                    {user?.permissions === 'basic_client' && <>Please consider purchasing the <Link to={'/settings/purchases'}>Pro version</Link> 🙏</>}
-                </Text>
+                <div style={{ position: 'absolute', bottom: '3%', display: 'flex', flexDirection: 'column', width: '100%', padding: '10%' }} >
+                    <Text css={{ 'white-space': 'pre-wrap', textAlign: 'left' }} blockquote >
+                        <strong>præ·ficiō{'\n'}</strong>
+                        <div style={{ display: 'flex', fontSize: '12px', flexWrap: 'wrap' }}>
+                            <p style={{ }} >pɹˈe͡ɪ-fˈɪsɪˌo͡ʊ · </p>
+                            <p style={{ }}>verb · </p>
+                            <p style={{ fontStyle: 'italic' }}>Latin · </p>
+                            <p> 
+                                <i onClick={PraeficioPronunciation} className="fa-solid fa-volume-high"></i>
+                            </p>
+                        </div>
+                        <p style={{ fontSize: '12px' }} >I - to place in command, put in charge.</p>
+                        <p style={{ fontSize: '12px' }} >II - to set over any thing (as officer, superintendent, leader, etc.), to place in authority over, place at the head, appoint to the command of</p>
+                    </Text>
+                    <Text >Your Tier: &nbsp;<Badge color={user?.permissions === 'basic_client' ? 'primary' : 'success'}>{permissionsMap[user?.permissions]}</Badge></Text>
+
+                    <Text css={{ 'white-space': 'pre-wrap', fontSize: '15px' }} blockquote em >
+                        Made with&nbsp; <i className="fa fa-heart fa-1x fa-beat"></i>&nbsp; <i className="fa fa-heart fa-1x fa-beat"></i>&nbsp; {"\n by "} <Link to={'https://github.com/mel-habip'}>{"Mel Habip :) "} <i className="fa-brands fa-github"></i>{" \n "}</Link>
+                        {user?.permissions === 'basic_client' && <>Please consider purchasing the <Link to={'/settings/purchases'}>Pro version</Link> 🙏</>}
+                    </Text>
+                </div>
             </nav>
         </>
     );
+
+
+    function PraeficioPronunciation() {
+        const sound = new Audio(praeficio_pronunciation);
+        sound.play();
+    }
 }
 
 export default NavMenu;
