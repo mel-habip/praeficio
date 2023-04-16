@@ -48,9 +48,6 @@ export default function Workspaces({ subSection }) {
     }, [workspace_id, subSection]);
 
 
-
-
-
     if (!user.use_beta_features) return (
         <>
             <NavMenu ></NavMenu>
@@ -64,14 +61,10 @@ export default function Workspaces({ subSection }) {
         </>
     );
 
-
-
-
     return (
         <>
             <NavMenu ></NavMenu>
-
-            <Navbar isBordered variant="static" >
+            <Navbar isBordered variant="static" css={{position: 'relative', top: '2%'}}>
                 <Navbar.Content hideIn="xs" variant="underline-rounded">
                     <div className="empty spacer" style={{ 'width': '50px' }}></div>
                     <Link style={{ height: '100%' }} to='/workspaces/my_workspaces'>
@@ -86,7 +79,7 @@ export default function Workspaces({ subSection }) {
                         <Navbar.Item isActive={selectedSubSection.subSection === 'my_favourites'}
                         >Faves</Navbar.Item>
                     </Link>
-                    <p>{JSON.stringify([selectedSubSection, selectedIsOther])}</p>
+                    {/* <p>{JSON.stringify([selectedSubSection, selectedIsOther])}</p> */}
 
                     {selectedIsOther &&
 
@@ -141,16 +134,17 @@ export default function Workspaces({ subSection }) {
 
             </Navbar>
             {selectedSubSection.subSection === 'my_workspaces' && <MyWorkspacesSection {...{ setSelectedSubSection }} />}
+            {selectedSubSection.subSection === 'my_favourites' && <MyWorkspacesSection favesOnly {...{ setSelectedSubSection }} />}
             {selectedIsOther && selectedSubSection.subSection === 'messages' && <SpecificWorkspaceMessagesPanel {...{ user, setSelectedSubSection, selectedSubSection }} />}
-            {selectedIsOther && selectedSubSection.subSection === 'settings' && <p> coming soon1</p>}
-            {selectedIsOther && selectedSubSection.subSection === 'members' && <p> coming soon2</p>}
-            {selectedIsOther && selectedSubSection.subSection === 'positions' && <p> coming soon3</p>}
+            {selectedIsOther && selectedSubSection.subSection === 'settings' && <p> Settings coming soon</p>}
+            {selectedIsOther && selectedSubSection.subSection === 'members' && <p> Members Menu coming soon</p>}
+            {selectedIsOther && selectedSubSection.subSection === 'positions' && <p> WS Positions coming soon</p>}
         </>
     );
 }
 
 
-export function MyWorkspacesSection({ setSelectedSubSection }) {
+export function MyWorkspacesSection({ setSelectedSubSection, favesOnly = false }) {
 
     const [creationModalOpen, setCreationModalOpen] = useState(false);
     const [invitationModalOpen, setInvitationModalOpen] = useState(false);
@@ -166,7 +160,7 @@ export function MyWorkspacesSection({ setSelectedSubSection }) {
         axios.get(`http://localhost:8000/workspaces`).then(response => {
             if (response.status === 200) {
                 let { data: items, ...rest } = response.data;
-                setUserWorkspaces(items ?? []);
+                setUserWorkspaces((items ?? []).filter(item => item.starred || !favesOnly));
             } else {
                 console.warn('fetch', response);
             }
@@ -185,7 +179,7 @@ export function MyWorkspacesSection({ setSelectedSubSection }) {
                 <Button className="gradient-anim" color="gradient" css={{ height: '150px' }} shadow onPress={() => setCreationModalOpen(true)} > New Workspace </Button>
             </Grid>
         </Grid.Container>
-        <WorkspaceCreationModal {...{ modalOpen: creationModalOpen, setModalOpen: setCreationModalOpen, userWorkspaces, setUserWorkspaces, setIsLoggedIn }} />
+        <WorkspaceCreationModal {...{ modalOpen: creationModalOpen, setModalOpen: setCreationModalOpen, userWorkspaces, setUserWorkspaces, setIsLoggedIn, isFave: favesOnly }} />
         <InvitationAcceptConfirmModal {...{ modalOpen: invitationModalOpen, setModalOpen: setInvitationModalOpen, userWorkspaces, setUserWorkspaces, setIsLoggedIn, user, selectedWorkspace }} />
     </>);
 
@@ -282,16 +276,17 @@ function SpecificWorkspaceMessagesPanel({ user, setSelectedSubSection, selectedS
             <h3>Chat Thread </h3>
 
 
-            <CommentsList {...{ role, messages, user }} />
+            <CommentsList {...{ role, messages, user, setMessages, workspace_id }} />
 
         </>
     );
 }
 
-function Comment({ message, level = 0, sectionLength = 1, role, user }) {
+function Comment({ message, level = 0, sectionLength = 1, role, user, handleError, workspace_id }) {
     const [showChildren, setShowChildren] = useState(level < 4 && sectionLength < 5);
     const [innerDetails, setInnerDetails] = useState(message);
     const [showReplyMode, setShowReplyMode] = useState(false);
+    const [newMessageText, setNewMessageText] = useState('');
     let {
         format
     } = new Intl.DateTimeFormat('en-US', {
@@ -334,11 +329,38 @@ function Comment({ message, level = 0, sectionLength = 1, role, user }) {
                 <label>
                     Type your reply here
                 </label>
-                <Textarea
-                    aria-label='reply field for comment'
-                    placeholder='Type here'
-                    width='100%'
-                ></Textarea>
+                <Row justify='space-evenly' >
+                    <Textarea
+                        aria-label='reply field for comment'
+                        placeholder='Type here'
+                        width='100%'
+                        value={newMessageText}
+                        onChange={e => setNewMessageText(e.target.value)}
+                    ></Textarea>
+                    <CustomButton
+                        buttonStyle="btn--transparent"
+                        aria-label="send message button"
+                        rounded
+                        disabled={!newMessageText.length}
+                        shadow
+                        onClick={() => {
+                            console.log('sending message', newMessageText);
+                            axios.post(`http://localhost:8000/workspace_messages/${workspace_id}`, {
+                                content: newMessageText,
+                                parent_workspace_message_id: innerDetails.workspace_message_id,
+                            }).then(response => {
+                                console.log('response:', response.data);
+                                if ([201, 200].includes(response.status)) {
+                                    console.log('successful');
+                                    setInnerDetails({ ...innerDetails, children: (innerDetails.children || []).concat(response.data) });
+                                    setNewMessageText('');
+                                    setShowReplyMode(false);
+                                } else {
+                                    console.warn(response);
+                                }
+                            }).catch(handleError);
+                        }} ><i className="fa-solid fa-dove"></i></CustomButton>
+                </Row>
             </div>}
             <div className="comment-children-container">
                 {!showChildren &&
@@ -353,7 +375,7 @@ function Comment({ message, level = 0, sectionLength = 1, role, user }) {
                         <button className="comment-collapse-children" onClick={() => setShowChildren(false)} ></button>
                         <div className="comment-children">
                             {innerDetails.children.map((child) => (
-                                <Comment key={child.workspace_message_id} message={child} level={level + 1} sectionLength={innerDetails.children.length} role={role} />
+                                <Comment key={child.workspace_message_id} message={child} level={level + 1} sectionLength={innerDetails.children.length} {...{ role, workspace_id, handleError }} />
                             ))}
                             <div />
                         </div>
@@ -364,29 +386,55 @@ function Comment({ message, level = 0, sectionLength = 1, role, user }) {
     );
 };
 
-function CommentsList({ messages, role, user }) {
+function CommentsList({ messages, role, user, workspace_id, setMessages, handleError }) {
+    const [newMessageText, setNewMessageText] = useState('');
     return (
         <div className="comments-list">
             {messages.map((message) => (
-                <Comment key={message.workspace_message_id} {...{ message, role, user }} level={0} />
+                <Comment key={message.workspace_message_id} {...{ message, role, user, handleError, workspace_id }} level={0} />
             ))}
             <div className="comment-reply-container root">
                 <label>
                     Type your new message here
                 </label>
-                <Textarea
-                    aria-label='field for new root comment'
-                    placeholder='Type here'
-                    clearable
-                    width='100%'
-                    css={{ mb: '10px' }}
-                ></Textarea>
+                <Row justify='space-evenly' >
+                    <Textarea
+                        aria-label='field for new root comment'
+                        placeholder='Type here'
+                        clearable
+                        value={newMessageText}
+                        onChange={e => setNewMessageText(e.target.value)}
+                        width='100%'
+                        css={{ mb: '10px' }}
+                    ></Textarea>
+                    <CustomButton
+                        buttonStyle="btn--transparent"
+                        aria-label="send message button"
+                        rounded
+                        disabled={!newMessageText.length}
+                        shadow
+                        onClick={() => {
+                            console.log('sending message', newMessageText);
+                            axios.post(`http://localhost:8000/workspace_messages/${workspace_id}`, {
+                                content: newMessageText,
+                            }).then(response => {
+                                console.log('response:', response.data);
+                                if ([201, 200].includes(response.status)) {
+                                    console.log('successful');
+                                    setMessages(messages.concat(response.data));
+                                    setNewMessageText('');
+                                } else {
+                                    console.warn(response);
+                                }
+                            }).catch(handleError);
+                        }} ><i className="fa-solid fa-dove"></i></CustomButton>
+                </Row>
             </div>
         </div>
     );
 };
 
-function WorkspaceCreationModal({ modalOpen, setModalOpen, setUserWorkspaces, userWorkspaces, setIsLoggedIn }) {
+function WorkspaceCreationModal({ modalOpen, setModalOpen, setUserWorkspaces, userWorkspaces, setIsLoggedIn, isFave = false }) {
     const [newWorkspaceDetails, setNewWorkspaceDetails] = useState({});
 
 
@@ -436,6 +484,7 @@ function WorkspaceCreationModal({ modalOpen, setModalOpen, setUserWorkspaces, us
                     await axios.post(`http://localhost:8000/workspaces/`, {
                         name: newWorkspaceDetails.name,
                         publicity: newWorkspaceDetails.publicity,
+                        starred: isFave,
                     }).then(response => {
                         console.log('response:', response.data);
                         if ([201].includes(response.status)) {

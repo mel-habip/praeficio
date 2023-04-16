@@ -32,14 +32,14 @@ export default function validateAndSanitizeBodyParts(all_props = {}, required = 
                     const allowedOptions = expectedType.slice(5, -1).split(',').map(a => a.trim());
                     if (!allowedOptions.includes(req.body[prop])) {
                         return res.status(400).json({
-                            message: `Expected one of "${allowedOptions.join(', ')}" but got "${req.body[prop]}" for prop "${prop}"`
+                            message: `Expected one of '${allowedOptions.join(', ')}' but got '${req.body[prop]}' for prop '${prop}'`
                         });
                     }
                 } else {
                     const trueType = typeFind(req.body[prop]); //the type provided in the request
                     if (expectedType !== trueType) { //wrong type
                         return res.status(400).json({
-                            message: `Expected "${expectedType}" but got "${trueType}" for prop "${prop}"`
+                            message: `Expected '${expectedType}' but got '${trueType}' for prop '${prop}'`
                         });
                     }
                     if (expectedType !== 'boolean' && required[prop] && !req.body[prop]) { //falsy value, for all except booleans
@@ -48,11 +48,13 @@ export default function validateAndSanitizeBodyParts(all_props = {}, required = 
                         });
                     }
                 }
+                cleanedBody[prop] = req.body[prop];
             }
-            cleanedBody[prop] = req.body[prop];
         }
 
-        req.body = {...cleanedBody};
+        req.body = {
+            ...cleanedBody
+        };
 
         next();
     }
@@ -64,12 +66,18 @@ function typeFind(val) {
 
     if ([null, undefined].includes(val)) return 'null';
 
-    const dateObject = new Date(val);
-    if (dateObject.toString() !== 'Invalid Date') return 'date';
-
     const primType = typeof val;
+
+    if (['boolean', 'number'].includes(primType)) return primType;
 
     if (primType === 'object') return 'hash';
 
-    return primType; //covers boolean, string, number
+    if (primType === 'string') {
+        const dateObject = new Date(val);
+        console.log('dateified', val, dateObject);
+        if (dateObject.toString() !== 'Invalid Date') return 'date';
+        return 'string';
+    }
+
+    throw Error(`Expected unknown type with value: ${val}`, )
 }

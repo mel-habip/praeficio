@@ -8,6 +8,7 @@ import cors from 'cors';
 import userRouter from './routes/users.js';
 import positionRouter from './routes/positions.js';
 import workspacesRouter from './routes/workspaces.js';
+import workspaceMessagesRouter from './routes/workspace_messages.js'
 import alertsRouter from './routes/alerts.js';
 import todosRouter from './routes/todos.js';
 import apiRouter from './routes/api.js';
@@ -34,6 +35,7 @@ APP.use(function errorHandler(err, req, res, next) {
 APP.use('/users', userRouter);
 APP.use('/positions', positionRouter);
 APP.use('/workspaces', workspacesRouter);
+APP.use('/workspace_messages', workspaceMessagesRouter);
 APP.use('/alerts', alertsRouter);
 APP.use('/todos', todosRouter);
 APP.use('/api', apiRouter);

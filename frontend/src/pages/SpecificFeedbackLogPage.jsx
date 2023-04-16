@@ -631,7 +631,6 @@ function ThreadsModal({ user, item_id, is_open, set_is_open, setIsLoggedIn, disa
         aria-labelledby="chat modal"
         open={is_open}
         onClose={() => set_is_open(false)}
-        scroll
         width='700px'
     >
         <Modal.Body>

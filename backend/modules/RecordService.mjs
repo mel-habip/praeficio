@@ -133,6 +133,12 @@ export default class RecordService {
                 }
                 return workspace;
             }
+            case 'WorkspaceMessage': {
+                const sql = `SELECT workspace_messages.*, users.username as sent_by_username FROM workspace_messages LEFT JOIN users ON users.user_id = workspace_messages.sent_by WHERE workspace_message_id = ? ${constraint_stringifier(constraints)} LIMIT 1;`;
+                const [workspace_message] = await query(sql, record_id_1);
+                if (!workspace_message) return null;
+                return workspace_message;
+            }
             case 'WorkspaceUserAssociation': {
                 const sql = `SELECT * FROM workspace_user_associations WHERE workspace_id = ? AND user_id = ?`;
                 const [assoc] = await query(sql, record_id_1, record_id_2);
@@ -167,30 +173,21 @@ export default class RecordService {
     }
 
     /**
-     * @param {Number} record_ids one or more of the primary keys for the record
+     * @method hard_delete
+     * @param {Object} criteria
      */
-    async hard_delete(...record_ids) {
+    async hard_delete(criteria) {
         const table_name = this.table_name || recordTypeMap.table_names[this.record_type];
 
+        const keys = Object.keys(criteria);
+        const vals = Object.values(criteria);
 
-        const primary_keys = this.primary_key || recordTypeMap.simple_primary_key[this.record_type] || recordTypeMap.complex_primary_key[this.record_type];
-
-        if (!primary_keys || !table_name) throw Error(`${this.record_type} not recognized`);
-
-        let result;
-
-        if (typeof primary_keys === 'string') { //simple
-            const sql = `DELETE FROM ${table_name} WHERE ${primary_keys} = ?;`;
-            result = await query(sql, primary_record_id);
-        } else { //complex
-            let sql = `DELETE FROM ${table_name} WHERE`;
-            sql += primary_keys.map(a => a + ' = ?').join(',');
-            result = await query(sql, record_ids);
-        }
+        const sql = `DELETE FROM ${table_name} WHERE ` + keys.map(a => a + ' = ?').join(',');
+        const result = await query(sql, vals);
 
         return {
             success: !!result?.affectedRows,
-            message: result?.affectedRows ? 'deleted' : 'failed',
+            message: result?.affectedRows ? `deleted ${result?.affectedRows}` : 'failed',
             details: result
         };
     }
@@ -209,21 +206,25 @@ export default class RecordService {
         let keys = Object.keys(data);
 
         const sql = `UPDATE ${table_name} SET  ${keys.map(a=> a+ ' = ?').join(', ')}  WHERE ( ${(typeof primary_key === 'string' ? [primary_key] : primary_key).map(a=>a+' = ?').join(' AND ')});`;
+
+        console.log('SQL', sql);
+        console.log('data', ...keys.map(key => data[key]).concat(record_ids));
+
         const update = await query(sql, ...keys.map(key => data[key]).concat(record_ids));
 
         if (!update || !update?.affectedRows) {
             return {
                 success: false,
-                message: update?.affectedRows ? 'deleted' : 'failed',
+                message: 'failed',
                 details: update
             };
         }
 
-        let new_record_details = await this.fetch_by_id([record_ids]);
+        let new_record_details = await this.fetch_by_id([...record_ids]);
 
         return {
             success: !!new_record_details,
-            message: new_record_details ? 'created' : 'failed',
+            message: 'updated',
             details: new_record_details
         };
     }
@@ -254,6 +255,7 @@ export default class RecordService {
         console.log(data, this.primary_key, creation_details);
 
         if (typeof this.primary_key === 'string') { //simple
+            console.log('simple primary key');
             let new_record_details = await this.fetch_by_id(creation_details.insertId);
             console.log(new_record_details);
             return {
@@ -277,12 +279,12 @@ export default class RecordService {
     async confirm_exists_by_id(...record_ids) {
         const table_name = this.table_name || recordTypeMap.table_names[this.record_type];
 
-
         const primary_keys = this.primary_key || recordTypeMap.simple_primary_key[this.record_type] || recordTypeMap.complex_primary_key[this.record_type];
 
         if (!primary_keys || !table_name) throw Error(`${this.record_type} not recognized`);
 
         let result;
+        let [primary_record_id] = record_ids;
 
         if (typeof primary_keys === 'string') { //simple
             const sql = `SELECT ${primary_keys} FROM ${table_name} WHERE ${primary_keys} = ?;`;

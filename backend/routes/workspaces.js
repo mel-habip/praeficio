@@ -82,7 +82,8 @@ workspacesRouter.get('/', async (req, res) => {
 //create new Workspace
 workspacesRouter.post('/', validateAndSanitizeBodyParts({
     name: 'string',
-    publicity: "enum(public, private)"
+    publicity: "enum(public, private)",
+    starred: 'boolean'
 }, ['name', 'publicity']), async (req, res) => {
 
     if (req.user.permissions === 'basic_client') {
@@ -91,13 +92,13 @@ workspacesRouter.post('/', validateAndSanitizeBodyParts({
 
     const creation_result = await workspaceHelper.create_single({
         name: req.body.name,
-        publicity: req.body.publicity
+        publicity: req.body.publicity,
     });
 
     if (!creation_result?.success) {
         return res.status(422).json({
-            message: `Failed to create Workspace`,
-            data: creation_result
+            message: creation_result?.message || `Failed to create Workspace`,
+            data: creation_result?.details
         });
     }
 
@@ -105,6 +106,7 @@ workspacesRouter.post('/', validateAndSanitizeBodyParts({
         user_id: req.user.id,
         workspace_id: creation_result.details.workspace_id,
         role: 'workspace_admin',
+        starred: !!req.body.starred,
         joined: true,
         joined_on: new Date(),
         method: 'invitation',
@@ -133,8 +135,6 @@ workspacesRouter.get('/:workspace_id', async (req, res) => {
     if (positions.devs.includes(req.user.permissions)) {
         detailed = true;
     } else if (req.query.token) {
-
-
 
         const role = req.user.workspaces.find(({
             workspace_id
@@ -239,9 +239,9 @@ workspacesRouter.delete('/:workspace_id/user/:user_id', authenticateRole(true), 
 //change association or accept invitation
 workspacesRouter.put('/:workspace_id/user/:user_id', authenticateRole(), async (req, res) => {
 
-    if (!req.body.joined && !req.body.role) {
+    if (!req.body.joined && !req.body.role && !req.body.starred) {
         return res.status(400).json({
-            message: `invitation_accepted or role must be provided`
+            message: `joined or role must be provided`
         });
     }
 
@@ -278,22 +278,21 @@ workspacesRouter.delete('/:workspace_id', authenticateRole(true), async (req, re
     });
 });
 
-
 export default workspacesRouter;
 
 function authenticateRole(require_admin = false) {
 
     return (req, res, next) => {
-        if (positions.devs.includes(req.user.permissions)) next();
+        if (positions.devs.includes(req.user.permissions)) return next();
 
 
         const role = req.user.workspaces.find(workspace => workspace.workspace_id === req.params.workspace_id)?.role;
         if (!role) return res.status(403).send('Forbidden: You do not have access to this.');
 
 
-        if (require_admin && positions.workspace_admins.includes(role)) next();
+        if (require_admin && positions.workspace_admins.includes(role)) return next();
 
-        if (positions.workspace_users.includes(role)) next();
+        if (positions.workspace_users.includes(role)) return next();
 
         return res.status(403).send('Forbidden: You do not have access to this.');
     }

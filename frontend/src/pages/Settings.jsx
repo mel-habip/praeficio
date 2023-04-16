@@ -265,7 +265,14 @@ function PersonalSettingsSection({ user, setUser }) {
                             password,
                         }).then(response => {
                             if (response.status === 200) {
-                                setUser({ ...user });
+                                setUser({
+                                    ...user, 
+                                    first_name: firstName,
+                                    last_name: lastName,
+                                    email,
+                                    username,
+                                    use_beta_features: useBetaFeatures,
+                                });
                             } else {
                                 console.log('response', response);
                             }

@@ -92,7 +92,7 @@ function App() {
     }
   }, [isLoggedIn]);
 
-  // if (![true, false].includes(isLoggedIn)) { return (<LoadingPage />); }
+  if (![true, false].includes(isLoggedIn)) { return (<LoadingPage />); }
 
   return (
     <NextUIProvider theme={isDark ? darkTheme : lightTheme}>

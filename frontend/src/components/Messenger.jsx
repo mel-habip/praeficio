@@ -16,7 +16,7 @@ export default function MessengerSection({ messageList = [], user }) {
     }
 
     return (
-        <div className="imessage" >
+        <div className="imessage" style={{overflowY: 'auto'}} >
             {messageList?.map((item, index) => {
                 const from = (item?.sent_by === user?.id) ? 'me' : 'them';
                 const from_me = from === 'me';

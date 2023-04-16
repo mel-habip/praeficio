@@ -194,6 +194,10 @@ a {
   height: 0;
 }
 
+.nextui-navbar-container {
+  min-width: 100%;
+}
+
 
 
 .gradient-anim {
