@@ -168,7 +168,9 @@ CREATE TABLE todos (
     category VARCHAR(255) DEFAULT "General",
     completed BOOLEAN DEFAULT FALSE,
     archived BOOLEAN DEFAULT FALSE,
+    due_on DATETIME DEFAULT NULL,
     created_on DATETIME DEFAULT current_timestamp,
+    completed_on DATETIME DEFAULT NULL,
     updated_on DATETIME DEFAULT NULL ON UPDATE current_timestamp,
     FOREIGN KEY (user_id)
         REFERENCES users (user_id)

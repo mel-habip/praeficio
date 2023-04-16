@@ -34,13 +34,15 @@ todosRouter.get(`/my_todos`, async (req, res) => {
 //create a ToDo
 todosRouter.post(`/`, validateAndSanitizeBodyParts({
     content: 'string',
-    category: 'string'
+    category: 'string',
+    due_on: 'date'
 }, ['content', 'category']), async (req, res) => {
 
     let creation = await helper.create_single({
         user_id: req.user.id,
         content: req.body.content,
         category: req.body.category,
+        due_on: req.body.due_on,
     });
 
     if (creation?.success) {
@@ -55,7 +57,13 @@ todosRouter.post(`/`, validateAndSanitizeBodyParts({
 });
 
 //edit a ToDo
-todosRouter.put('/:to_do_id/', async (req, res) => {
+todosRouter.put('/:to_do_id/', validateAndSanitizeBodyParts({
+    content: 'string',
+    category: 'string',
+    due_on: 'date',
+    archived: 'boolean',
+    completed: 'boolean'
+}, []), async (req, res) => {
     let match = await helper.fetch_by_id([req.params.to_do_id]);
 
     if (!match) return res.status(404).send(`ToDo not found.`);
@@ -66,36 +74,56 @@ todosRouter.put('/:to_do_id/', async (req, res) => {
 
     if (match.archived) return res.status(400).send(`ToDo is archived and is uneditable`);
 
-    let update_sql = `UPDATE todos SET content = ?, category = ?, completed = ?, archived = ? WHERE to_do_id = ?`;
+    if (req.body.completed && !match.completed) req.body.completed_on = new Date();
 
-    let props = ['content', 'category', 'completed', 'archived'];
+    let update_details = await helper.update_single(req.body, req.params.to_do_id);
 
-    let propDefaults = {
-        content: "",
-        category: "General",
-        completed: false,
-        archived: false,
-    }
-
-    //if value coming is is not null, it is intentional, so if blank, set to null to clear value
-    //if value coming is nullish, its not intentional, so try to keep as is by referencing the match
-    let result = await query(update_sql, props.map(prop => (req.body[prop] == null) ? match[prop] : req.body[prop] || propDefaults[prop]).concat(req.params.to_do_id));
-
-    if (result?.affectedRows) {
-        let data = await helper.fetch_by_id([req.params.to_do_id]);
-
-        return res.status(200).json({
-            success: true,
-            message: 'updated',
-            data: data
-        });
-    } else {
+    if (!update_details?.success) {
         return res.status(422).json({
             success: false,
-            message: 'failed',
-            details: result
+            message: update_details?.message || 'failed',
+            details: update_details?.details
         });
     }
+
+    return res.status(200).json({
+        success: true,
+        message: update_details?.message || 'updated',
+        data: update_details?.details
+    });
+
+    // let update_sql = `UPDATE todos SET content = ?, category = ?, completed = ?, archived = ? WHERE to_do_id = ?`;
+
+    // let props = ['content', 'category', 'completed', 'archived'];
+
+    // let propDefaults = {
+    //     content: "",
+    //     category: "General",
+    //     completed: false,
+    //     archived: false,
+    // };
+
+
+
+    // //if value coming is is not null, it is intentional, so if blank, set to null to clear value
+    // //if value coming is nullish, its not intentional, so try to keep as is by referencing the match
+    // let result = await query(update_sql, props.map(prop => (req.body[prop] == null) ? match[prop] : req.body[prop] || propDefaults[prop]).concat(req.params.to_do_id));
+
+    // if (result?.affectedRows) {
+    //     let data = await helper.fetch_by_id([req.params.to_do_id]);
+
+    //     return res.status(200).json({
+    //         success: true,
+    //         message: 'updated',
+    //         data: data
+    //     });
+    // } else {
+    //     return res.status(422).json({
+    //         success: false,
+    //         message: 'failed',
+    //         details: result
+    //     });
+    // }
 });
 
 //delete a ToDo
