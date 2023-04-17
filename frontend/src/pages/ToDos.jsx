@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useRef } from 'react';
 import IsLoggedInContext from '../contexts/IsLoggedInContext';
 import ThemeContext from '../contexts/ThemeContext';
 import axios from 'axios';
@@ -23,9 +23,10 @@ function ToDos({ archive }) {
         category: new Set(),
     });
     const [isLoading, setIsLoading] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(false);
     const [previousUpdate, setPreviousUpdate] = useState(null); //meant for an "undo" functionality
 
-    const selectedValue = React.useMemo(
+    const selectedCategoryValue = React.useMemo(
         () => Array.from(content.category).join(", ").replaceAll("_", " "),
         [content.category]
     );
@@ -35,12 +36,6 @@ function ToDos({ archive }) {
 
     axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
 
-
-    const kickOut = () => {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('user_id');
-        setIsLoggedIn(false);
-    };
 
     // search Debounce mechanism from https://stackoverflow.com/questions/42217121/how-to-start-search-only-when-user-stops-typing
     const [searchText, setSearchText] = useState('');
@@ -62,10 +57,10 @@ function ToDos({ archive }) {
     useEffect(() => setFilteredToDoList(toDoList), [toDoList]);
 
 
-    function updateToDo(to_do_id, status) {
+    function updateToDoStatus(to_do_id, status) {
         axios.put(`http://localhost:8000/todos/${to_do_id}`, { completed: status }).then(response => {
             if (response.status === 401) {
-                kickOut();
+                setIsLoggedIn(false);
             } else if (response.status === 200) {
                 setToDoList(toDoList.map(to_do => {
                     if (to_do.to_do_id === to_do_id) {
@@ -90,10 +85,10 @@ function ToDos({ archive }) {
         }));
     }
 
-    useEffect(() => {
+    useEffect(() => { //main fetcher on load
         axios.get(`http://localhost:8000/todos/my_todos${archive ? '?archived=true' : ''}`).then(response => {
             if (response.status === 401) {
-                kickOut();
+                setIsLoggedIn(false);
             } else if (response.status === 200) {
                 setToDoList(response.data.data ?? []);
             } else {
@@ -124,6 +119,15 @@ function ToDos({ archive }) {
         {!toDoList.length && <> <h2>{archive ? "No items in the archive yet" : "No To-Do's Yet! Let's create one now!"} 😄 </h2> </>}
         {archive ? <CustomButton to="/todos/" buttonStyle="btn--outline"> <i className="fa-solid fa-angles-left"></i> Back to current To-Do's</CustomButton> : <CustomButton to="/todos/archive" buttonStyle="btn--outline"> Archived To-Do's <i className="fa-solid fa-angles-right"></i></CustomButton>}
 
+
+        <div style={{ position: "absolute", top: '5%', right: '5%' }}>
+            <Tooltip content="Edit Mode" enterDelay={500} placement='bottom' >
+                <CustomButton onClick={() => setIsEditMode(!isEditMode)} ><i className="fa-regular fa-pen-to-square"></i></CustomButton>
+            </Tooltip>
+
+        </div>
+
+
         <Input
             bordered
             value={searchText}
@@ -144,13 +148,12 @@ function ToDos({ archive }) {
                         key={`${category}-card`}
                         children={items.map(item =>
                             <ToDoItem archive={archive}
+                                edit_mode={isEditMode}
                                 is_initially_checked={item.completed}
-                                id={item.to_do_id}
                                 key={item.to_do_id}
-                                completion_date={item.completed_on?.substring(0, 10)}
-                                due_date={item.due_on?.substring(0, 10)}
-                                text={item.content}
-                                update_function={updateToDo} />
+                                details={item}
+                                details_updater={updateCachedToDoList}
+                                status_updater={updateToDoStatus} />
                         )} />
                 </Grid>
             )}
@@ -171,7 +174,7 @@ function ToDos({ archive }) {
 
                 axios.post(`http://localhost:8000/todos/archive_all_completed`).then(response => {
                     if (response.status === 401) {
-                        kickOut();
+                        setIsLoggedIn(false);
                     } else if (response.status === 201) {
                         setToDoList(toDoList.filter(item => !item.completed));
                     } else {
@@ -190,7 +193,7 @@ function ToDos({ archive }) {
                 <Input labelPlaceholder="When is this due?" color="primary" type="date" rounded bordered clearable onChange={(e) => setContent({ ...content, due_on: e.target.value })} ></Input>
 
                 <Dropdown>
-                    <Dropdown.Button shadow>{selectedValue || 'Category'}</Dropdown.Button>
+                    <Dropdown.Button shadow>{selectedCategoryValue || 'Category'}</Dropdown.Button>
                     <Dropdown.Menu
                         aria-label="Category Dropdown"
                         selectionMode="single"
@@ -212,10 +215,10 @@ function ToDos({ archive }) {
                     shadow
                     auto
                     onPress={async () => {
-                        console.log('creating to-do', selectedValue, content.text);
+                        console.log('creating to-do', selectedCategoryValue, content.text);
                         await axios.post(`http://localhost:8000/todos/`, {
                             content: content.text,
-                            category: selectedValue,
+                            category: selectedCategoryValue,
                             due_on: content.due_on || null,
                         }).then(response => {
                             console.log('response:', response.data);
@@ -224,7 +227,7 @@ function ToDos({ archive }) {
                                 setCreationModalOpen(false);
                                 setToDoList(toDoList.concat(response.data));
                             } else if (response.status === 401) {
-                                kickOut();
+                                setIsLoggedIn(false);
                             } else {
                                 console.log(response);
                             }
@@ -238,18 +241,20 @@ function ToDos({ archive }) {
 
 export default ToDos;
 
-function ToDoItem({ is_initially_checked = false, update_function, id, text, archive, completion_date, due_date }) {
+function ToDoItem({ is_initially_checked = false, status_updater, details_updater, details, archive, edit_mode = false }) {
     const [itemChecked, setItemChecked] = useState(is_initially_checked);
+    const [editSelected, setEditSelected] = useState(false);
+    const todoTextRef = useRef();
 
     const due_date_details = {
-        due_date,
-        days_away: due_date ? ((new Date(due_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)).toFixed(0) : '',
+        due_date: details.due_on,
+        days_away: details.due_on ? ((new Date(details.due_on).getTime() - Date.now()) / (1000 * 60 * 60 * 24)).toFixed(0) : '',
     };
 
     due_date_details.past = due_date_details.days_away < 0;
 
-    if (due_date) {
-        due_date_details.sentence = due_date_details.past ? `The due date passed ${due_date_details.days_away * -1} days ago` : `The due date is in ${due_date_details.days_away} days`;
+    if (details.due_on) {
+        due_date_details.sentence = due_date_details.past ? `The due date passed ${Math.abs(due_date_details.days_away)} days ago` : `The due date is in ${Math.abs(due_date_details.days_away)} days`;
         if (due_date_details.past) {
             due_date_details.status = 'error';
         } else if (due_date_details.days_away < 10) {
@@ -269,28 +274,33 @@ function ToDoItem({ is_initially_checked = false, update_function, id, text, arc
         }
         default: {
             due_date_details.color = 'lightgrey';
-            due_date_details.logo = due_date ? '🟢' : '';
+            due_date_details.logo = details.due_on ? '🟢' : '';
         }
     }
 
 
-    return (<Row justify="flex-start" >
-        <Checkbox
-            isDisabled={archive}
-            key={id}
-            color="success"
-            onChange={(val) => { setItemChecked(val); console.log(id, val); update_function(id, val) }}
-            isSelected={itemChecked} >
-            <Text h4
-                color="white"
-                className={itemChecked ? 'strike' : ''} >{text}
-            </Text>
-            {archive && <Text h7 color="lightgrey" >{completion_date} </Text>}
-        </Checkbox>
-        {!archive && due_date &&
+    return (<Row justify="flex-start">
+        {editSelected ? <Input css={{ mt: '15px' }} ref={todoTextRef} onKeyDown={e => { if (e.key === 'Enter') { details_updater(details.to_do_id, { ...details, content: todoTextRef.current.value }); setEditSelected(false) } }} labelPlaceholder="Hit 'Enter' to save" initialValue={details.content} /> :
+            <Checkbox
+                isDisabled={archive || edit_mode}
+                key={details.to_do_id}
+                color="success"
+                onChange={(val) => { setItemChecked(val); console.log(details.to_do_id, val); status_updater(details.to_do_id, val) }}
+                isSelected={itemChecked} >
+                <Text h4
+                    color="white"
+                    className={itemChecked ? 'strike' : ''} >{details.content}
+                </Text>
+                {archive && <Text h7 color="lightgrey" >{details.completed_on?.substring(0, 10)} </Text>}
+            </Checkbox>
+        }
+
+        {!archive && !!details.due_on &&
             <Tooltip content={due_date_details.sentence} shadow>
                 <Text h7 color={due_date_details.color} > &nbsp; {due_date_details.logo} </Text>
             </Tooltip>}
+        {edit_mode && <CustomButton buttonSize="btn--small" buttonStyle="btn--transparent" onClick={() => setEditSelected(!editSelected)}><i style={{ margin: 'auto' }} className={editSelected ? "fa-solid fa-circle-xmark" : "fa-solid fa-pencil"} /></CustomButton>}
+        {edit_mode && <CustomButton buttonSize="btn--small" buttonStyle="btn--transparent"><i style={{ margin: 'auto' }} className="fa-solid fa-trash-can" /></CustomButton>}
         <br />
     </Row>);
 }

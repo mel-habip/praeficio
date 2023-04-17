@@ -71,6 +71,11 @@
   font-size: 20px;
 }
 
+.btn--small {
+  /* padding: 4px 10px; */
+  font-size: 15px;
+}
+
 .btn--large:hover,
 .btn--medium:hover {
   transition: all 0.3s ease-out;

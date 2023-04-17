@@ -334,7 +334,6 @@ function Comment({ message, level = 0, sectionLength = 1, role, user, handleErro
                         aria-label='reply field for comment'
                         placeholder='Type here'
                         width='100%'
-                        value={newMessageText}
                         onChange={e => setNewMessageText(e.target.value)}
                     ></Textarea>
                     <CustomButton
@@ -402,7 +401,6 @@ function CommentsList({ messages, role, user, workspace_id, setMessages, handleE
                         aria-label='field for new root comment'
                         placeholder='Type here'
                         clearable
-                        value={newMessageText}
                         onChange={e => setNewMessageText(e.target.value)}
                         width='100%'
                         css={{ mb: '10px' }}
