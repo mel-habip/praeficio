@@ -11,7 +11,6 @@ import NavMenu from '../components/NavMenu';
 import { Button, Modal, Spacer, Table, Text, Input, Checkbox, Tooltip, Row, Grid } from '@nextui-org/react';
 
 import { CustomButton } from '../fields/CustomButton';
-import DateField from '../fields/DateField';
 
 let delay = 300; //for Tooltips
 

@@ -12,9 +12,6 @@ import { CustomButton } from '../fields/CustomButton';
 
 import { Button, Modal, Spacer, Text, Input, Checkbox, Tooltip, Row, Grid, Dropdown, Card } from '@nextui-org/react';
 
-import { DatePicker } from 'react-responsive-datepicker'
-import 'react-responsive-datepicker/dist/index.css'
-
 import validatePassword from '../utils/validatePassword.mjs';
 
 export default function Settings() {

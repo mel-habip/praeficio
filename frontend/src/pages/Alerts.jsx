@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
 
-import { DatePicker } from 'react-responsive-datepicker'
-import 'react-responsive-datepicker/dist/index.css'
-
 import NavMenu from '../components/NavMenu';
 
 function Alerts() {
