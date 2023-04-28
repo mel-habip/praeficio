@@ -57,7 +57,7 @@ export default function FeedbackLogsPage({ archive }) {
 
     return (<>
         <NavMenu />
-        {archive ? <CustomButton to="/feedback_logs/" buttonStyle="btn--outline"> <i className="fa-solid fa-angles-left"></i> Back to current logs</CustomButton> : <CustomButton to="/feedback_logs/archive" buttonStyle="btn--outline"> Archived Logs <i className="fa-solid fa-angles-right"></i></CustomButton>}
+        {archive ? <CustomButton to="/feedback_logs/" > <i className="fa-solid fa-angles-left"></i> Back to current logs</CustomButton> : <CustomButton to="/feedback_logs/archive"> Archived Logs <i className="fa-solid fa-angles-right"></i></CustomButton>}
 
         <Grid.Container gap={1} justify="center">
             {feedbackLogs.map((log, index) =>

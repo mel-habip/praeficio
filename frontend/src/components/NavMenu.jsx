@@ -3,9 +3,9 @@ import { CustomButton } from '../fields/CustomButton';
 import { Link } from 'react-router-dom';
 import ThemeContext from '../contexts/ThemeContext';
 import IsLoggedInContext from '../contexts/IsLoggedInContext';
-import { Badge, Row, Text } from '@nextui-org/react';
+import { Badge, Row, Text, Tooltip } from '@nextui-org/react';
 
-import praeficio_pronunciation from  '../praeficio_pronunciation.mp3';
+import praeficio_pronunciation from '../praeficio_pronunciation.mp3';
 
 import './NavMenu.css';
 
@@ -49,19 +49,20 @@ function NavMenu() {
                     align="center"
                     gap={1}
                 >
-
                     <div style={{ width: '40px' }}></div>
-
-                    <CustomButton onClick={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"}></i></CustomButton>
+                    <CustomButton tooltip="light/dark mode" tooltip_placement='bottom' onClick={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"} /></CustomButton>
 
                     <CustomButton
                         tooltip="log out"
-                        onClick={() => localStorage.removeItem('access_token') || setIsLoggedIn(false)}><i className="fa-solid fa-person-through-window"></i></CustomButton>
+                        tooltip_placement='bottom'
+                        onClick={() => localStorage.removeItem('access_token') || setIsLoggedIn(false)}
+                    ><i className="fa-solid fa-person-through-window" />
+                    </CustomButton>
 
                 </Row>
 
-                <Link to='/' className='nav-menu-logo' onClick={closeNavMenu}> Præficiō for {user?.first_name || 'You'} &nbsp;
-                    <i className="fa-solid fa-user-secret"></i>
+                <Link to='/company' className='nav-menu-logo' onClick={closeNavMenu}> Præficiō for {user?.first_name || 'You'} &nbsp;
+                    <i className="fa-solid fa-user-secret" />
                 </Link>
 
 
@@ -77,7 +78,7 @@ function NavMenu() {
                             className='nav-links'
                             onClick={closeNavMenu}
                         >
-                            Positions&nbsp; <i className="fa-solid fa-money-bill-trend-up" style={{ color: 'green' }}></i>
+                            Positions&nbsp; <i className="fa-solid fa-money-bill-trend-up" style={{ color: 'green' }} />
                         </Link>
                     </li>
                     <li className='nav-item'>
@@ -86,7 +87,7 @@ function NavMenu() {
                             className='nav-links'
                             onClick={closeNavMenu}
                         >
-                            Workspaces&nbsp; <i className="fa-regular fa-building" ></i>
+                            Workspaces&nbsp; <i className="fa-regular fa-building" />
                         </Link>
                     </li>
                     <li className='nav-item'>
@@ -95,7 +96,7 @@ function NavMenu() {
                             className='nav-links'
                             onClick={closeNavMenu}
                         >
-                            Alerts&nbsp; <i className="fa-regular fa-bell"></i>
+                            Alerts&nbsp; <i className="fa-regular fa-bell" />
                         </Link>
                     </li>
                     <li className='nav-item'>
@@ -104,7 +105,7 @@ function NavMenu() {
                             className='nav-links'
                             onClick={closeNavMenu}
                         >
-                            To-Do's&nbsp; <i className="fa-solid fa-list-check"></i>
+                            To-Do's&nbsp; <i className="fa-solid fa-list-check" />
                         </Link>
                     </li>
                     <li className='nav-item'>
@@ -113,7 +114,7 @@ function NavMenu() {
                             className='nav-links'
                             onClick={closeNavMenu}
                         >
-                            Financial Calculator&nbsp; <i className="fa-solid fa-square-root-variable"></i>
+                            Financial Calculator&nbsp; <i className="fa-solid fa-square-root-variable" />
                         </Link>
                     </li>
                     <li className='nav-item'>
@@ -122,7 +123,7 @@ function NavMenu() {
                             className='nav-links'
                             onClick={closeNavMenu}
                         >
-                            Settings&nbsp; <i className="fa-solid fa-wrench"></i>
+                            Settings&nbsp; <i className="fa-solid fa-wrench" />
                         </Link>
                     </li>
                     <li className='nav-item'>
@@ -131,7 +132,7 @@ function NavMenu() {
                             className='nav-links'
                             onClick={closeNavMenu}
                         >
-                            Feedback Logs&nbsp; <i className="fa-solid fa-bars-staggered"></i>
+                            Feedback Logs&nbsp; <i className="fa-solid fa-bars-staggered" />
                         </Link>
                     </li>
                     <li className='nav-item'>
@@ -140,19 +141,28 @@ function NavMenu() {
                             className='nav-links'
                             onClick={closeNavMenu}
                         >
-                            Service Desk&nbsp; <i className="fa-solid fa-headset"></i>
+                            Service Desk&nbsp; <i className="fa-solid fa-headset" />
+                        </Link>
+                    </li>
+                    <li className='nav-item'>
+                        <Link
+                            to='/tictactoe'
+                            className='nav-links'
+                            onClick={closeNavMenu}
+                        >
+                            Tic-Tac-Toe&nbsp; <i className="fa-solid fa-table-cells-large" />
                         </Link>
                     </li>
                 </ul>
-                <div style={{ position: 'absolute', bottom: '3%', display: 'flex', flexDirection: 'column', width: '100%', padding: '10%' }} >
+                <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', padding: '8%', width: 'calc(100% + 2rem)' }} >
                     <Text css={{ 'white-space': 'pre-wrap', textAlign: 'left' }} blockquote >
                         <strong>præ·ficiō{'\n'}</strong>
                         <div style={{ display: 'flex', fontSize: '12px', flexWrap: 'wrap' }}>
-                            <p style={{ }} >pɹˈe͡ɪ-fˈɪsɪˌo͡ʊ · </p>
-                            <p style={{ }}>verb · </p>
+                            <p style={{}} >pɹˈe͡ɪ-fˈɪsɪˌo͡ʊ · </p>
+                            <p style={{}}>verb · </p>
                             <p style={{ fontStyle: 'italic' }}>Latin · </p>
-                            <p> 
-                                <i onClick={PraeficioPronunciation} className="fa-solid fa-volume-high"></i>
+                            <p>
+                                <i onClick={PraeficioPronunciation} className="fa-solid fa-volume-high" />
                             </p>
                         </div>
                         <p style={{ fontSize: '12px' }} >I - to place in command, put in charge.</p>
@@ -161,7 +171,7 @@ function NavMenu() {
                     <Text >Your Tier: &nbsp;<Badge color={user?.permissions === 'basic_client' ? 'primary' : 'success'}>{permissionsMap[user?.permissions]}</Badge></Text>
 
                     <Text css={{ 'white-space': 'pre-wrap', fontSize: '15px' }} blockquote em >
-                        Made with&nbsp; <i className="fa fa-heart fa-1x fa-beat"></i>&nbsp; <i className="fa fa-heart fa-1x fa-beat"></i>&nbsp; {"\n by "} <Link to={'https://github.com/mel-habip'}>{"Mel Habip :) "} <i className="fa-brands fa-github"></i>{" \n "}</Link>
+                        Made with&nbsp; <i className="fa fa-heart fa-1x fa-beat" />&nbsp; <i className="fa fa-heart fa-1x fa-beat" />&nbsp; {"\n by "} <Link to={'https://github.com/mel-habip'}>{"Mel Habip :) "} <i className="fa-brands fa-github" />{" \n "}</Link>
                         {user?.permissions === 'basic_client' && <>Please consider purchasing the <Link to={'/settings/purchases'}>Pro version</Link> 🙏</>}
                     </Text>
                 </div>

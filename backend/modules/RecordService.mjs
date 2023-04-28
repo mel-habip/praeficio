@@ -47,7 +47,7 @@ export default class RecordService {
     table_name;
 
     /**
-     * @param {Number} record_id_1 - the record to be fetched
+     * @param {Array|String} record_ids - the records to be fetched
      * @param {{any?:any}} constraints - will return empty array if doesn't meet constraints
      * @param {{users?: boolean, feedback_log_items?:boolean, messages?:boolean, items?:boolean, workspaces?:boolean, positions?:boolean }} inclusions to include data otherwise not provided
      * @returns {Promise<{to_do_id?: number, 
@@ -95,7 +95,7 @@ export default class RecordService {
                 return to_do;
             }
             case 'User': {
-                const sql_1 = `SELECT user_id, username, last_name, first_name, email, permissions, active, created_on, updated_on, use_beta_features FROM users WHERE user_id = ? ${constraint_stringifier(constraints)} LIMIT 1;`;
+                const sql_1 = `SELECT user_id, username, last_name, first_name, email, permissions, active, created_on, updated_on, use_beta_features, to_do_categories FROM users WHERE user_id = ? ${constraint_stringifier(constraints)} LIMIT 1;`;
 
                 const [user] = await query(sql_1, record_id_1);
 
@@ -162,14 +162,55 @@ export default class RecordService {
                 return feedbackLogItemMessage;
             }
             default: {
-                if (!this.record_type) {
-                    console.error(`No Record Type specified`);
-                } else {
-                    console.error(`${this.record_type} is not a recognized Record Type`);
+                const table_name = this.table_name || recordTypeMap.table_names[this.record_type];
+
+                const primary_key = this.primary_key || recordTypeMap.simple_primary_key[this.record_type];
+
+                if (!table_name || !primary_key || !this.record_type) {
+                    console.log(`${this.record_type} not recognized`);
+                    return null;
                 }
-                return null;
+
+
+                const sql = `SELECT * FROM ${table_name}  WHERE ( ${(typeof primary_key === 'string' ? [primary_key] : primary_key).map(a => a + ' = ?').join(' AND ')});`;
+
+                console.log('SQL', sql);
+                const [record] = await query(sql, record_ids);
+                return record;
             }
         }
+    }
+
+    /**
+     * @method fetch_by_criteria
+     * @param {Object} criteria
+     */
+    async fetch_by_criteria(criteria = {}) {
+
+        const {
+            limit,
+            offset
+        } = criteria;
+        delete criteria.limit;
+        delete criteria.offset;
+
+        const table_name = this.table_name || recordTypeMap.table_names[this.record_type];
+        const keys = Object.keys(criteria);
+        const vals = Object.values(criteria);
+
+        //these allow you to specify rules like -->  "SELECT * FROM workspace_messages ORDER BY workspace_message_id LIMIT 60 OFFSET 30;"
+        //what this does is returns records all the way to record 60 starting at 30, or in other words, records 30 to 60.
+        const limitText = limit ? ` LIMIT ${limit}` : '';
+        const offsetText = offset ? ` OFFSET ${offset}` : '';
+
+        const sql = `SELECT * FROM ${table_name} WHERE ` + keys.map(a => a + ' = ?').join(',') + limitText + offsetText;
+        const result = await query(sql, vals);
+
+        return {
+            success: !!result,
+            message: `Fetched ${result.length} rows`,
+            details: result
+        };
     }
 
     /**

@@ -632,6 +632,7 @@ function ThreadsModal({ user, item_id, is_open, set_is_open, setIsLoggedIn, disa
         open={is_open}
         onClose={() => set_is_open(false)}
         width='700px'
+        css={{maxHeight: '700px'}}
     >
         <Modal.Body>
             <CustomButton

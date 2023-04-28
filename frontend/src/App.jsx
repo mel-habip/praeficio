@@ -3,6 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import NavMenu from './components/NavMenu';
 import { BrowserRouter as Router, Route, Routes, Navigate, useNavigate, useParams } from 'react-router-dom';
+import CompanyPublicPage from './pages/CompanyPublicPage';
+import Newsletters from './pages/Newsletters';
+import NewslettersAdmin from './pages/NewslettersAdmin';
 import LoginPage from './pages/LoginPage.jsx';
 import Portal from './pages/Portal.jsx';
 import Positions from './pages/Positions.jsx';
@@ -11,6 +14,7 @@ import Alerts from './pages/Alerts.jsx';
 import Workspaces from './pages/Workspaces.jsx';
 import ToDos from './pages/ToDos.jsx';
 import TestZone from './pages/TestZone';
+import TicTacToePage from './pages/TicTacToePage.jsx';
 import FeedbackLogsPage from './pages/FeedbackLogsPage.jsx';
 import SpecificFeedbackLogPage from './pages/SpecificFeedbackLogPage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
@@ -77,7 +81,7 @@ function App() {
         } else if (response.status === 401) {
           setIsLoggedIn(false);
         }
-      });
+      }).catch(er => setIsLoggedIn(false));
     } else {
       setIsLoggedIn(false);
     }
@@ -92,7 +96,7 @@ function App() {
     }
   }, [isLoggedIn]);
 
-  if (![true, false].includes(isLoggedIn)) { return (<LoadingPage />); }
+  if (isLoggedIn === null && localAccessToken) return (<LoadingPage />);
 
   return (
     <NextUIProvider theme={isDark ? darkTheme : lightTheme}>
@@ -102,10 +106,16 @@ function App() {
             <Router >
               <Routes>
                 <Route path='/' element={isLoggedIn ? <Portal /> : <LoginPage />} exact />
-                <Route path='/login' element={<LoginPage />} />
+                <Route path='/company' element={<CompanyPublicPage />} exact/>
+                <Route path='/newsletters' element={<Newsletters />} exact/>
+                <Route path='/newsletters/admin' element={isLoggedIn ? <NewslettersAdmin /> : <LoginPage />} exact/>
+                <Route path='/login' element={<LoginPage />} exact/>
                 <Route path='/positions' element={isLoggedIn ? <Positions /> : <LoginPage />} exact />
                 <Route path='/alerts' element={isLoggedIn ? <Alerts /> : <LoginPage />} exact />
 
+                <Route path="/tic-tac-toe" element={<Navigate to="/tictactoe" replace />} />
+                <Route path="/tic_tac_toe" element={<Navigate to="/tictactoe" replace />} />
+                <Route path='/tictactoe' element={<TicTacToePage />} />
 
                 <Route path="/workspaces" element={<Navigate to="/workspaces/my_workspaces" replace />} />
 

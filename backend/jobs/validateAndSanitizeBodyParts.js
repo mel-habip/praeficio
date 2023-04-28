@@ -1,6 +1,8 @@
+import is_valid_email from "../utils/is_valid_email.js";
+
 /**
  * @middleware 
- * @param {{[prop]: 'string'|'number'|'boolean'|'hash'|'array'|'date'|'enum(word_1, word_2, word_3)'}} all_props
+ * @param {{[prop]: 'string'|'number'|'boolean'|'hash'|'array'|'date'|'enum(word_1, word_2, word_3)'|'email'}} all_props
  * @param {Array<string> | {[prop]: true}} required
  */
 export default function validateAndSanitizeBodyParts(all_props = {}, required = []) {
@@ -35,6 +37,12 @@ export default function validateAndSanitizeBodyParts(all_props = {}, required = 
                             message: `Expected one of '${allowedOptions.join(', ')}' but got '${req.body[prop]}' for prop '${prop}'`
                         });
                     }
+                } else if (expectedType === 'email') {
+                    if (!is_valid_email(req.body[prop])) {
+                        return res.status(400).json({
+                            message: `Invalid email provided for prop "${prop}"`
+                        });
+                    } //if it is valid, we're good
                 } else {
                     const trueType = typeFind(req.body[prop]); //the type provided in the request
                     if (expectedType !== trueType) { //wrong type

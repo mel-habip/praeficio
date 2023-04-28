@@ -11,17 +11,18 @@ import workspacesRouter from './routes/workspaces.js';
 import workspaceMessagesRouter from './routes/workspace_messages.js'
 import alertsRouter from './routes/alerts.js';
 import todosRouter from './routes/todos.js';
+import newsletterRouter from './routes/newsletters.js'
 import apiRouter from './routes/api.js';
+import subscriberRouter from './routes/subscribers.js'
 import feedbackLogRouter from './routes/feedback_logs.js';
 import feedbackLogFilterRouter from './routes/feedback_log_filters.js';
 import feedbackLogItemsRouter from './routes/feedback_log_items.js';
 import feedbackLogItemMessagesRouter from './routes/feedback_log_item_messages.js';
 
-const log = console.log;
-
 import REGULAR_SCHEDULED_JOBS from './scheduled_jobs/regular_internal_jobs.js';
 
 
+const log = console.log;
 
 const APP = express(); //creating and starting the server
 APP.use(cors());
@@ -43,6 +44,8 @@ APP.use('/feedback_logs', feedbackLogRouter);
 APP.use('/feedback_log_filters', feedbackLogFilterRouter);
 APP.use('/feedback_log_items', feedbackLogItemsRouter);
 APP.use('/feedback_log_item_messages', feedbackLogItemMessagesRouter);
+APP.use('/subscribers', subscriberRouter);
+APP.use('/newsletters', newsletterRouter);
 
 Object.values(REGULAR_SCHEDULED_JOBS).forEach(job => job.start());
 

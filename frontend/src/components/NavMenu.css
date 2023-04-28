@@ -3,9 +3,15 @@
 }
 
 .nav-menu {
-  height: 100vh;
+  min-height: 100vh;
   top: 0;
   width: auto;
+  max-width: 15%;
+  overflow-y: scroll;
+  -ms-overflow-style: none;
+  overflow: -moz-scrollbars-none;
+  scrollbar-width: none;
+  overflow-x: hidden;
   color: var(--text-primary);
   backdrop-filter: blur(8px);
   position: fixed;
@@ -14,8 +20,14 @@
   border-right: 1px solid var(--border_color);
   padding-right: 2rem;
   animation: close-navmenu 0.75s;
+  display: flex;
+  flex-direction: column;
 }
 
+/* just hiding the inner scrollbar in the navbar */
+.nav-menu::-webkit-scrollbar {
+  display: none;
+}
 
 .nav-menu.active {
   animation: open-navmenu 0.75s;

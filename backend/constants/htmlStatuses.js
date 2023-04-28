@@ -2,6 +2,7 @@
 const htmlStatuses = {
     OK: 200,
     Created: 201,
+    'No Content': 204,
     bad_request: 400,
     'Bad Request': 400,
     'Bad request': 400,

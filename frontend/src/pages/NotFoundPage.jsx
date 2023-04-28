@@ -42,7 +42,7 @@ function NotFoundPage() {
       }
       <br />
       <div style={{ display: 'flex', flexDirection: 'row', width: '50%' }} >
-        <Link className='nav-links' onClick={() => window.history.go(-2)} > <i className="fa-solid fa-backward"></i> &nbsp;Back</Link>
+        <Link className='nav-links' onClick={() => window.history.go(-1)} > <i className="fa-solid fa-backward"></i> &nbsp;Back</Link>
         <Link to='/' className='nav-links' >
           Let's go home...
         </Link>

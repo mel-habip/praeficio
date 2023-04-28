@@ -46,11 +46,17 @@
   border: 1px solid var(--primary);
 }
 
+.btn--secondary:not(.disabled) {
+  background-color: var(--secondary);
+  color: var(--primary);
+  border: 1px solid var(--secondary);
+}
+
 .btn--outline:not(.disabled) {
   background-color: transparent;
   color: var(--secondary);
   padding: 8px 20px;
-  border: 1px solid var(--primary);
+  border: 1px solid var(--secondary);
   transition: all 0.3s ease-out;
 }
 

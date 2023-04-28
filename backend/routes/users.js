@@ -46,6 +46,7 @@ userRouter.get('/', authenticateToken, async (req, res) => {
 });
 
 userRouter.get('/session', authenticateToken, (req, res) => {
+
     return res.status(200).json({
         ...req.user
     });
@@ -228,7 +229,7 @@ userRouter.post('/login', async (req, res) => {
         }
         if (await bcrypt.compare(req.body.password, result.password)) {
             const user = {
-                id: result.user_id
+                id: result.user_id,
             };
             const access_token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET_KEY);
             return res.status(200).json({
@@ -238,6 +239,9 @@ userRouter.post('/login', async (req, res) => {
                 created_on: result.created_on,
                 message: `Successful`,
                 access_token,
+                to_do_categories: result.to_do_categories,
+                use_beta_features: result.use_beta_features,
+                permissions: result.permissions,
             });
         } else {
             return res.status(401).json({

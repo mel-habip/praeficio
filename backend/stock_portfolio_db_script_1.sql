@@ -190,7 +190,6 @@ CREATE TABLE feedback_logs (
         ON DELETE SET NULL
 );
 
-
 CREATE TABLE feedback_log_user_associations (
 	feedback_log_id INT NOT NULL,
     user_id INT NOT NULL,
@@ -273,6 +272,32 @@ AFTER DELETE ON feedback_log_item_messages
 FOR EACH ROW
 UPDATE feedback_log_items SET updated_on = NOW()
 WHERE feedback_log_items.feedback_log_item_id = OLD.feedback_log_item_id;
+
+CREATE TABLE subscribers (
+	email VARCHAR(100) PRIMARY KEY,
+    name VARCHAR(100),
+    related_user_id INT,
+    updates_to_receive ENUM('all') DEFAULT 'all',
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (related_user_id)
+        REFERENCES users (user_id)
+        ON DELETE SET NULL
+);
+
+CREATE TABLE newsletters (
+	newsletter_id INT PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(255),
+    description VARCHAR(800),
+    content LONGTEXT,
+    read_length INT,
+    written_by INT,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (written_by)
+        REFERENCES users (user_id)
+        ON DELETE SET NULL
+);
 
 
 SET GLOBAL event_scheduler = ON;

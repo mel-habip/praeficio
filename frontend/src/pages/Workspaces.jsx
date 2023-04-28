@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { useParams } from 'react-router-dom'
 import { Link } from 'react-router-dom';
 
-import './Workspaces.css';
+import './stylesheets/Workspaces.css';
 
 import NavMenu from '../components/NavMenu';
 

@@ -11,7 +11,7 @@ import { CustomButton } from '../fields/CustomButton';
 
 import { Button, Modal, Spacer, Text, Input, Checkbox, Tooltip, Row, Grid, Dropdown, Card } from '@nextui-org/react';
 
-function ToDos({ archive }) {
+export default function ToDos({ archive }) {
 
     const [toDoList, setToDoList] = useState(null);
     const [filteredToDoList, setFilteredToDoList] = useState(null);
@@ -117,12 +117,12 @@ function ToDos({ archive }) {
     return (<>
         <NavMenu />
         {!toDoList.length && <> <h2>{archive ? "No items in the archive yet" : "No To-Do's Yet! Let's create one now!"} 😄 </h2> </>}
-        {archive ? <CustomButton to="/todos/" buttonStyle="btn--outline"> <i className="fa-solid fa-angles-left"></i> Back to current To-Do's</CustomButton> : <CustomButton to="/todos/archive" buttonStyle="btn--outline"> Archived To-Do's <i className="fa-solid fa-angles-right"></i></CustomButton>}
+        {archive ? <CustomButton to="/todos/"> <i className="fa-solid fa-angles-left"></i> Back to current To-Do's</CustomButton> : <CustomButton disabled={isEditMode} to="/todos/archive"> Archived To-Do's <i className="fa-solid fa-angles-right"></i></CustomButton>}
 
 
         <div style={{ position: "absolute", top: '5%', right: '5%' }}>
             <Tooltip content="Edit Mode" enterDelay={500} placement='bottom' >
-                <CustomButton onClick={() => setIsEditMode(!isEditMode)} ><i className="fa-regular fa-pen-to-square"></i></CustomButton>
+                <CustomButton disabled={archive} onClick={() => setIsEditMode(!isEditMode)} ><i className="fa-regular fa-pen-to-square"></i></CustomButton>
             </Tooltip>
 
         </div>
@@ -190,7 +190,7 @@ function ToDos({ archive }) {
             <Modal.Body>
                 <Spacer y={0.4} />
                 <Input labelPlaceholder="What do you need to do?" color="primary" rounded bordered clearable onChange={(e) => setContent({ ...content, text: e.target.value })} ></Input>
-                <Input labelPlaceholder="When is this due?" color="primary" type="date" rounded bordered clearable onChange={(e) => setContent({ ...content, due_on: e.target.value })} ></Input>
+                <Input label="When is this due?" color="primary" type="date" rounded bordered clearable onChange={(e) => setContent({ ...content, due_on: e.target.value })} ></Input>
 
                 <Dropdown>
                     <Dropdown.Button shadow>{selectedCategoryValue || 'Category'}</Dropdown.Button>
@@ -238,8 +238,6 @@ function ToDos({ archive }) {
     </>);
 
 };
-
-export default ToDos;
 
 function ToDoItem({ is_initially_checked = false, status_updater, details_updater, details, archive, edit_mode = false }) {
     const [itemChecked, setItemChecked] = useState(is_initially_checked);
@@ -303,8 +301,7 @@ function ToDoItem({ is_initially_checked = false, status_updater, details_update
         {edit_mode && <CustomButton buttonSize="btn--small" buttonStyle="btn--transparent"><i style={{ margin: 'auto' }} className="fa-solid fa-trash-can" /></CustomButton>}
         <br />
     </Row>);
-}
-
+};
 
 function ToDoCategoryCard({ text, children, archive }) {
     return (
