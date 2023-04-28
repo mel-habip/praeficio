@@ -10,9 +10,6 @@ import LoadingPage from '../pages/LoadingPage';
 import NavMenu from '../components/NavMenu';
 import { Button, Modal, Spacer, Table, Text, Input, Checkbox, Tooltip, Row, Grid } from '@nextui-org/react';
 
-import { DatePicker } from 'react-responsive-datepicker'
-import 'react-responsive-datepicker/dist/index.css'
-
 import { CustomButton } from '../fields/CustomButton';
 import DateField from '../fields/DateField';
 
@@ -308,15 +305,15 @@ function Positions() {
                         helperText={sizeError} helperColor={sizeError ? "error" : "primary"}
                         onClick={() => setAcquiredOnPickerIsOpen(true)} onClearClick={() => setAcquiredOn('')}
                     />
-                    <DatePicker isOpen={acquiredOnPickerIsOpen} title="Acquired On" onClose={(val) => setAcquiredOn(frmt(val)) || setAcquiredOnPickerIsOpen(false)}
+                    {/* <DatePicker isOpen={acquiredOnPickerIsOpen} title="Acquired On" onClose={(val) => setAcquiredOn(frmt(val)) || setAcquiredOnPickerIsOpen(false)}
                         onChange={(val) => setAcquiredOn(frmt(val)) || console.log(acquiredOn) || setAcquiredOnPickerIsOpen(false)}
-                        closeText={<i className="fa-regular fa-circle-check"></i>} clearText={acquiredOn ? <i className="fa-regular fa-trash-can" onClick={(e) => { console.log('clicked', e) }}></i> : ''} colorScheme="#0F52BA" defaultValue={new Date()} minDate={new Date(2000, 10, 10)} maxDate={new Date().addDays(1)} headerFormat='DD, MM dd' />
+                        closeText={<i className="fa-regular fa-circle-check"></i>} clearText={acquiredOn ? <i className="fa-regular fa-trash-can" onClick={(e) => { console.log('clicked', e) }}></i> : ''} colorScheme="#0F52BA" defaultValue={new Date()} minDate={new Date(2000, 10, 10)} maxDate={new Date().addDays(1)} headerFormat='DD, MM dd' /> */}
                     <Spacer y={0.5} />
                     <Input value={soldOn} rounded type="text" clearable bordered labelPlaceholder="Sold On" color={sizeError ? "error" : "primary"} status={sizeError ? "error" : "default"}
                         helperText={sizeError} helperColor={sizeError ? "error" : "primary"} onClick={() => setSoldOnPickerIsOpen(true)} onClearClick={() => setSoldOn('')} />
-                    <DatePicker isOpen={soldOnPickerIsOpen} title="Sold On" onClose={(val) => setSoldOn(frmt(val)) || console.log('clicked here', val) || setSoldOnPickerIsOpen(false)}
+                    {/* <DatePicker isOpen={soldOnPickerIsOpen} title="Sold On" onClose={(val) => setSoldOn(frmt(val)) || console.log('clicked here', val) || setSoldOnPickerIsOpen(false)}
                         onChange={(val) => setSoldOn(frmt(val)) || console.log(soldOn) || setSoldOnPickerIsOpen(false)}
-                        colorScheme="#0F52BA" closeText={<i className="fa-regular fa-circle-check"></i>} clearText={soldOn ? <i className="fa-regular fa-trash-can"></i> : ''} defaultValue={new Date()} minDate={new Date(2000, 10, 10)} maxDate={new Date().addDays(1)} headerFormat='DD, MM dd' />
+                        colorScheme="#0F52BA" closeText={<i className="fa-regular fa-circle-check"></i>} clearText={soldOn ? <i className="fa-regular fa-trash-can"></i> : ''} defaultValue={new Date()} minDate={new Date(2000, 10, 10)} maxDate={new Date().addDays(1)} headerFormat='DD, MM dd' /> */}
                     <Button
                         disabled={!ticker || !size || size === '0'}
                         shadow
