@@ -16,6 +16,10 @@ import query from '../utils/db_connection.js';
 import sql_wrap from '../utils/sql_wrap.js';
 import is_valid_email from '../utils/is_valid_email.js';
 import emailService from '../jobs/emailService.js';
+import validatePassword from '../../frontend/src/utils/validatePassword.mjs';
+import UserService from '../modules/UserService.mjs';
+
+const helper = new UserService();
 
 userRouter.get('/', authenticateToken, async (req, res) => {
 
@@ -41,28 +45,52 @@ userRouter.get('/', authenticateToken, async (req, res) => {
     });
 });
 
-userRouter.get('/session', authenticateToken, (req, res)=> {
-    return res.status(200).json({...req.user});
+userRouter.get('/session', authenticateToken, (req, res) => {
+
+    return res.status(200).json({
+        ...req.user
+    });
 })
+
 
 userRouter.post('/create_new_user', async (req, res) => {
     log('received: ', req.body || {});
 
     if (!req.body.username) {
-        return res.status(401).json(`Username required.`);
+        return res.status(405).json({
+            message: `Username required.`,
+            error_part: 'username'
+        });
     }
+
     if (!req.body.password) {
-        return res.status(401).json(`Password required.`);
+        return res.status(405).json({
+            message: `Password required.`,
+            error_part: 'password'
+        });
+    }
+
+    if (!validatePassword(req.body.password)) {
+        return res.status(405).json({
+            message: `Password not strong enough.`,
+            error_part: 'password'
+        });
     }
 
     if (!await isAvailableUsername(req.body.username)) {
-        return res.status(401).json(`Username ${req.body.username} already in use`);
+        return res.status(405).json({
+            message: `Username ${req.body.username} already in use`,
+            error_part: 'username'
+        });
     }
 
     let is_secured = !!req.body.email; //if email is provided, we will set the account as inactive and await activation
 
     if (is_secured && !is_valid_email(req.body.email)) {
-        return res.status(401).send(`Invalid email address.`);
+        return res.status(405).json({
+            message: `Invalid email address.`,
+            error_part: 'email'
+        });
     }
 
     //hashed = encrypted
@@ -77,7 +105,10 @@ userRouter.post('/create_new_user', async (req, res) => {
     let creation = await query(sql);
 
     if (!creation) {
-        return res.status(422).send('New User Creation Error');
+        return res.status(422).json({
+            message: 'New User Creation Error',
+            error_part: 'other'
+        });
     };
 
     sql = `SELECT ${db_keys.all_except_pass.join(', ')} FROM users WHERE user_id = LAST_INSERT_ID();`
@@ -169,10 +200,15 @@ userRouter.post('/pre_signed_create_new_user', authenticateToken, async (req, re
 });
 
 userRouter.post('/login', async (req, res) => {
-    console.log('received', req.body);
     if (!req.body?.username) {
         return res.status(401).json({
-            message: `Username required.`
+            message: `Username required.`,
+            error_part: 'username'
+        });
+    } else if (!req.body?.password) {
+        return res.status(401).json({
+            message: `Password required.`,
+            error_part: 'password'
         });
     }
 
@@ -181,17 +217,19 @@ userRouter.post('/login', async (req, res) => {
     await query(sql, req.body.username).then(async ([result]) => {
         if (!result || result?.deleted) {
             return res.status(401).json({
-                message: `Username not recognized`
+                message: `Username not recognized`,
+                error_part: 'username'
             });
         };
         if (!result.active) {
             return res.status(401).json({
-                message: `Cannot Login to Inactive Account. Must Activate first.`
+                message: `Cannot Login to Inactive Account. Must Activate first.`,
+                error_part: 'inactive'
             });
         }
         if (await bcrypt.compare(req.body.password, result.password)) {
             const user = {
-                id: result.user_id
+                id: result.user_id,
             };
             const access_token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET_KEY);
             return res.status(200).json({
@@ -201,10 +239,14 @@ userRouter.post('/login', async (req, res) => {
                 created_on: result.created_on,
                 message: `Successful`,
                 access_token,
+                to_do_categories: result.to_do_categories,
+                use_beta_features: result.use_beta_features,
+                permissions: result.permissions,
             });
         } else {
             return res.status(401).json({
-                message: `Incorrect Password`
+                message: `Incorrect Password`,
+                error_part: 'password'
             });
         }
     });
@@ -291,11 +333,11 @@ userRouter.get('/:user_id', authenticateToken, async (req, res) => {
 
 userRouter.put('/:user_id', authenticateToken, async (req, res) => {
 
-    let selected_user_details = await fetchUserDetails(req.params.user_id);
+    let selected_user_details = await helper.fetch_by_id([req.params.user_id]);
 
     if (!selected_user_details) {
-        return res.status(422).json({
-            message: `Something went wrong`
+        return res.status(404).json({
+            message: `User ${req.params.user_id} not found`
         });
     };
 
@@ -303,7 +345,10 @@ userRouter.put('/:user_id', authenticateToken, async (req, res) => {
 
     Object.entries(selected_user_details).forEach(([key, og_value]) => {
         let changed_value = req.body[key];
-        if (changed_value != null && changed_value !== og_value) {
+
+        if (changed_value != null && Array.isArray(changed_value)) {
+            changes[key] = JSON.stringify(changed_value);
+        } else if (changed_value != null && changed_value !== og_value) {
             changes[key] = changed_value;
         }
     });
@@ -348,17 +393,21 @@ userRouter.put('/:user_id', authenticateToken, async (req, res) => {
     let sql = `UPDATE users SET ${Object.keys(changes).map(key => `${key} = ?`).join(', ')} WHERE user_id = ?;`;
 
     await query(sql, [...Object.values(changes), req.params.user_id]).then(response => {
-        if (!response) {
-            return res.status(422).json({
-                message: `Something went wrong`
+        if (response.affectedRows) {
+            return res.status(200).json({
+                message: `${list(Object.keys(changes))} updated.`,
+                response,
             });
-        };
-        res.status(200).json({
-            message: `${list(Object.keys(changes))} updated.`,
+        }
+        return res.status(422).json({
+            message: `Something went wrong`,
             response,
         });
     }).catch(error => {
-        return res.status(422).send({message: `Something went wrong`, error})
+        return res.status(422).send({
+            message: `Something went wrong`,
+            error
+        });
     });
 });
 

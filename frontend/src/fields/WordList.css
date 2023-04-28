@@ -1,0 +1,39 @@
+.word-list-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.word-list-bubble {
+  display: inline-block;
+  background-color: #f0f0f0;
+  color: black;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 14px;
+  margin-bottom: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.word-list-input {
+  display: inline-block;
+  border: none;
+  border-radius: 2rem;
+  padding-left: 50px;
+  outline: none;
+  font-size: 14px;
+  padding: 5px;
+  width: 100%;
+  margin: 0;
+}
+
+.word-list-bubble-delete-button {
+    background: transparent;
+    border: none;
+}

@@ -1,4 +1,5 @@
 import express from 'express';
+import jwt from 'jsonwebtoken';
 const workspacesRouter = express.Router();
 const log = console.log;
 import authenticateToken from '../jobs/authenticateToken.js';
@@ -8,98 +9,144 @@ import {
 import query from '../utils/db_connection.js';
 import emailService from '../jobs/emailService.js';
 
+import validateAndSanitizeBodyParts from '../jobs/validateAndSanitizeBodyParts.js';
+
+import WorkspaceService from '../modules/WorkspaceService.mjs';
+import WorkspaceUserAssociationService from '../modules/WorkspaceUserAssociationService.mjs';
+
+const workspaceHelper = new WorkspaceService();
+const workspaceUserHelper = new WorkspaceUserAssociationService();
+
 workspacesRouter.use(authenticateToken);
 
+//fetch all WSs that user has access to
 workspacesRouter.get('/', async (req, res) => {
     if (positions.devs.includes(req.user.permissions)) {
-        let sql_1 = `SELECT * FROM workspaces`;
 
-        let workspaces = await query(sql_1);
+        let sql_1 = `SELECT workspaces.*, 
+                        wua.role, 
+                        wua.joined_on as member_since, 
+                        u1.username AS invitation_sent_by_username, 
+                        u2.username AS application_accepted_by_username,
+                        wua.joined, 
+                        wua.method, 
+                        wua.starred,
+                        (SELECT JSON_ARRAYAGG(
+                            JSON_OBJECT(
+                                'created_on', created_on,
+                                'name', workspace_topic_name
+                            )
+                        ) FROM workspace_topics WHERE workspace_id = workspaces.workspace_id) AS topics
+                        FROM workspaces 
+                        LEFT JOIN workspace_user_associations AS wua
+                        	ON (wua.workspace_id = workspaces.workspace_id AND wua.user_id = ?)
+                        LEFT JOIN users AS u1 ON wua.invitation_sent_by = u1.user_id
+                        LEFT JOIN users AS u2 ON wua.application_accepted_by = u2.user_id;`;
 
+        let workspaces = await query(sql_1, req.user.id);
 
-        for await (const workspace of workspaces) {
-            await query(`SELECT * FROM workspace_user_associations WHERE workspace_id = ?`, workspace.workspace_id).then(response => {
-                workspace.users = response.map(x => x.user_id);
-            });
-            await query(`SELECT * FROM workspace_position_associations WHERE workspace_id = ?`, workspace.workspace_id).then(response => {
-                workspace.positions = response.map(x => x.position_id);
-            });
-        };
-
-        return res.status(200).json(workspaces);
+        return res.status(200).json({
+            data: workspaces
+        });
 
     } else {
 
-        const user_workspace_map = req.user.workspaces.reduce((map, {
-            workspace_id,
-            role
-        }) => (map[workspace_id] = role) && map, {});
+        let sql_3 = `SELECT workspaces.*, 
+                        wua.role, 
+                        wua.joined_on as member_since, 
+                        u1.username AS invitation_sent_by_username, 
+                        u2.username AS application_accepted_by_username,
+                        wua.joined, 
+                        wua.method, 
+                        wua.starred,
+                        (SELECT JSON_ARRAYAGG(
+                            JSON_OBJECT(
+                                'created_on', created_on,
+                                'name', workspace_topic_name
+                            )
+                        ) FROM workspace_topics WHERE workspace_id = workspaces.workspace_id) AS topics
+                        FROM workspaces 
+                        LEFT JOIN workspace_user_associations AS wua
+                        	ON (wua.workspace_id = workspaces.workspace_id)
+                        LEFT JOIN users AS u1 ON wua.invitation_sent_by = u1.user_id
+                        LEFT JOIN users AS u2 ON wua.application_accepted_by = u2.user_id WHERE wua.user_id = ?;`
 
-        let sql = `SELECT * FROM workspaces WHERE workspace_id IN (?)`;
+        let workspaces = await query(sql_3, req.user.id);
 
-        let workspaces = await query(sql, req.user.workspaces.map(x => x.workspace_id).join(', '));
-
-        for await (const workspace of workspaces) {
-            if (positions.workspace_users.includes(user_workspace_map[workspace.workspace_id])) {
-                await query(`SELECT * FROM workspace_user_associations WHERE workspace_id = ?`, workspace.workspace_id).then(response => {
-                    workspace.users = response.map(x => x.user_id);
-                });
-                await query(`SELECT * FROM workspace_position_associations WHERE workspace_id = ?`, workspace.workspace_id).then(response => {
-                    workspace.positions = response.map(x => x.position_id);
-                });
-            }
-        };
-
-        return res.status(201).json(workspaces);
+        return res.status(200).json({
+            data: workspaces
+        });
     }
-
-    // if (true) { //TODO: add permissions
-    //     let result = query(sql);
-
-    //     // if (defaultPermissions.actions)
-    //     return res.status(200).json(result);
-
-    // } else {
-    //     return res.status(403).send('Forbidden: You do not have access to this.');
-    // }
 });
 
-workspacesRouter.post('/', async (req, res) => {
+//create new Workspace
+workspacesRouter.post('/', validateAndSanitizeBodyParts({
+    name: 'string',
+    publicity: "enum(public, private)",
+    starred: 'boolean'
+}, ['name', 'publicity']), async (req, res) => {
 
     if (req.user.permissions === 'basic_client') {
         return res.status(403).send('Forbidden: You do not have access to this');
     }
 
-    if (!req.body?.name) {
-        return res.status(400).send(`Param name is required.`);
-    }
+    const creation_result = await workspaceHelper.create_single({
+        name: req.body.name,
+        publicity: req.body.publicity,
+    });
 
-    let sql = `INSERT INTO workspaces (name) VALUES (?);`;
-
-    let creation_result = await query(sql, req.body.name ?? '');
-
-    if (!creation_result || !creation_result?.insertId) {
-        res.status(422).json({
-            message: `Failed to create Workspace`,
-            data: creation_result
+    if (!creation_result?.success) {
+        return res.status(422).json({
+            message: creation_result?.message || `Failed to create Workspace`,
+            data: creation_result?.details
         });
     }
 
-    const sql_2 = `INSERT INTO workspace_user_associations (user_id, workspace_id, role) VALUES (?, ?, ?);`;
+    const association_result = await workspaceUserHelper.create_single({
+        user_id: req.user.id,
+        workspace_id: creation_result.details.workspace_id,
+        role: 'workspace_admin',
+        starred: !!req.body.starred,
+        joined: true,
+        joined_on: new Date(),
+        method: 'invitation',
+        invitation_sent_by: req.user.id,
+        application_accepted_by: req.user.id,
+    });
 
-    let association_result = await query(sql_2, [req.user.id, creation_result.insertId, 'workspace_admin']);
+    if (!association_result?.success) {
+        return res.status(422).json({
+            message: association_result?.message || `Failed to associate user to Workspace`,
+            data: association_result?.details
+        });
+    }
 
     return res.status(201).json({
-        creation_result,
-        association_result
+        ...creation_result.details,
+        ...association_result.details,
     });
 });
 
+//fetch details of a single workspace, including messages, users and positions
 workspacesRouter.get('/:workspace_id', async (req, res) => {
+
     let detailed;
 
     if (positions.devs.includes(req.user.permissions)) {
         detailed = true;
+    } else if (req.query.token) {
+
+        const role = req.user.workspaces.find(({
+            workspace_id
+        }) => workspace_id === req.params.workspace_id)?.role;
+        if (!role) {
+            return res.status(403).send('Forbidden: You do not have access to this.');
+        }
+        if (positions.workspace_users.includes(role)) {
+            detailed = true;
+        } else {
+            detailed = false;
+        }
     } else {
         const role = req.user.workspaces.find(({
             workspace_id
@@ -112,46 +159,37 @@ workspacesRouter.get('/:workspace_id', async (req, res) => {
         } else {
             detailed = false;
         }
-    };
+    }
 
-    let workspace = await fetch_one_workspace(detailed, req.params.workspace_id);
+    let workspace = await workspaceHelper.fetch_by_id(req.params.workspace_id, {}, {
+        users: detailed,
+        messages: true
+    });
 
     if (!workspace) {
         return res.status(404).send("Resource not found.");
     };
 
     return res.status(200).json(workspace);
-
-    async function fetch_one_workspace(detailed = false, workspace_id) {
-        const sql = `SELECT * FROM workspaces WHERE workspace_id = ?`;
-        const [workspace] = await query(sql, workspace_id);
-        if (!workspace) return;
-        if (detailed) {
-            await query(`SELECT * FROM workspace_user_associations WHERE workspace_id = ?`, workspace.workspace_id).then(response => {
-                workspace.users = response.map(x => x.user_id);
-            });
-            await query(`SELECT * FROM workspace_position_associations WHERE workspace_id = ?`, workspace.workspace_id).then(response => {
-                workspace.positions = response.map(x => x.position_id);
-            });
-        }
-        return workspace;
-    }
 });
 
-workspacesRouter.post('/add_user', async (req, res) => {
+workspacesRouter.put('/:workspace_id', authenticateRole(true), async (req, res) => {
 
-    if (!req.body.user_id || !req.body.workspace_id) {
-        return res.status(400).json('Params user_id and workspace_id are required.');
-    }
+    let update = await workspaceHelper.update_single({
+        ...req.body
+    }, req.params.workspace_id);
 
-    if (!authenticateRole(req.user, req.body.workspace_id)) {
-        return res.status(403).send('Forbidden: You do not have access to this.');
-    }
+    return res.status(200).json(update);
+});
+
+
+//add user to WS
+workspacesRouter.post('/:workspace_id/user/:user_id', validateAndSanitizeBodyParts({role: 'string'}), authenticateRole(), async (req, res) => {
 
     //check if user exists
     const sql_1 = `SELECT deleted, email FROM users WHERE user_id = ?;`;
 
-    let [target_user] = await query(sql_1, req.body.user_id);
+    let [target_user] = await query(sql_1, req.params.user_id);
 
     if (!target_user || target_user?.deleted) {
         return res.status(404).send('Resource (user) not found');
@@ -159,7 +197,7 @@ workspacesRouter.post('/add_user', async (req, res) => {
 
     const sql_2 = `SELECT * FROM workspace_user_associations WHERE user_id = ? AND workspace_id = ?;`;
 
-    let [association_check] = await query(sql_2, req.body.user_id, req.body.workspace_id);
+    let [association_check] = await query(sql_2, req.params.user_id, req.params.workspace_id);
 
     if (association_check && !association_check.invitation_accepted) {
         if (target_user.email) {
@@ -172,14 +210,14 @@ workspacesRouter.post('/add_user', async (req, res) => {
             });
         } else {
             return res.status(400).json({
-                message: `Target user ${req.body.user_id} is missing an email address and cannot receive the invitation`
+                message: `Target user ${req.params.user_id} is missing an email address and cannot receive the invitation`
             });
         }
     }
 
     const sql_3 = 'INSERT INTO workspace_user_associations (workspace_id, user_id, role) VALUES (?, ?, ?);';
 
-    await query(sql_3, req.body.workspace_id, req.body.user_id, req.body.role || 'workspace_member').then(result => {
+    await query(sql_3, req.params.workspace_id, req.params.user_id, req.body.role || 'workspace_member').then(result => {
         if (result) {
             return res.status(200).json({
                 success: true,
@@ -187,22 +225,36 @@ workspacesRouter.post('/add_user', async (req, res) => {
             });
         }
         return res.status(422).send({
-            message: `Could not insert ${req.body.user_id} into ${req.body.workspace_id}`,
+            message: `Could not insert ${req.params.user_id} into ${req.params.workspace_id}`,
             error
         });
     });
 });
 
-workspacesRouter.put('/edit_user', async (req, res) => {
-    if (!authenticateRole(req.user, req.body.workspace_id)) {
-        return res.status(403).send('Forbidden: You do not have access to this.');
-    }
-})
+//remove user from WS
+workspacesRouter.delete('/:workspace_id/user/:user_id', authenticateRole(true), async (req, res) => {
 
-workspacesRouter.delete('/:workspace_id', async (req, res) => {
-    if (!authenticateRole(req.user, req.params.workspace_id, true)) {
-        return res.status(403).send('Forbidden: You do not have access to this.');
+});
+
+//change association or accept invitation
+workspacesRouter.put('/:workspace_id/user/:user_id', authenticateRole(), async (req, res) => {
+
+    if (!req.body.joined && !req.body.role && !req.body.starred) {
+        return res.status(400).json({
+            message: `joined or role must be provided`
+        });
     }
+
+    let update_details = await workspaceUserHelper.update_single(req.body, req.params.workspace_id, req.params.user_id);
+
+    return res.status(update_details?.success ? 200 : 422).json({
+        message: update_details?.message,
+        details: update_details?.details,
+    });
+});
+
+//delete WS
+workspacesRouter.delete('/:workspace_id', authenticateRole(true), async (req, res) => {
 
     let sql_1 = `SELECT * FROM workspaces WHERE workspace_id = ?;`;
 
@@ -226,15 +278,22 @@ workspacesRouter.delete('/:workspace_id', async (req, res) => {
     });
 });
 
-
 export default workspacesRouter;
 
-function authenticateRole(user, workspace_id, require_admin = false) {
-    if (positions.devs.includes(user.permissions)) return true;
+function authenticateRole(require_admin = false) {
 
-    const role = user.workspaces.find(workspace => workspace.workspace_id === workspace_id)?.role;
+    return (req, res, next) => {
+        if (positions.devs.includes(req.user.permissions)) return next();
 
-    if (!role) return false;
-    if (require_admin && positions.workspace_admins.includes(role)) return true;
-    return positions.workspace_users.includes(role);
+
+        const role = req.user.workspaces.find(workspace => workspace.workspace_id === req.params.workspace_id)?.role;
+        if (!role) return res.status(403).send('Forbidden: You do not have access to this.');
+
+
+        if (require_admin && positions.workspace_admins.includes(role)) return next();
+
+        if (positions.workspace_users.includes(role)) return next();
+
+        return res.status(403).send('Forbidden: You do not have access to this.');
+    }
 }

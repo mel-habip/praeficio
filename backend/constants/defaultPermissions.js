@@ -17,7 +17,9 @@ const defaultPermissions = {
                 "updated_on",
                 "email",
                 "active",
-                "deleted"
+                "deleted",
+                "to_do_categories",
+                "use_beta_features",
             ],
             "workspace_admin": [
                 "first_name",
@@ -25,7 +27,9 @@ const defaultPermissions = {
                 "username",
                 "email",
                 "active",
-                "deleted"
+                "deleted",
+                "to_do_categories",
+                "use_beta_features",
             ],
             "workspace_supervisor": [
                 "first_name",
@@ -33,7 +37,9 @@ const defaultPermissions = {
                 "username",
                 "email",
                 "active",
-                "deleted"
+                "deleted",
+                "to_do_categories",
+                "use_beta_features",
             ],
             "workspace_employee": [
                 "first_name",
@@ -41,7 +47,9 @@ const defaultPermissions = {
                 "username",
                 "email",
                 "active",
-                "deleted"
+                "deleted",
+                "to_do_categories",
+                "use_beta_features",
             ],
             "dev_lead": [
                 "first_name",
@@ -49,7 +57,9 @@ const defaultPermissions = {
                 "username",
                 "email",
                 "active",
-                "deleted"
+                "deleted",
+                "to_do_categories",
+                "use_beta_features",
             ],
             "dev_senior": [
                 "first_name",
@@ -57,7 +67,9 @@ const defaultPermissions = {
                 "username",
                 "email",
                 "active",
-                "deleted"
+                "deleted",
+                "to_do_categories",
+                "use_beta_features",
             ],
             "dev_junior": [
                 "first_name",
@@ -65,7 +77,19 @@ const defaultPermissions = {
                 "username",
                 "email",
                 "active",
-                "deleted"
+                "deleted",
+                "to_do_categories",
+                "use_beta_features",
+            ],
+            "basic_client": [
+                "first_name",
+                "last_name",
+                "username",
+                "email",
+                "active",
+                "deleted",
+                "to_do_categories",
+                "use_beta_features",
             ]
         },
         "delete_self_user": [
@@ -209,7 +233,7 @@ export default defaultPermissions;
 
 export const positions = {
     get all() {
-        return Array.from(new Set(Object.keys(this).slice(1).reduce((acc, cur)=> acc.concat(this[cur]),[])));
+        return Array.from(new Set(Object.keys(this).slice(1).reduce((acc, cur) => acc.concat(this[cur]), [])));
     },
     clients: [
         'pro_client',

@@ -6,9 +6,12 @@ dotenv.config({
     path: env_dir
 });
 
+import User from '../constants/userClass.js'
+
 /**
  * @function authenticateToken - middleware that converts JWT to user and adds it to request data
  * @returns {null} - adds `user` to request data
+ * @middleware
  */
 export default async function authenticateToken(req, res, next) { //this is middleware in /login
     const authHeader = req.headers.authorization;
@@ -17,25 +20,41 @@ export default async function authenticateToken(req, res, next) { //this is midd
         return res.status(401).send('Unauthenticated: No session token received.');
     }
 
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET_KEY, (async (err, user) => {
-        if (err) return res.status(403).send('Unauthenticated: Invalid Token');
-        req.user = user;
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET_KEY, (async (err, /** @type {User} */ user) => {
+        if (err) return res.status(401).send('Unauthenticated: Invalid Token');
 
-        let [active_status] = await query(`SELECT deleted, active, permissions FROM users WHERE user_id = ? LIMIT 1;`, user.id);
+        let [current_details] = await query(`SELECT deleted, active, permissions, first_name, last_name, email, created_on, updated_on, to_do_categories, use_beta_features, username FROM users WHERE user_id = ? LIMIT 1;`, user.id);
 
-        if (!active_status || active_status?.deleted) {
-            return res.status(403).send(`Unauthenticated: User ${user.id} not found.`);
-        } 
-        
-        if (!active_status.active) {
-            return res.status(403).send(`Unauthenticated: Inactive User ${user.id} cannot make requests.`);
+        if (!current_details || current_details?.deleted) {
+            return res.status(401).send(`Unauthenticated: User ${user.id} not found.`);
+        }
+
+        if (!current_details.active) {
+            return res.status(401).send(`Unauthenticated: Inactive User ${user.id} cannot make requests.`);
         };
 
-        req.user.permissions = active_status.permissions;
+        user.permissions = current_details.permissions;
 
-        if (active_status.permissions === 'total') req.user.is_total = true;
+        if (current_details.permissions === 'total') user.is_total = true;
 
-        await query(`SELECT workspace_id, role FROM workspace_user_associations WHERE user_id = ?;`, user.id).then(response => req.user.workspaces = response);
+        user.first_name = current_details.first_name;
+        user.last_name = current_details.last_name;
+        user.email = current_details.email;
+        user.created_on = current_details.created_on;
+        user.updated_on = current_details.updated_on;
+        user.use_beta_features = current_details.use_beta_features;
+        user.username = current_details.username;
+        user.to_do_categories = current_details.to_do_categories;
+
+        if (!user.to_do_categories?.length) {
+            user.to_do_categories = ['General', 'Personal', 'Financial', 'School', 'Professional', 'Legal', 'Immigration'];
+        }
+
+        await query(`SELECT workspace_id, role FROM workspace_user_associations WHERE user_id = ?;`, user.id).then(response => user.workspaces = response);
+
+        await query(`SELECT feedback_log_id FROM feedback_log_user_associations WHERE user_id = ?;`, user.id).then(response => user.feedback_logs = response.map(a => a.feedback_log_id));
+
+        req.user = new User(user);
 
         next();
     }));

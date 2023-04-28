@@ -4,26 +4,48 @@ const DOMAIN = `http://localhost:${PORT}`;
 
 import express from 'express';
 import cors from 'cors';
+
 import userRouter from './routes/users.js';
 import positionRouter from './routes/positions.js';
 import workspacesRouter from './routes/workspaces.js';
+import workspaceMessagesRouter from './routes/workspace_messages.js'
 import alertsRouter from './routes/alerts.js';
-
-const log = console.log;
+import todosRouter from './routes/todos.js';
+import newsletterRouter from './routes/newsletters.js'
+import apiRouter from './routes/api.js';
+import subscriberRouter from './routes/subscribers.js'
+import feedbackLogRouter from './routes/feedback_logs.js';
+import feedbackLogFilterRouter from './routes/feedback_log_filters.js';
+import feedbackLogItemsRouter from './routes/feedback_log_items.js';
+import feedbackLogItemMessagesRouter from './routes/feedback_log_item_messages.js';
 
 import REGULAR_SCHEDULED_JOBS from './scheduled_jobs/regular_internal_jobs.js';
 
 
+const log = console.log;
 
 const APP = express(); //creating and starting the server
 APP.use(cors());
 APP.use(express.json()); 
 
-APP.listen(PORT, '127.0.0.1', () => log(`Server Running on PORT ${PORT}`));
+APP.use(function errorHandler(err, req, res, next) {
+    console.error(err.stack);
+    res.status(422).send(`Unprocessable Entity`);
+});
 
 APP.use('/users', userRouter);
 APP.use('/positions', positionRouter);
 APP.use('/workspaces', workspacesRouter);
+APP.use('/workspace_messages', workspaceMessagesRouter);
+APP.use('/alerts', alertsRouter);
+APP.use('/todos', todosRouter);
+APP.use('/api', apiRouter);
+APP.use('/feedback_logs', feedbackLogRouter);
+APP.use('/feedback_log_filters', feedbackLogFilterRouter);
+APP.use('/feedback_log_items', feedbackLogItemsRouter);
+APP.use('/feedback_log_item_messages', feedbackLogItemMessagesRouter);
+APP.use('/subscribers', subscriberRouter);
+APP.use('/newsletters', newsletterRouter);
 
 Object.values(REGULAR_SCHEDULED_JOBS).forEach(job => job.start());
 
@@ -43,9 +65,10 @@ Object.values(REGULAR_SCHEDULED_JOBS).forEach(job => job.start());
  * 9) Create a Sandbox/Staging environment that is ideally not local
  * 10) Create custom permissionning model
  * 11) Create Joint Position Handling where it accumulates a set of positions and sends an email to that user
- */
-
+*/
 
 APP.get('/', (req, res) => {
     res.json('Hello World!');
 });
+
+APP.listen(PORT, '127.0.0.1', () => log(`Server Running on PORT ${PORT}`));

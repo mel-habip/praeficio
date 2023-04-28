@@ -45,18 +45,41 @@ export default async function query(sql, ...values) {
         console.error('Error in Promise: ', err);
         console.warn('Received: ', sql);
     }
-    return booleanize_db_data(result);
+    return cleaner(result);
 }
 
 
-function booleanize_db_data(array = []) {
+function cleaner(array = []) {
     if (!Array.isArray(array)) {
         return array;
     }
 
     return array.map(hash => {
-        ['active', 'deleted', 'invitation_accepted'].forEach(property => {
+        //boolean cleanup
+        ['active', 'deleted', 'invitation_accepted', 'completed', 'archived', 'use_beta_features', 'starred'].forEach(property => {
             if (hash.hasOwnProperty(property)) hash[property] = Boolean(hash[property]);
+        });
+        //array JSON cleanup
+        ['to_do_categories', 'notes', 'internal_notes', 'topics'].forEach(property => {
+            if (hash.hasOwnProperty(property)) {
+                try {
+                    hash[property] = JSON.parse(hash[property]) ?? [];
+                } catch (e) {
+                    console.log(`\nFailed to parse into JSON\n\tProperty: ${property}\n\tValue: ${hash[property]}`);
+                    hash[property] = [];
+                }
+            }
+        });
+        //hash JSON cleanup
+        [].forEach(property => {
+            if (hash.hasOwnProperty(property)) {
+                try {
+                    hash[property] = JSON.parse(hash[property]) ?? [];
+                } catch (e) {
+                    console.log(`\nFailed to parse into JSON\n\tProperty: ${property}\n\tValue: ${hash[property]}`);
+                    hash[property] = [];
+                }
+            }
         });
         return hash;
     });

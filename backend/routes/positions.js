@@ -15,16 +15,33 @@ const __dirname = path.dirname(fileURLToPath(
     import.meta.url));
 
 import authenticateToken from '../jobs/authenticateToken.js';
-import defaultPermissions, {positions} from '../constants/defaultPermissions.js';
+import defaultPermissions, {
+    positions
+} from '../constants/defaultPermissions.js';
 import query from '../utils/db_connection.js';
 import emailService from '../jobs/emailService.js';
+import PositionService from '../modules/PositionService.mjs';
+
+const helper = new PositionService();
 
 positionRouter.use(authenticateToken);
 
 
+
 //all positions of a user, including the workspaces to which they might be associated
 positionRouter.get('/user/:user_id', async (req, res) => {
-    let sql = `Select * FROM positions LEFT JOIN workspace_position_associations ON positions.position_id = workspace_position_associations.position_id WHERE positions.user_id = ?;`;
+
+    console.log('query', req.query)
+
+    let query_to_text = 'AND deleted = FALSE AND active = TRUE';
+
+    if (req.query.include_deleted?.toLowerCase() === 'true') {
+        query_to_text = '';
+    } else if (req.query.include_inactive?.toLowerCase() === 'true') {
+        query_to_text = 'AND deleted = FALSE';
+    }
+
+    let sql = `Select positions.*, workspace_id FROM positions LEFT JOIN workspace_position_associations ON positions.position_id = workspace_position_associations.position_id WHERE positions.user_id = ? ${query_to_text};`;
 
     let matches = await query(sql, req.params.user_id);
 
@@ -34,16 +51,13 @@ positionRouter.get('/user/:user_id', async (req, res) => {
 
     if (defaultPermissions.access.extract_position_data.includes(req.user.permissions)) return res.status(200).json(matches);
 
-    if (req.user.workspaces.includes(match.workspace_id))
-
-        return res.status(200).json(matches.filter(pos => req.user.workspaces.includes(pos.workspace_id)));
+    if (req.user.workspaces.includes(match.workspace_id)) return res.status(200).json(matches.filter(pos => req.user.workspaces.includes(pos.workspace_id)));
 });
 
 //details of a single position
 positionRouter.get('/:position_id', async (req, res) => {
-    let sql = `Select positions.*, workspace_position_associations.workspace_id  FROM positions LEFT JOIN workspace_position_associations ON positions.position_id = workspace_position_associations.position_id WHERE positions.position_id = ? LIMIT 1;`;
 
-    let [match] = await query(sql, req.params.position_id);
+    let match = await helper.fetch_by_id([req.params.position_id]);
 
     if (!match) return res.status(404).send(`Position not found.`);
 
@@ -90,19 +104,15 @@ positionRouter.post('/', async (req, res) => {
 
     let sql = `INSERT INTO positions (user_id, ticker, size, acquired_on, sold_on, notes) VALUES (?, ?, ?, ?, ?, ?)`;
 
-    let result = await query(sql, user_id, ticker, size, acquired_on, sold_on, notes);
+    let result = await query(sql, user_id, ticker, size, acquired_on || null, sold_on || null, notes);
 
-    if (!result) return res.status(422).send(`Something went wrong while creating a new Position`);
+    if (!result || !result?.affectedRows) return res.status(422).send(`Something went wrong while creating a new Position`);
 
     sql = `SELECT * FROM positions WHERE position_id = LAST_INSERT_ID();`;
 
     [result] = await query(sql);
 
-    try {
-        result.notes = JSON.parse(result.notes);
-    } catch {}
-
-    return res.status(200).json(result);
+    return res.status(201).json(result);
 });
 
 //import positions in bulk TODO:
@@ -190,6 +200,182 @@ positionRouter.post('/export', async (req, res) => {
         if (req.query?.keep !== 'true') fs.unlinkSync(filePath);
     });
 });
+
+//soft-delete position
+positionRouter.delete('/:position_id', async (req, res) => {
+
+    let match = await helper.fetch_by_id([req.params.position_id], {
+        deleted: false
+    });
+
+    if (!match) return res.status(404).send(`Position not found.`);
+
+    if (match.user_id === req.user.id) {
+        //good
+    } else if (defaultPermissions.access.extract_position_data.includes(req.user.permissions)) {
+        //good
+    } else if (req.user.workspaces.includes(match.workspace_id)) {
+        //good
+    } else {
+        return res.status(403).send(`Forbidden: ${req.user.permissions} (Workspaces ${req.user.workspaces}) cannot view this Position.`);
+    }
+
+    let result = await helper.soft_delete(req.params.position_id);
+
+    return res.status(result.success ? 200 : 422).json(result);
+});
+
+//un-soft-delete position
+positionRouter.put('/:position_id/recover', async (req, res) => {
+
+
+
+    let match = await helper.fetch_by_id([req.params.position_id]);
+
+    if (!match) return res.status(404).send(`Position not found.`);
+
+    if (match.user_id === req.user.id) {
+        //good
+    } else if (defaultPermissions.access.extract_position_data.includes(req.user.permissions)) {
+        //good
+    } else if (req.user.workspaces.includes(match.workspace_id)) {
+        //good
+    } else {
+        return res.status(403).send(`Forbidden: ${req.user.permissions} (Workspaces ${req.user.workspaces}) cannot view this Position.`);
+    }
+
+    let result = await helper.un_soft_delete(req.params.position_id);
+
+    return res.status(result.success ? 200 : 422).json(result);
+
+});
+
+//reactivate inactive position
+positionRouter.put('/:position_id/reactivate', async (req, res) => {
+    let sql = `Select positions.*, workspace_position_associations.workspace_id  FROM positions LEFT JOIN workspace_position_associations ON positions.position_id = workspace_position_associations.position_id WHERE positions.position_id = ? AND DELETED = FALSE LIMIT 1;`;
+
+    let [match] = await query(sql, req.params.position_id);
+
+    if (!match) return res.status(404).send(`Position not found.`);
+
+    if (match.user_id === req.user.id) {
+        //good
+    } else if (defaultPermissions.access.extract_position_data.includes(req.user.permissions)) {
+        //good
+    } else if (req.user.workspaces.includes(match.workspace_id)) {
+        //good
+    } else {
+        return res.status(403).send(`Forbidden: ${req.user.permissions} (Workspaces ${req.user.workspaces}) cannot view this Position.`);
+    }
+
+    sql = `UPDATE positions SET active = TRUE WHERE position_id = ?`;
+
+    let result = await query(sql, req.params.position_id);
+
+    if (result?.affectedRows) {
+        return res.status(200).json({
+            success: true,
+            message: 'reactivated',
+            data: match
+        });
+    } else {
+        return res.status(422).json({
+            success: false,
+            message: 'failed',
+            details: result
+        });
+    }
+
+});
+
+//deactivate position
+positionRouter.put('/:position_id/deactivate', async (req, res) => {
+    let sql = `Select positions.*, workspace_position_associations.workspace_id  FROM positions LEFT JOIN workspace_position_associations ON positions.position_id = workspace_position_associations.position_id WHERE positions.position_id = ? AND DELETED = FALSE LIMIT 1;`;
+
+    let [match] = await query(sql, req.params.position_id);
+
+    if (!match) return res.status(404).send(`Position not found.`);
+
+    if (match.user_id === req.user.id) {
+        //good
+    } else if (defaultPermissions.access.extract_position_data.includes(req.user.permissions)) {
+        //good
+    } else if (req.user.workspaces.includes(match.workspace_id)) {
+        //good
+    } else {
+        return res.status(403).send(`Forbidden: ${req.user.permissions} (Workspaces ${req.user.workspaces}) cannot view this Position.`);
+    }
+
+    sql = `UPDATE positions SET active = FALSE WHERE position_id = ?`;
+
+    let result = await query(sql, req.params.position_id);
+
+    if (result?.affectedRows) {
+        return res.status(200).json({
+            success: true,
+            message: 'deactivated',
+            data: match
+        });
+    } else {
+        return res.status(422).json({
+            success: false,
+            message: 'failed',
+            details: result
+        });
+    }
+
+});
+
+//edit a position
+positionRouter.put('/:position_id/', async (req, res) => {
+
+    let match = await helper.fetch_by_id([req.params.position_id], {
+        deleted: false
+    });
+
+    if (!match) return res.status(404).send(`Position not found.`);
+
+    if (match.user_id === req.user.id) {
+        //good
+    } else if (defaultPermissions.access.extract_position_data.includes(req.user.permissions)) {
+        //good
+    } else if (req.user.workspaces.includes(match.workspace_id)) {
+        //good
+    } else {
+        return res.status(403).send(`Forbidden: ${req.user.permissions} (Workspaces ${req.user.workspaces}) cannot view this Position.`);
+    }
+
+    let update_sql = `UPDATE positions SET ticker = ?, size = ?, acquired_on = ?, sold_on = ?, active = ?, notes = ? WHERE position_id = ?`;
+
+    let props = ['ticker', 'size', 'acquired_on', 'sold_on', 'active', 'notes'];
+
+    //if value coming is is not null, it is intentional, so if blank, set to null to clear value
+    //if value coming is nullish, its not intentional, so try to keep as is by referencing the match
+    let result = await query(update_sql, props.map(prop => {
+        if (prop === 'notes') {
+            return (req.body[prop] == null) ? JSON.stringify(match[prop]) : JSON.stringify(req.body[prop]) || "[]"
+        }
+        return (req.body[prop] == null) ? match[prop] : req.body[prop] || null
+
+    }).concat(req.params.position_id));
+
+    if (result?.affectedRows) {
+        let data = await helper.fetch_by_id([req.params.position_id]);
+        return res.status(200).json({
+            success: true,
+            message: 'updated',
+            data
+        });
+    } else {
+        return res.status(422).json({
+            success: false,
+            message: 'failed',
+            details: result
+        });
+    }
+
+});
+
 
 
 export default positionRouter;
