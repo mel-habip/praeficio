@@ -5,7 +5,8 @@
   "main": "backend/backend.js",
   "scripts": {
     "devStart": "nodemon backend/backend.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start:frontend": "cd frontend && npm start"
   },
   "keywords": [],
   "type": "module",
