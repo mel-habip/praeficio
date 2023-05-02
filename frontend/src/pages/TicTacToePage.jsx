@@ -81,10 +81,10 @@ export default function TicTacToePage() {
         <pre>Last: {lastMove||'none'}</pre> */}
         {!isLoggedIn && <Button
             css={{ width: '4rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white', position: 'fixed', left: '0%', top: '0%', margin: '1rem' }}
-            onPress={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"}/></Button>}
+            onPress={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"} /></Button>}
 
         <CustomizedDropdown disabled={round > 1} optionsList={dimensionOptions} title="Grid" mountDirectly default_value="3" outerUpdater={a => setDimensions(parseInt(a))} showDisabledColor />
-        <CustomButton onClick={reset}>Reset <i className="fa-solid fa-arrows-rotate"/></CustomButton>
+        <CustomButton onClick={reset}>Reset <i className="fa-solid fa-arrows-rotate" /></CustomButton>
         <br />
         {finalState && <Badge color={finalColor} >{finalState}</Badge>}
         {playerTurn === playerTwo && !finalState && <Loading></Loading>}
@@ -301,7 +301,31 @@ function generateWinningCombinations(scale) {
     winningCombinations.push(diagonal1);
     winningCombinations.push(diagonal2);
 
+
+    //generate additional diagonals
+    if (scale > 6) {
+        //first topLeft to bottomRight
+        let tempArray=[];
+        let temp = scale;
+        while (temp < board.length) {
+            
+        }
+    }
+
+
+    if (scale > 6) return winningCombinations.map(x => getAdjacentArrays(x)).flat(1);
+
     return winningCombinations;
+};
+
+//splits arrays larger than 6 into an array of arrays each of which are the 6 adjacent parts
+function getAdjacentArrays(arr) {
+    const result = [];
+    const len = arr.length;
+    for (let i = 0; i < len - 5; i++) {
+        result.push(arr.slice(i, i + 6));
+    }
+    return result;
 };
 
 function adjacentCellFinder(board, index) {
