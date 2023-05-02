@@ -27,6 +27,8 @@ export default function TicTacToePage() {
 
     const [dimensions, setDimensions] = useState(3); //to later have 4*4, 5*5, 6*6 ... games
 
+    const [pastMoves, setPastMoves] = useState([]);
+
     const winningArrangements = React.useMemo(() => {
         return generateWinningCombinations(dimensions || 3);
     }, [dimensions]);
@@ -43,7 +45,10 @@ export default function TicTacToePage() {
     }, [boardStart]);
 
     const [round, setRound] = useState(1);
-    const [lastMove, setLastMove] = useState(null);
+
+    const lastMove = React.useMemo(() => {
+        return pastMoves[pastMoves.length - 1];
+    }, [pastMoves]);
 
     const [finalState, setFinalState] = useState(null);
 
@@ -53,7 +58,7 @@ export default function TicTacToePage() {
         return 'warning';
     }, [finalState]);
 
-    const dimensionOptions = React.useMemo(() => [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(i => ({ key: i.toString(), name: `${i}x${i} grid`, description: i > 6 ? 'create a 6-streak to win' : null, disabled: i > 10 })), []);
+    const dimensionOptions = React.useMemo(() => [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18].map(i => ({ key: i.toString(), name: `${i}x${i} grid`, description: i > 6 ? 'create a 6-streak to win' : null })), []);
 
     const [playerTurn, setPlayerTurn] = useState(playerOne);
 
@@ -146,7 +151,7 @@ export default function TicTacToePage() {
             console.log(resultWords.end_tie);
             setFinalState(resultWords.end_tie);
         }
-        setLastMove(to_position);
+        setPastMoves(pastMoves.concat(to_position));
         if (!finalState) toggleTurn();
     };
 
@@ -155,7 +160,6 @@ export default function TicTacToePage() {
         setRound(1);
         setBoard(boardStart);
         setScoreBoard([]);
-        setLastMove(null);
         setFinalState(null);
         setPlayerTurn(playerOne);
     };
@@ -300,18 +304,6 @@ function generateWinningCombinations(scale) {
     }
     winningCombinations.push(diagonal1);
     winningCombinations.push(diagonal2);
-
-
-    //generate additional diagonals
-    if (scale > 6) {
-        //first topLeft to bottomRight
-        let tempArray=[];
-        let temp = scale;
-        while (temp < board.length) {
-            
-        }
-    }
-
 
     if (scale > 6) return winningCombinations.map(x => getAdjacentArrays(x)).flat(1);
 

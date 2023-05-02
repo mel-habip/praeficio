@@ -9,6 +9,8 @@ import { CustomButton } from '../fields/CustomButton';
 
 import { Button, Modal, Spacer, Text, Badge, Checkbox, Tooltip, Input, Grid, Dropdown } from '@nextui-org/react';
 
+import videoBg1 from '../sparkly_world_video.mp4';
+
 const referralCodes = {
     mel_secret_code: "Mel H.",
     hira_secret_code: "Hira",
@@ -81,6 +83,7 @@ const sentences = {
 
 
 export default function CompanyPublicPage() {
+    document.title = "Praeficio.com";
     const [lang, setLang] = useState('en');
     const toggleLang = () => setLang(lang === 'fr' ? 'en' : 'fr');
     const [showIncompletePage, setShowIncompletePage] = useState(false);
@@ -99,44 +102,48 @@ export default function CompanyPublicPage() {
     const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
 
     return (<>
-        <Button
-            css={{ width: '4rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white', position: 'fixed', left: '0%', top: '0%', margin: '1rem' }}
-            onPress={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"}></i></Button>
-        <h1>Ficio.ca</h1>
-        <div style={{ position: 'absolute', top: '3%', right: '3%', display: 'flex', flexDirection: 'column' }}>
-            <Tooltip content={lang !== 'fr' ? "Veuillez noter que notre capacité en français est limitée." : ""} placement="leftEnd" color="invert" >
-                <CustomButton onClick={toggleLang} style={{ textTransform: 'uppercase' }} >  {lang}  <i className="fa-solid fa-arrows-spin" /></CustomButton>
-            </Tooltip>
-            <CustomButton to='/newsletters?show_latest=true'> Newsletter <i className="fa-solid fa-angles-right" /></CustomButton>
+        <video src={videoBg1} autoPlay loop className={`background-video-1 ${isDark ? '': 'invert'}`} muted playsInline />
+        <div style={{zIndex: 100}} >
+            <Button
+                css={{ width: '4rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white', position: 'fixed', left: '0%', top: '0%', margin: '1rem' }}
+                onPress={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"}></i></Button>
+            <h1>Praeficio.com</h1>
+            <div style={{ position: 'absolute', top: '3%', right: '3%', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                <Tooltip content={lang !== 'fr' ? "Veuillez noter que notre capacité en français est limitée." : ""} placement="leftEnd" color="invert" >
+                    <CustomButton onClick={toggleLang} style={{ textTransform: 'uppercase' }} >  {lang}  <i className="fa-solid fa-arrows-spin" /></CustomButton>
+                </Tooltip>
+                <CustomButton to='/newsletters?show_latest=true'> Newsletter <i className="fa-solid fa-angles-right" /></CustomButton>
 
-            <CustomButton to='/about_us'> About Us <i className="fa-solid fa-angles-right" /></CustomButton>
+                <CustomButton to='/about_us'> About Us <i className="fa-solid fa-angles-right" /></CustomButton>
 
-            <CustomButton to='/contact_us'> Contact Us <i className="fa-solid fa-angles-right" /></CustomButton>
-        </div>
-
-        {!!referrer && <Text em size={13} css={{ color: 'lightgreen' }} >{sentences.referral_part_1[lang]} {`"${referrer}"`}, {sentences.referral_part_2[lang]}</Text>}
-
-        {!showIncompletePage ? <h3><i className="fa-solid fa-person-digging"></i>&nbsp;{sentences.being_built[lang]}&nbsp;<i className="fa-solid fa-screwdriver-wrench"></i></h3> : <>
-
-            <h2>{sentences.slogan3[lang]}</h2>
-            <div>
-                <Badge color="warning" >faster</Badge>
-                <Badge color="success">safer</Badge>
-                <Badge color="secondary">better</Badge>
+                <CustomButton to='/contact_us'> Contact Us <i className="fa-solid fa-angles-right" /></CustomButton>
             </div>
-            <br />
-            <h4>{sentences.slogan1[lang]}</h4>
 
-            <h3>{sentences.slogan2[lang]}</h3>
-            <CustomButton buttonStyle="btn--secondary" onClick={() => setSubscriptionModalOpen(true)} >{sentences.subscribe_button[lang]}</CustomButton>
-        </>}
+            {!!referrer && <Text em size={13} css={{ color: 'lightgreen' }} >{sentences.referral_part_1[lang]} {`"${referrer}"`}, {sentences.referral_part_2[lang]}</Text>}
 
-        <SubscriptionModal isOpen={subscriptionModalOpen} setIsOpen={setSubscriptionModalOpen} lang={lang} />
+            {!showIncompletePage ? <h3><i className="fa-solid fa-person-digging"></i>&nbsp;{sentences.being_built[lang]}&nbsp;<i className="fa-solid fa-screwdriver-wrench"></i></h3> : <>
 
-        <Checkbox
-            css={{ position: 'absolute', top: '95%' }}
-            onChange={val => setShowIncompletePage(val)}
-        >{sentences.show_incomplete[lang]}</Checkbox>
+                <h2>{sentences.slogan3[lang]}</h2>
+                <div>
+                    <Badge color="warning" >faster</Badge>
+                    <Badge color="success">safer</Badge>
+                    <Badge color="secondary">better</Badge>
+                </div>
+                <br />
+                <h4>{sentences.slogan1[lang]}</h4>
+
+                <h3>{sentences.slogan2[lang]}</h3>
+                <CustomButton buttonStyle="btn--secondary" onClick={() => setSubscriptionModalOpen(true)} >{sentences.subscribe_button[lang]}</CustomButton>
+            </>}
+
+            <SubscriptionModal isOpen={subscriptionModalOpen} setIsOpen={setSubscriptionModalOpen} lang={lang} />
+
+            <Checkbox
+                css={{ position: 'absolute', top: '95%' }}
+                onChange={val => setShowIncompletePage(val)}
+            >{sentences.show_incomplete[lang]}</Checkbox>
+
+        </div>
     </>);
 };
 
