@@ -27,6 +27,8 @@ export default function TicTacToePage() {
 
     const [dimensions, setDimensions] = useState(3); //to later have 4*4, 5*5, 6*6 ... games
 
+    const [pastMoves, setPastMoves] = useState([]);
+
     const winningArrangements = React.useMemo(() => {
         return generateWinningCombinations(dimensions || 3);
     }, [dimensions]);
@@ -43,7 +45,10 @@ export default function TicTacToePage() {
     }, [boardStart]);
 
     const [round, setRound] = useState(1);
-    const [lastMove, setLastMove] = useState(null);
+
+    const lastMove = React.useMemo(() => {
+        return pastMoves[pastMoves.length - 1];
+    }, [pastMoves]);
 
     const [finalState, setFinalState] = useState(null);
 
@@ -53,7 +58,7 @@ export default function TicTacToePage() {
         return 'warning';
     }, [finalState]);
 
-    const dimensionOptions = React.useMemo(() => [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(i => ({ key: i.toString(), name: `${i}x${i} grid`, description: i > 6 ? 'create a 6-streak to win' : null, disabled: i > 10 })), []);
+    const dimensionOptions = React.useMemo(() => [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18].map(i => ({ key: i.toString(), name: `${i}x${i} grid`, description: i > 6 ? 'create a 6-streak to win' : null })), []);
 
     const [playerTurn, setPlayerTurn] = useState(playerOne);
 
@@ -81,10 +86,10 @@ export default function TicTacToePage() {
         <pre>Last: {lastMove||'none'}</pre> */}
         {!isLoggedIn && <Button
             css={{ width: '4rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white', position: 'fixed', left: '0%', top: '0%', margin: '1rem' }}
-            onPress={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"}/></Button>}
+            onPress={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"} /></Button>}
 
         <CustomizedDropdown disabled={round > 1} optionsList={dimensionOptions} title="Grid" mountDirectly default_value="3" outerUpdater={a => setDimensions(parseInt(a))} showDisabledColor />
-        <CustomButton onClick={reset}>Reset <i className="fa-solid fa-arrows-rotate"/></CustomButton>
+        <CustomButton onClick={reset}>Reset <i className="fa-solid fa-arrows-rotate" /></CustomButton>
         <br />
         {finalState && <Badge color={finalColor} >{finalState}</Badge>}
         {playerTurn === playerTwo && !finalState && <Loading></Loading>}
@@ -146,7 +151,7 @@ export default function TicTacToePage() {
             console.log(resultWords.end_tie);
             setFinalState(resultWords.end_tie);
         }
-        setLastMove(to_position);
+        setPastMoves(pastMoves.concat(to_position));
         if (!finalState) toggleTurn();
     };
 
@@ -155,7 +160,6 @@ export default function TicTacToePage() {
         setRound(1);
         setBoard(boardStart);
         setScoreBoard([]);
-        setLastMove(null);
         setFinalState(null);
         setPlayerTurn(playerOne);
     };
@@ -177,6 +181,8 @@ function AlekSpecial(board, player, opponent, winningArrangements) {
     // console.log(`Alek special called, board provided:`, board);
 
     const boardScores = new Array(board.length).fill(0);
+
+    const boardDimension = Math.sqrt(board.length);
 
     let exhausted_arrangements = 0;
 
@@ -201,10 +207,17 @@ function AlekSpecial(board, player, opponent, winningArrangements) {
             openSpots
         });
 
-        if (openSpots === 1 && (!playerMarks || !opponentMarks)) {
+        if (boardDimension > 6 && openSpots === 2 && !playerMarks) {
+            //means the opponent is 2 moves away from winning and both spots are open.
+            //this happens in 7*7 and larger games since we only require a streak of 6, which means they can add one to the other end
+            bestMove = arrangement.filter(p => !board[p])[0];
+            console.log(`Critical move (type 2) triggerred, moving to ${bestMove}, arrangement found: `, arrangement);
+            return { boardScores, bestMove };
+            break;
+        } else if (openSpots === 1 && (!playerMarks || !opponentMarks)) {
             //means we are 1 step from winning or 1 step from loosing, so we should conquer the available spot.\
             bestMove = arrangement.filter(p => !board[p])[0];
-            console.log(`Critical move triggerred, moving to ${bestMove}, arrangement found: `, arrangement);
+            console.log(`Critical move (type 1) triggerred, moving to ${bestMove}, arrangement found: `, arrangement);
             return { boardScores, bestMove };
             break;
         } else if (playerMarks && !opponentMarks) {
@@ -301,7 +314,19 @@ function generateWinningCombinations(scale) {
     winningCombinations.push(diagonal1);
     winningCombinations.push(diagonal2);
 
+    if (scale > 6) return winningCombinations.map(x => getAdjacentArrays(x)).flat(1);
+
     return winningCombinations;
+};
+
+//splits arrays larger than 6 into an array of arrays each of which are the 6 adjacent parts
+function getAdjacentArrays(arr) {
+    const result = [];
+    const len = arr.length;
+    for (let i = 0; i < len - 5; i++) {
+        result.push(arr.slice(i, i + 6));
+    }
+    return result;
 };
 
 function adjacentCellFinder(board, index) {
