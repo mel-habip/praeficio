@@ -207,17 +207,17 @@ function AlekSpecial(board, player, opponent, winningArrangements) {
             openSpots
         });
 
-        if (boardDimension > 6 && openSpots === 2 && !playerMarks) {
+        if (openSpots === 1 && (!playerMarks || !opponentMarks)) {
+            //means we are 1 step from winning or 1 step from loosing, so we should conquer the available spot.\
+            bestMove = arrangement.filter(p => !board[p])[0];
+            console.log(`Critical move (type 1) triggerred, moving to ${bestMove}, arrangement found: `, arrangement);
+            return { boardScores, bestMove };
+            break;
+        } else if (boardDimension > 6 && openSpots === 2 && !playerMarks) {
             //means the opponent is 2 moves away from winning and both spots are open.
             //this happens in 7*7 and larger games since we only require a streak of 6, which means they can add one to the other end
             bestMove = arrangement.filter(p => !board[p])[0];
             console.log(`Critical move (type 2) triggerred, moving to ${bestMove}, arrangement found: `, arrangement);
-            return { boardScores, bestMove };
-            break;
-        } else if (openSpots === 1 && (!playerMarks || !opponentMarks)) {
-            //means we are 1 step from winning or 1 step from loosing, so we should conquer the available spot.\
-            bestMove = arrangement.filter(p => !board[p])[0];
-            console.log(`Critical move (type 1) triggerred, moving to ${bestMove}, arrangement found: `, arrangement);
             return { boardScores, bestMove };
             break;
         } else if (playerMarks && !opponentMarks) {

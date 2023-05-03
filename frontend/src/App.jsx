@@ -30,7 +30,7 @@ import axios from 'axios';
 function App() {
   const browserDarkPreference = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const localTheme = localStorage.getItem('theme');
-  let isDarkInitial = false; //proves persistence, sets State based on localStorage
+  let isDarkInitial = true; //proves persistence, sets State based on localStorage
   if (localTheme === 'dark') {
     isDarkInitial = true;
   } else if (localTheme === 'light') {
@@ -105,8 +105,10 @@ function App() {
           <div className="App">
             <Router >
               <Routes>
-                <Route path='/' element={isLoggedIn ? <Portal /> : <LoginPage />} exact />
-                <Route path='/company' element={<CompanyPublicPage />} exact/>
+                <Route path='/' element={<CompanyPublicPage />} exact />
+                <Route path='/company' element={<Navigate to="/" replace />} />
+                <Route path='/home' element={<Navigate to="/portal" replace />} />
+                <Route path='/portal' element={isLoggedIn ? <Portal /> : <LoginPage />} exact />
                 <Route path='/newsletters' element={<Newsletters />} exact/>
                 <Route path='/newsletters/admin' element={isLoggedIn ? <NewslettersAdmin /> : <LoginPage />} exact/>
                 <Route path='/login' element={<LoginPage />} exact/>
