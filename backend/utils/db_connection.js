@@ -9,18 +9,17 @@ dotenv.config({
     path: env_dir
 });
 
-console.log("root password", process.env.DB_ROOT_PASSWORD);
-
 const connection = mysql.createConnection({
-    host: "localhost",
+    host: process.env.DB_HOST,
+    port: "3306",
     user: "admin",
-    password: "admin1",
-    database: 'stock_portfolio_db',
+    password: process.env.DB_PASSWORD,
+    database: 'praeficio-database-1',
 });
 
 connection.connect(function (err) {
     if (err) throw err;
-    console.log("Connected!");
+    console.log("Database Connected!");
 });
 
 //node native promisify, turns the query async so that we can wait for data to come back

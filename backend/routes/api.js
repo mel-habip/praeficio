@@ -14,7 +14,9 @@ import {
 
 const log = console.log;
 
-apiRouter.use(authenticateToken);
+apiRouter.get('/test', async (_, res) => {
+    res.status(200).send('<h1>Hello World from the API! (with HTML) <h1/>');
+});
 
 
 apiRouter.get('/', async (_, res) => {
@@ -60,7 +62,7 @@ apiRouter.get('/random_result', (_, res) => {
     });
 });
 
-apiRouter.post('/search', async (req, res) => { //TODO: Consider some caching here
+apiRouter.post('/search', authenticateToken, async(req, res) => { //TODO: Consider some caching here
     const {
         type,
         keyword,
