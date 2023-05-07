@@ -4,9 +4,11 @@ import is_valid_email from '../utils/is_valid_email.js';
 import dotenv from 'dotenv';
 import env_dir from '../utils/env_dir.js';
 
-dotenv.config({
-    path: env_dir
-});
+if (env_dir) {
+    dotenv.config({
+        path: env_dir
+    });
+}
 
 const DEF_FROM = `"Test from Mel's Portfolio Tracker Demo 1.0" ${process.env.DOMAIN_EMAIL_ADDRESS}`; //will be replaced when domain goes live.
 
