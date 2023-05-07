@@ -12,9 +12,6 @@
   "type": "module",
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "nodemon": "^2.0.20"
-  },
   "dependencies": {
     "bcrypt": "^5.1.0",
     "bcryptjs": "^2.4.3",
@@ -31,5 +28,8 @@
     "path": "^0.12.7",
     "url": "^0.11.0"
   },
-  "repository": {}
+  "repository": {},
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
 }
