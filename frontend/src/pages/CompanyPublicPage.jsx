@@ -177,7 +177,7 @@ function SubscriptionModal({ isOpen, setIsOpen, lang }) {
                         return; //means there are errors}
                     }
                     console.log('submitted');
-                    axios.post('https://${process.env.REACT_APP_BUILD_ENV}.praeficio.com/subscribers/', { email: subscriptionInfo.email, name: subscriptionInfo.name })
+                    axios.post(`https://${process.env.REACT_APP_BUILD_ENV}.praeficio.com/subscribers/`, { email: subscriptionInfo.email, name: subscriptionInfo.name })
                         .then(res => {
                             if (res.status === 201) {
                                 setIsOpen(false);
