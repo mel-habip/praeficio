@@ -71,7 +71,7 @@ function App() {
     if (!localUserId) return;
     if (localAccessToken) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${localAccessToken}`;
-      axios.get(`http://localhost:8000/users/session`).then(response => {
+      axios.get(`https://${process.env.SELF_URL_P1}.praeficio.com/users/session`).then(response => {
         console.log('/session fetch results', response)
         if (response.status === 200) {
           setUser(response.data);
