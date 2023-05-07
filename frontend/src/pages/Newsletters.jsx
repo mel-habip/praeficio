@@ -19,7 +19,7 @@ export default function Newsletters() {
     useEffect(() => { //main fetcher on load
         setIsLoading(true);
         console.log(`Loading page #${pageNumber}`);
-        axios.get(`https://${process.env.REACT_APP_BUILD_ENV}.praeficio.com/newsletters?size=25&page=${pageNumber}`).then(response => {
+        axios.get(`https://${process.env.REACT_APP_BUILD_ENV}.praeficio.com/be/newsletters?size=25&page=${pageNumber}`).then(response => {
             setNewsletterArticleList(prevList => [...(prevList || []), ...response.data.data]);
             setHasMore(response.data.has_more);
             setIsLoading(false);
