@@ -98,7 +98,7 @@ function App() {
 
   if (isLoggedIn === null && localAccessToken) return (<LoadingPage />);
 
-  if (window.location.pathname.includes('/praeficio.com/be')) return (<div></div>);
+  if (window.location.href.includes('.praeficio.com/be') || window.location.pathname.startsWith('/be/')) return (<div></div>);
 
   return (
     <NextUIProvider theme={isDark ? darkTheme : lightTheme}>
