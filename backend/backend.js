@@ -25,8 +25,6 @@ const APP = express(); //creating and starting the server
 APP.use(cors());
 APP.use(express.json());
 
-const mainRouter = express.Router();
-
 APP.use(function errorHandler(err, req, res, next) {
     if (!err) return next();
     console.error(err.stack);
@@ -36,19 +34,19 @@ APP.use(function errorHandler(err, req, res, next) {
     // res.status(422).send(`Unprocessable Entity`); //what was there before
 });
 
-mainRouter.use('/users', userRouter);
-mainRouter.use('/positions', positionRouter);
-mainRouter.use('/workspaces', workspacesRouter);
-mainRouter.use('/workspace_messages', workspaceMessagesRouter);
-mainRouter.use('/alerts', alertsRouter);
-mainRouter.use('/todos', todosRouter);
-mainRouter.use('/api', apiRouter);
-mainRouter.use('/feedback_logs', feedbackLogRouter);
-mainRouter.use('/feedback_log_filters', feedbackLogFilterRouter);
-mainRouter.use('/feedback_log_items', feedbackLogItemsRouter);
-mainRouter.use('/feedback_log_item_messages', feedbackLogItemMessagesRouter);
-mainRouter.use('/subscribers', subscriberRouter);
-mainRouter.use('/newsletters', newsletterRouter);
+APP.use('/users', userRouter);
+APP.use('/positions', positionRouter);
+APP.use('/workspaces', workspacesRouter);
+APP.use('/workspace_messages', workspaceMessagesRouter);
+APP.use('/alerts', alertsRouter);
+APP.use('/todos', todosRouter);
+APP.use('/api', apiRouter);
+APP.use('/feedback_logs', feedbackLogRouter);
+APP.use('/feedback_log_filters', feedbackLogFilterRouter);
+APP.use('/feedback_log_items', feedbackLogItemsRouter);
+APP.use('/feedback_log_item_messages', feedbackLogItemMessagesRouter);
+APP.use('/subscribers', subscriberRouter);
+APP.use('/newsletters', newsletterRouter);
 
 Object.values(REGULAR_SCHEDULED_JOBS).forEach(job => job.start());
 
@@ -70,11 +68,9 @@ Object.values(REGULAR_SCHEDULED_JOBS).forEach(job => job.start());
  * 11) Create Joint Position Handling where it accumulates a set of positions and sends an email to that user
  */
 
-mainRouter.get('/', (req, res) => {
+APP.get('/', (req, res) => {
     return res.status(200).json('Hello World!');
 });
-
-APP.use('/be', mainRouter); 
 
 APP.listen(PORT);
 
