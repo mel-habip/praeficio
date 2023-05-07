@@ -2,9 +2,12 @@ import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import query from '../utils/db_connection.js';
 import env_dir from '../utils/env_dir.js';
-dotenv.config({
-    path: env_dir
-});
+
+if (env_dir) {
+    dotenv.config({
+        path: env_dir
+    });
+}
 
 import User from '../constants/userClass.js'
 

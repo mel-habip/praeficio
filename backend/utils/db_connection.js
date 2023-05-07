@@ -5,9 +5,11 @@ import dotenv from 'dotenv';
 import util from 'util';
 dotenv.config();
 import env_dir from '../utils/env_dir.js';
-dotenv.config({
-    path: env_dir
-});
+if (env_dir) {
+    dotenv.config({
+        path: env_dir
+    });
+}
 
 const connection = mysql.createConnection({
     host: process.env.DB_HOST,
