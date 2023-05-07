@@ -110,7 +110,7 @@ function ToDoCategoriesSection() {
                 shadow
                 color="success"
                 onPress={() => {
-                    axios.put(`https://${process.env.SELF_URL_P1}.praeficio.com/users/${user.id}`, { to_do_categories: currentCategories }).then(response => {
+                    axios.put(`https://${process.env.REACT_APP_BUILD_ENV}.praeficio.com/users/${user.id}`, { to_do_categories: currentCategories }).then(response => {
                         if (response.status === 200) {
                             console.log('got here! :D ', setUser)
                             setUser({ ...user, to_do_categories: currentCategories });
@@ -253,7 +253,7 @@ function PersonalSettingsSection({ user, setUser }) {
                     shadow
                     color="success"
                     onPress={() => {
-                        axios.put(`https://${process.env.SELF_URL_P1}.praeficio.com/users/${user.id}`, {
+                        axios.put(`https://${process.env.REACT_APP_BUILD_ENV}.praeficio.com/users/${user.id}`, {
                             first_name: firstName,
                             last_name: lastName,
                             email,
