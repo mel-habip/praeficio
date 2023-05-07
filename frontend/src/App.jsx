@@ -71,7 +71,7 @@ function App() {
     if (!localUserId) return;
     if (localAccessToken) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${localAccessToken}`;
-      axios.get(`https://${process.env.REACT_APP_BUILD_ENV}.praeficio.com/be/users/session`).then(response => {
+      axios.get(`https://${process.env.REACT_APP_BUILD_ENV}.praeficio.com/users/session`).then(response => {
         console.log('/session fetch results', response)
         if (response.status === 200) {
           setUser(response.data);
@@ -98,7 +98,7 @@ function App() {
 
   if (isLoggedIn === null && localAccessToken) return (<LoadingPage />);
 
-  if (window.location.href.includes('.praeficio.com/be') || window.location.pathname.startsWith('/be/')) return (<div></div>);
+  if (window.location.href.includes('.praeficio.com') || window.location.pathname.startsWith('/be/')) return (<div></div>);
 
   return (
     <NextUIProvider theme={isDark ? darkTheme : lightTheme}>
