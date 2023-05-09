@@ -12,6 +12,7 @@ import { CustomButton } from '../fields/CustomButton';
 import { Button, Modal, Spacer, Text, Input, Checkbox, Tooltip, Row, Grid, Dropdown, Card } from '@nextui-org/react';
 
 export default function ToDos({ archive }) {
+    document.title = "Praeficio.com | ToDo's";
 
     const [toDoList, setToDoList] = useState(null);
     const [filteredToDoList, setFilteredToDoList] = useState(null);

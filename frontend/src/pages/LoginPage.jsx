@@ -8,6 +8,7 @@ import ErrorModule from '../components/ErrorModule';
 import validatePassword from '../utils/validatePassword.mjs';
 
 export default function LoginPage() {
+    document.title = "Praeficio.com | Log-In";
 
     console.log("REACT_APP_BUILD_ENV", process.env.REACT_APP_BUILD_ENV);
     console.log('PUBLIC_URL', process.env.PUBLIC_URL);

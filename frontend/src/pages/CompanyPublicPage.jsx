@@ -1,4 +1,4 @@
-import React, { useState, useContext, useRef, useEffect } from 'react';
+import React, { useState, useContext, lazy } from 'react';
 import ThemeContext from '../contexts/ThemeContext';
 import axios from 'axios';
 
@@ -123,7 +123,7 @@ export default function CompanyPublicPage() {
             audioSrc: romeo_and_juliet,
             color: '#c334eb'
         }
-    ]
+    ];
 
 
 

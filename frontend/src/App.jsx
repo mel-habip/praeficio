@@ -1,8 +1,11 @@
-// import logo from './logo.gif';
 // import './App.css';
 import React, { useState, useEffect, lazy } from 'react';
-import NavMenu from './components/NavMenu';
 import { BrowserRouter as Router, Route, Routes, Navigate, useNavigate, useParams } from 'react-router-dom';
+
+import ThemeContext from './contexts/ThemeContext';
+import IsLoggedInContext from './contexts/IsLoggedInContext';
+import { NextUIProvider, createTheme } from '@nextui-org/react';
+import axios from 'axios';
 
 const CompanyPublicPage = lazy(() => import('./pages/CompanyPublicPage'));
 const Newsletters = lazy(() => import('./pages/Newsletters'));
@@ -21,12 +24,6 @@ const SpecificFeedbackLogPage = lazy(() => import('./pages/SpecificFeedbackLogPa
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
 const ForbiddenPage = lazy(() => import('./pages/ForbiddenPage.jsx'));
 const LoadingPage = lazy(() => import('./pages/LoadingPage'));
-
-import ThemeContext from './contexts/ThemeContext';
-import IsLoggedInContext from './contexts/IsLoggedInContext';
-import { NextUIProvider, createTheme } from '@nextui-org/react';
-
-import axios from 'axios';
 
 
 function App() {
