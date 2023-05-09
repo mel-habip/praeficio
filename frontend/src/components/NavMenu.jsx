@@ -5,7 +5,7 @@ import ThemeContext from '../contexts/ThemeContext';
 import IsLoggedInContext from '../contexts/IsLoggedInContext';
 import { Badge, Row, Text, Tooltip } from '@nextui-org/react';
 
-import praeficio_pronunciation from '../praeficio_pronunciation.mp3';
+import praeficio_pronunciation from '../media/praeficio_pronunciation.mp3';
 
 import './NavMenu.css';
 

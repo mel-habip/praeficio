@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 
 import NavMenu from '../components/NavMenu';
 
-import centerpiece from '../gandalf-you-shall-not-pass.gif';
+import centerpiece from '../media/gandalf-you-shall-not-pass.gif';
 
 
 export default function ForbiddenPage() {
