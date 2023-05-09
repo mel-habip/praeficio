@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useRef, useEffect } from 'react';
 import ThemeContext from '../contexts/ThemeContext';
 import axios from 'axios';
 
@@ -9,7 +9,11 @@ import { CustomButton } from '../fields/CustomButton';
 
 import { Button, Modal, Spacer, Text, Badge, Checkbox, Tooltip, Input, Grid, Dropdown } from '@nextui-org/react';
 
-import videoBg1 from '../sparkly_world_video.mp4';
+import videoBg1 from '../media/sparkly_world_video.mp4';
+
+import launch_music from '../media/dvorak_symphony_9_movement_4.mp3';
+
+import AudioPlayer from '../components/AudioPlayer';
 
 const referralCodes = {
     mel_secret_code: "Mel H.",
@@ -86,7 +90,9 @@ export default function CompanyPublicPage() {
     document.title = "Praeficio.com";
     const [lang, setLang] = useState('en');
     const toggleLang = () => setLang(lang === 'fr' ? 'en' : 'fr');
-    const [showIncompletePage, setShowIncompletePage] = useState(false);
+
+    const showIncompletePage = process.env.REACT_APP_BUILD_ENV === 'beta';
+
     const { isDark, toggleTheme } = useContext(ThemeContext);
     const queryParams = new URLSearchParams(window.location.search);
     const referral_token = queryParams.get("referral_code");
@@ -101,22 +107,41 @@ export default function CompanyPublicPage() {
 
     const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
 
+
+    const tracks = [
+        {
+            title: 'New World Symphony',
+            artist: 'Dvořák',
+            audioSrc: launch_music,
+            color: '#f5b342'
+        }
+    ]
+
+
+
+
+
     return (<>
-        <video src={videoBg1} autoPlay loop className={`background-video-1 ${isDark ? '': 'invert'}`} muted playsInline />
-        <div style={{zIndex: 100}} >
+        <video src={videoBg1} autoPlay loop className={`background-video-1 ${isDark ? '' : 'invert'}`} muted playsInline />
+        <div style={{ zIndex: 100 }} >
             <Button
                 css={{ width: '4rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white', position: 'fixed', left: '0%', top: '0%', margin: '1rem' }}
                 onPress={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"}></i></Button>
             <h1>Praeficio.com</h1>
-            <div style={{ position: 'absolute', top: '3%', right: '3%', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+            <div style={{ position: 'absolute', top: '3%', right: '3%', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', height: '90%' }}>
                 <Tooltip content={lang !== 'fr' ? "Veuillez noter que notre capacité en français est limitée." : ""} placement="leftEnd" color="invert" >
                     <CustomButton onClick={toggleLang} style={{ textTransform: 'uppercase' }} >  {lang}  <i className="fa-solid fa-arrows-spin" /></CustomButton>
                 </Tooltip>
-                <CustomButton to='/newsletters?show_latest=true'> Newsletter <i className="fa-solid fa-angles-right" /></CustomButton>
+                <CustomButton buttonStyle="btn--transparent" to='/newsletters?show_latest=true'> Newsletter <i className="fa-solid fa-angles-right" /></CustomButton>
 
-                <CustomButton to='/about_us'> About Us <i className="fa-solid fa-angles-right" /></CustomButton>
+                <CustomButton buttonStyle="btn--transparent" to='/about_us'> About Us <i className="fa-solid fa-angles-right" /></CustomButton>
 
-                <CustomButton to='/contact_us'> Contact Us <i className="fa-solid fa-angles-right" /></CustomButton>
+                <CustomButton buttonStyle="btn--transparent" to='/contact_us'> Contact Us <i className="fa-solid fa-angles-right" /></CustomButton>
+
+                <div style={{ marginTop: 'auto' }} >
+                    <AudioPlayer tracks={tracks} />
+                </div>
+
             </div>
 
             {!!referrer && <Text em size={13} css={{ color: 'lightgreen' }} >{sentences.referral_part_1[lang]} {`"${referrer}"`}, {sentences.referral_part_2[lang]}</Text>}
@@ -137,11 +162,6 @@ export default function CompanyPublicPage() {
             </>}
 
             <SubscriptionModal isOpen={subscriptionModalOpen} setIsOpen={setSubscriptionModalOpen} lang={lang} />
-
-            <Checkbox
-                css={{ position: 'absolute', top: '95%' }}
-                onChange={val => setShowIncompletePage(val)}
-            >{sentences.show_incomplete[lang]}</Checkbox>
 
         </div>
     </>);
@@ -177,7 +197,7 @@ function SubscriptionModal({ isOpen, setIsOpen, lang }) {
                         return; //means there are errors}
                     }
                     console.log('submitted');
-                    axios.post(`http://${process.env.REACT_APP_BUILD_ENV}.praeficio.com:8000/subscribers/`, { email: subscriptionInfo.email, name: subscriptionInfo.name })
+                    axios.post(`http://${process.env.REACT_APP_API_LINK}.praeficio.com:8000/subscribers/`, { email: subscriptionInfo.email, name: subscriptionInfo.name })
                         .then(res => {
                             if (res.status === 201) {
                                 setIsOpen(false);
@@ -247,4 +267,4 @@ function SubscriptionModal({ isOpen, setIsOpen, lang }) {
             </form>
         </Modal.Body>
     </Modal >);
-}
+};

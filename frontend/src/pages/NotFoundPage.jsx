@@ -6,10 +6,8 @@ import { Link } from 'react-router-dom';
 
 import NavMenu from '../components/NavMenu';
 
-import centerpiece from '../crying.jpg';
 
-
-const images = ['crying.jpg', "this_is_fine.gif", "ok_boomer.jpg", 'awkward_dog.jpg'];
+const images = ['crying.jpg', "this_is_fine.gif", "doge_404.jpg", 'awkward_dog.jpg', 'sassy_goat.jpeg'];
 
 function NotFoundPage() {
   const { isLoggedIn } = useContext(IsLoggedInContext);
@@ -19,7 +17,7 @@ function NotFoundPage() {
   useEffect(() => {
     const randomNumber = Math.floor(Math.random() * images.length);
     console.log(randomNumber);
-    import(`../${images[randomNumber]}`).then(image => {
+    import(`../media/${images[randomNumber]}`).then(image => {
       setImageSrc(image.default);
     });
   }, []);

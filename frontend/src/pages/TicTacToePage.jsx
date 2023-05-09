@@ -18,7 +18,7 @@ const resultWords = {
     win: 'YOU WIN',
     end_tie: 'TIE',
     early_tie: 'TIE - NO WINNING COMBINATIONS LEFT',
-}
+};
 
 export default function TicTacToePage() {
     document.title = "Tic-Tac-Toe";
@@ -123,6 +123,8 @@ export default function TicTacToePage() {
         console.log('called move');
 
         { //validation step
+            if (finalState) { console.error(`Game already ended as "${finalState}"`); return; }
+
             if ([playerOne, playerTwo].includes(board[to_position])) { console.error(`Position ${to_position} has already been claimed`); return; }
 
             if (board[to_position] === undefined) { console.error(`Position ${to_position} not found on board`); return; }
@@ -139,6 +141,8 @@ export default function TicTacToePage() {
         setRound(newRound);
         setBoard(newBoard);
 
+        setPastMoves(pastMoves.concat(to_position));
+        
         if (winning(newBoard, player, winningArrangements)) {
             if (player === playerOne) {
                 console.log(resultWords.win);
@@ -150,9 +154,9 @@ export default function TicTacToePage() {
         } else if (newRound > board.length) {
             console.log(resultWords.end_tie);
             setFinalState(resultWords.end_tie);
+        } else {
+            toggleTurn();
         }
-        setPastMoves(pastMoves.concat(to_position));
-        if (!finalState) toggleTurn();
     };
 
     function reset() {
