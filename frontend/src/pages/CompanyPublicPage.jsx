@@ -11,10 +11,10 @@ import { Button, Modal, Spacer, Text, Badge, Checkbox, Tooltip, Input, Grid, Dro
 
 import videoBg1 from '../media/sparkly_world_video.mp4';
 
+import AudioPlayer from '../components/AudioPlayer';
+
 const dvorak_symphony_9_movement_4 = lazy(() => import('../media/dvorak_symphony_9_movement_4.mp3'));
 const romeo_and_juliet = lazy(() => import('../media/romeo_and_juliet.mp3'));
-
-import AudioPlayer from '../components/AudioPlayer';
 
 const referralCodes = {
     mel_secret_code: "Mel H.",
@@ -86,7 +86,6 @@ const sentences = {
         fr: 'Afficher la page incomplète'
     },
 };
-
 
 export default function CompanyPublicPage() {
     document.title = "Praeficio.com";
