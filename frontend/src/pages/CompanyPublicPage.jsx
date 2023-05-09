@@ -20,6 +20,7 @@ const referralCodes = {
     hira_secret_code: "Hira",
     anon_secret_code: "Us",
     potato: 'potato',
+    rise_of_raj: 'Raj Sangha'
 };
 
 const sentences = {
@@ -95,12 +96,12 @@ export default function CompanyPublicPage() {
 
     const { isDark, toggleTheme } = useContext(ThemeContext);
     const queryParams = new URLSearchParams(window.location.search);
-    const referral_token = queryParams.get("referral_code");
+    const referral_code = queryParams.get("referral_code");
 
-    const referrer = referralCodes[referral_token];
+    const referrer = referralCodes[referral_code];
 
-    if (referral_token && !referrer) {
-        console.warn(`Your referral code "${referral_token}" is not recognized`);
+    if (referral_code && !referrer) {
+        console.warn(`Your referral code "${referral_code}" is not recognized`);
     } else if (referrer) {
         console.log(`Referred by: `, referrer);
     }
