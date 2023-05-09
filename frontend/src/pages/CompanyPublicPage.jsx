@@ -11,7 +11,8 @@ import { Button, Modal, Spacer, Text, Badge, Checkbox, Tooltip, Input, Grid, Dro
 
 import videoBg1 from '../media/sparkly_world_video.mp4';
 
-import launch_music from '../media/dvorak_symphony_9_movement_4.mp3';
+const dvorak_symphony_9_movement_4 = lazy(() => import('../media/dvorak_symphony_9_movement_4.mp3'));
+const romeo_and_juliet = lazy(() => import('../media/romeo_and_juliet.mp3'));
 
 import AudioPlayer from '../components/AudioPlayer';
 
@@ -84,7 +85,7 @@ const sentences = {
         en: 'Show Incomplete Page',
         fr: 'Afficher la page incomplète'
     },
-}
+};
 
 
 export default function CompanyPublicPage() {
@@ -112,9 +113,15 @@ export default function CompanyPublicPage() {
     const tracks = [
         {
             title: 'New World Symphony',
-            artist: 'Dvořák',
-            audioSrc: launch_music,
+            artist: 'Antonín Dvořák',
+            audioSrc: dvorak_symphony_9_movement_4,
             color: '#f5b342'
+        },
+        {
+            title: 'Romeo and Juliet, No 13 Dance of the Knights',
+            artist: 'Sergei Prokofiev',
+            audioSrc: romeo_and_juliet,
+            color: '#c334eb'
         }
     ]
 
