@@ -13,8 +13,6 @@ import videoBg1 from '../media/sparkly_world_video.mp4';
 
 import AudioPlayer from '../components/AudioPlayer';
 
-const dvorak_symphony_9_movement_4 = lazy(() => import('../media/dvorak_symphony_9_movement_4.mp3'));
-const romeo_and_juliet = lazy(() => import('../media/romeo_and_juliet.mp3'));
 
 const referralCodes = {
     mel_secret_code: "Mel H.",
@@ -113,13 +111,14 @@ export default function CompanyPublicPage() {
         {
             title: 'New World Symphony',
             artist: 'Antonín Dvořák',
-            audioSrc: dvorak_symphony_9_movement_4,
+            audioSrc: '../media/dvorak_symphony_9_movement_4.mp3',
+            imageSrc: '..media/dvorak.jpg',
             color: '#f5b342'
         },
         {
             title: 'Romeo and Juliet, No 13 Dance of the Knights',
             artist: 'Sergei Prokofiev',
-            audioSrc: romeo_and_juliet,
+            audioSrc: '../media/romeo_and_juliet.mp3',
             color: '#c334eb'
         }
     ];

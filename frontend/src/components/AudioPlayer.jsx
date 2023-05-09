@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, lazy } from 'react';
 
 import './AudioPlayer.css';
 
@@ -8,6 +8,11 @@ import './AudioPlayer.css';
  * https://letsbuildui.dev/articles/building-an-audio-player-with-react-hooks
  */
 
+/**
+ * @component AudioPlayer provides a UI that plays music
+ * @param {Array<{title:string, artist:string, audioSrc:string, imageSrc:string}>} tracks
+ * @note `audioSrc` and `imageSrc` must be relative directories based on this file
+ */
 export default function AudioPlayer({ tracks }) {
     // State
     const [trackIndex, setTrackIndex] = useState(0);
@@ -15,10 +20,13 @@ export default function AudioPlayer({ tracks }) {
     const [isPlaying, setIsPlaying] = useState(false);
 
     // Destructure for conciseness
-    const { title, artist, color, image, audioSrc } = tracks[trackIndex];
+    const { title, artist, color, imageSrc, audioSrc } = tracks[trackIndex];
+
+    const audioSrcImport = lazy(() => import(audioSrc));
+    const imageSrcImport = imageSrc ? lazy(() => import(imageSrc)) : '';
 
     // Refs
-    const audioRef = useRef(new Audio(audioSrc));
+    const audioRef = useRef(new Audio(audioSrcImport));
     const intervalRef = useRef();
     const isReady = useRef(false);
 
@@ -65,7 +73,7 @@ export default function AudioPlayer({ tracks }) {
     useEffect(() => {
         audioRef.current.pause();
 
-        audioRef.current = new Audio(audioSrc);
+        audioRef.current = new Audio(audioSrcImport);
         setTrackProgress(audioRef.current.currentTime);
 
         if (isReady.current) {
@@ -113,10 +121,10 @@ export default function AudioPlayer({ tracks }) {
     return (
         <div className="audio-player">
             <div className="track-info">
-                {!!image &&
+                {!!imageSrcImport &&
                     <img
                         className="artwork"
-                        src={image}
+                        src={imageSrcImport}
                         alt={`track artwork for ${title} by ${artist}`}
                     />}
                 <h2 className="title">{title}</h2>
