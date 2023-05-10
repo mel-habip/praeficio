@@ -10,6 +10,7 @@ import { Button, Modal, Spacer, Text, Badge, Card, Grid, Loading } from '@nextui
 import LoadingPage from './LoadingPage';
 
 export default function Newsletters() {
+    document.title = "Newsletter";
 
     const [newsletterArticleList, setNewsletterArticleList] = useState(null);
     const [pageNumber, setPageNumber] = useState(1);

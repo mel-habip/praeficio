@@ -10,6 +10,7 @@ import NavMenu from '../components/NavMenu';
 const images = ['crying.jpg', "this_is_fine.gif", "doge_404.jpg", 'awkward_dog.jpg', 'sassy_goat.jpeg'];
 
 function NotFoundPage() {
+  document.title = "Praeficio.com | Not Found";
   const { isLoggedIn } = useContext(IsLoggedInContext);
   const { isDark, toggleTheme } = useContext(ThemeContext);
   const [imageSrc, setImageSrc] = useState(null);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, lazy } from 'react';
 
 import './AudioPlayer.css';
 
@@ -8,17 +8,35 @@ import './AudioPlayer.css';
  * https://letsbuildui.dev/articles/building-an-audio-player-with-react-hooks
  */
 
+/**
+ * @component AudioPlayer provides a UI that plays music
+ * @param {Array<{title:string, artist:string, audioSrc:string, imageSrc:string}>} tracks
+ * @note `audioSrc` and `imageSrc` must be relative directories based on this file
+ */
 export default function AudioPlayer({ tracks }) {
     // State
     const [trackIndex, setTrackIndex] = useState(0);
     const [trackProgress, setTrackProgress] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
 
+
     // Destructure for conciseness
-    const { title, artist, color, image, audioSrc } = tracks[trackIndex];
+    const { title, artist, color, imageName, audioName } = tracks[trackIndex];
+
+    const fileNameMatcher = (name) => {
+        switch (name.trim().toLowerCase()) {
+            case 'dvorak': return 'dvorak.jpg';
+            case 'dvorak_symphony_9_movement_4': return 'dvorak_symphony_9_movement_4.mp3';
+            case 'prokofiev': return 'prokofiev.jpg';
+            case 'romeo_and_juliet': return 'romeo_and_juliet.mp3';
+            case 'we_are_one': return 'we_are_one.jpg';
+            case 'fur_beethoven': return 'fur_beethoven.mp3';
+            default: console.error('Unknown track');
+        }
+    }
 
     // Refs
-    const audioRef = useRef(new Audio(audioSrc));
+    const audioRef = useRef(new Audio(fileNameMatcher(audioName)));
     const intervalRef = useRef();
     const isReady = useRef(false);
 
@@ -65,7 +83,7 @@ export default function AudioPlayer({ tracks }) {
     useEffect(() => {
         audioRef.current.pause();
 
-        audioRef.current = new Audio(audioSrc);
+        audioRef.current = new Audio(fileNameMatcher(audioName));
         setTrackProgress(audioRef.current.currentTime);
 
         if (isReady.current) {
@@ -74,7 +92,7 @@ export default function AudioPlayer({ tracks }) {
             startTimer();
         } else {
             // Set the isReady ref as true for the next pass
-            // isReady.current = true;
+            isReady.current = true;
         }
     }, [trackIndex]);
 
@@ -113,10 +131,11 @@ export default function AudioPlayer({ tracks }) {
     return (
         <div className="audio-player">
             <div className="track-info">
-                {!!image &&
+                {!!imageName &&
                     <img
                         className="artwork"
-                        src={image}
+                        loading="lazy"
+                        src={fileNameMatcher(imageName)}
                         alt={`track artwork for ${title} by ${artist}`}
                     />}
                 <h2 className="title">{title}</h2>

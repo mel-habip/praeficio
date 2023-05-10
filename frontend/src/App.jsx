@@ -1,30 +1,29 @@
-// import logo from './logo.gif';
 // import './App.css';
-import React, { useState, useEffect } from 'react';
-import NavMenu from './components/NavMenu';
+import React, { useState, useEffect, lazy } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, useNavigate, useParams } from 'react-router-dom';
-import CompanyPublicPage from './pages/CompanyPublicPage';
-import Newsletters from './pages/Newsletters';
-import NewslettersAdmin from './pages/NewslettersAdmin';
-import LoginPage from './pages/LoginPage.jsx';
-import Portal from './pages/Portal.jsx';
-import Positions from './pages/Positions.jsx';
-import Settings from './pages/Settings.jsx';
-import Alerts from './pages/Alerts.jsx';
-import Workspaces from './pages/Workspaces.jsx';
-import ToDos from './pages/ToDos.jsx';
-import TestZone from './pages/TestZone';
-import TicTacToePage from './pages/TicTacToePage.jsx';
-import FeedbackLogsPage from './pages/FeedbackLogsPage.jsx';
-import SpecificFeedbackLogPage from './pages/SpecificFeedbackLogPage.jsx';
-import NotFoundPage from './pages/NotFoundPage.jsx';
-import ForbiddenPage from './pages/ForbiddenPage.jsx';
-import LoadingPage from './pages/LoadingPage';
+
 import ThemeContext from './contexts/ThemeContext';
 import IsLoggedInContext from './contexts/IsLoggedInContext';
 import { NextUIProvider, createTheme } from '@nextui-org/react';
-
 import axios from 'axios';
+
+const CompanyPublicPage = lazy(() => import('./pages/CompanyPublicPage'));
+const Newsletters = lazy(() => import('./pages/Newsletters'));
+const NewslettersAdmin = lazy(() => import('./pages/NewslettersAdmin'));
+const LoginPage = lazy(() => import('./pages/LoginPage.jsx'));
+const Portal = lazy(() => import('./pages/Portal.jsx'));
+const Positions = lazy(() => import('./pages/Positions.jsx'));
+const Settings = lazy(() => import('./pages/Settings.jsx'));
+const Alerts = lazy(() => import('./pages/Alerts.jsx'));
+const Workspaces = lazy(() => import('./pages/Workspaces.jsx'));
+const ToDos = lazy(() => import('./pages/ToDos.jsx'));
+const TestZone = lazy(() => import('./pages/TestZone'));
+const TicTacToePage = lazy(() => import('./pages/TicTacToePage.jsx'));
+const FeedbackLogsPage = lazy(() => import('./pages/FeedbackLogsPage.jsx'));
+const SpecificFeedbackLogPage = lazy(() => import('./pages/SpecificFeedbackLogPage.jsx'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
+const ForbiddenPage = lazy(() => import('./pages/ForbiddenPage.jsx'));
+const LoadingPage = lazy(() => import('./pages/LoadingPage'));
 
 
 function App() {

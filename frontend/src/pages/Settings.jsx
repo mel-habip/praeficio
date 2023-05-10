@@ -15,6 +15,7 @@ import { Button, Modal, Spacer, Text, Input, Checkbox, Tooltip, Row, Grid, Dropd
 import validatePassword from '../utils/validatePassword.mjs';
 
 export default function Settings() {
+    document.title = "Praeficio.com | Settings";
     const { user, accessToken, setUser } = useContext(IsLoggedInContext);
     const { isDark } = useContext(ThemeContext);
 

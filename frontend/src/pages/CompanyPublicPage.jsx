@@ -1,4 +1,4 @@
-import React, { useState, useContext, useRef, useEffect } from 'react';
+import React, { useState, useContext, lazy, Suspense } from 'react';
 import ThemeContext from '../contexts/ThemeContext';
 import axios from 'axios';
 
@@ -7,13 +7,12 @@ import ErrorModule from '../components/ErrorModule';
 
 import { CustomButton } from '../fields/CustomButton';
 
-import { Button, Modal, Spacer, Text, Badge, Checkbox, Tooltip, Input, Grid, Dropdown } from '@nextui-org/react';
+import { Button, Modal, Spacer, Text, Badge, Checkbox, Tooltip, Input, Grid, Dropdown, Loading } from '@nextui-org/react';
 
 import videoBg1 from '../media/sparkly_world_video.mp4';
 
-import launch_music from '../media/dvorak_symphony_9_movement_4.mp3';
+const AudioPlayer = lazy(() => import('../components/AudioPlayer'));
 
-import AudioPlayer from '../components/AudioPlayer';
 
 const referralCodes = {
     mel_secret_code: "Mel H.",
@@ -84,8 +83,7 @@ const sentences = {
         en: 'Show Incomplete Page',
         fr: 'Afficher la page incomplète'
     },
-}
-
+};
 
 export default function CompanyPublicPage() {
     document.title = "Praeficio.com";
@@ -112,11 +110,26 @@ export default function CompanyPublicPage() {
     const tracks = [
         {
             title: 'New World Symphony',
-            artist: 'Dvořák',
-            audioSrc: launch_music,
+            artist: 'Antonín Dvořák',
+            audioName: 'dvorak_symphony_9_movement_4',
+            imageName: 'dvorak',
             color: '#f5b342'
+        },
+        {
+            title: 'Romeo & Juliet',
+            artist: 'Sergei Prokofiev',
+            audioName: 'romeo_and_juliet',
+            imageName: 'prokofiev',
+            color: '#c334eb'
+        },
+        {
+            title: 'Für Beethoven',
+            artist: 'We Are One & Ludwig Van Beethoven',
+            audioName: 'fur_beethoven',
+            imageName: 'we_are_one',
+            color: '#42b6f5'
         }
-    ]
+    ];
 
 
 
@@ -129,7 +142,7 @@ export default function CompanyPublicPage() {
                 css={{ width: '4rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white', position: 'fixed', left: '0%', top: '0%', margin: '1rem' }}
                 onPress={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"}></i></Button>
             <h1>Praeficio.com</h1>
-            <div style={{ position: 'absolute', top: '3%', right: '3%', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', height: '90%' }}>
+            <div style={{ position: 'absolute', top: '3%', right: '2%', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', height: '95%' }}>
                 <Tooltip content={lang !== 'fr' ? "Veuillez noter que notre capacité en français est limitée." : ""} placement="leftEnd" color="invert" >
                     <CustomButton onClick={toggleLang} style={{ textTransform: 'uppercase' }} >  {lang}  <i className="fa-solid fa-arrows-spin" /></CustomButton>
                 </Tooltip>
@@ -140,7 +153,9 @@ export default function CompanyPublicPage() {
                 <CustomButton buttonStyle="btn--transparent" to='/contact_us'> Contact Us <i className="fa-solid fa-angles-right" /></CustomButton>
 
                 <div style={{ marginTop: 'auto' }} >
-                    <AudioPlayer tracks={tracks} />
+                    <Suspense fallback={<Loading />}>
+                        <AudioPlayer tracks={tracks} />
+                    </Suspense>
                 </div>
 
             </div>

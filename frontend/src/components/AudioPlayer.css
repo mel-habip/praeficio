@@ -4,7 +4,8 @@
 }
 
 .audio-player {
-    max-width: 350px;
+    max-width: 300px;
+    min-width: 300px;
     border-radius: 20px;
     padding: 24px;
     box-shadow: 0 28px 28px rgba(0, 119, 255, 0.2);
