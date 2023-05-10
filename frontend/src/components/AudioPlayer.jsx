@@ -19,14 +19,24 @@ export default function AudioPlayer({ tracks }) {
     const [trackProgress, setTrackProgress] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
 
-    // Destructure for conciseness
-    const { title, artist, color, imageSrc, audioSrc } = tracks[trackIndex];
 
-    const audioSrcImport = lazy(() => import(audioSrc));
-    const imageSrcImport = imageSrc ? lazy(() => import(imageSrc)) : '';
+    // Destructure for conciseness
+    const { title, artist, color, imageName, audioName } = tracks[trackIndex];
+
+    const fileNameMatcher = (name) => {
+        switch (name.trim().toLowerCase()) {
+            case 'dvorak': return 'dvorak.jpg';
+            case 'dvorak_symphony_9_movement_4': return 'dvorak_symphony_9_movement_4.mp3';
+            case 'prokofiev': return 'prokofiev.jpg';
+            case 'romeo_and_juliet': return 'romeo_and_juliet.mp3';
+            case 'we_are_one': return 'we_are_one.jpg';
+            case 'fur_beethoven': return 'fur_beethoven.mp3';
+            default: console.error('Unknown track');
+        }
+    }
 
     // Refs
-    const audioRef = useRef(new Audio(audioSrcImport));
+    const audioRef = useRef(new Audio(fileNameMatcher(audioName)));
     const intervalRef = useRef();
     const isReady = useRef(false);
 
@@ -73,7 +83,7 @@ export default function AudioPlayer({ tracks }) {
     useEffect(() => {
         audioRef.current.pause();
 
-        audioRef.current = new Audio(audioSrcImport);
+        audioRef.current = new Audio(fileNameMatcher(audioName));
         setTrackProgress(audioRef.current.currentTime);
 
         if (isReady.current) {
@@ -82,7 +92,7 @@ export default function AudioPlayer({ tracks }) {
             startTimer();
         } else {
             // Set the isReady ref as true for the next pass
-            // isReady.current = true;
+            isReady.current = true;
         }
     }, [trackIndex]);
 
@@ -121,10 +131,11 @@ export default function AudioPlayer({ tracks }) {
     return (
         <div className="audio-player">
             <div className="track-info">
-                {!!imageSrcImport &&
+                {!!imageName &&
                     <img
                         className="artwork"
-                        src={imageSrcImport}
+                        loading="lazy"
+                        src={fileNameMatcher(imageName)}
                         alt={`track artwork for ${title} by ${artist}`}
                     />}
                 <h2 className="title">{title}</h2>
