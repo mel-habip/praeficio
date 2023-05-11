@@ -211,6 +211,7 @@ export default function LoginPage() {
                                                     setAccessToken(res.access_token);
                                                     setUserId(res.user_id);
                                                     setIsLoggedIn(true);
+                                                    window.location.replace('/portal');
                                                 } else {
                                                     catchError(res)
                                                 }
