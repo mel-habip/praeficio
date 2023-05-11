@@ -1,15 +1,16 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, lazy, Suspense } from 'react';
 import ThemeContext from '../contexts/ThemeContext';
 import IsLoggedInContext from '../contexts/IsLoggedInContext';
-import axios from 'axios';
 
-import NavMenu from '../components/NavMenu';
 import { CustomButton } from '../fields/CustomButton';
 import CustomizedDropdown from '../fields/CustomizedDropdown';
 
 import './stylesheets/TicTacToePage.css';
 
-import { Button, Modal, Loading, Badge } from '@nextui-org/react';
+import { Button, Loading, Badge } from '@nextui-org/react';
+
+const NavMenu = lazy(() => import('../components/NavMenu'));
+const AudioPlayer = lazy(() => import('../components/AudioPlayer'));
 
 const playerOne = "X";
 const playerTwo = "O";
@@ -92,7 +93,7 @@ export default function TicTacToePage() {
         <CustomButton onClick={reset}>Reset <i className="fa-solid fa-arrows-rotate" /></CustomButton>
         <br />
         {finalState && <Badge color={finalColor} >{finalState}</Badge>}
-        {playerTurn === playerTwo && !finalState && <Loading></Loading>}
+        {/* {playerTurn === playerTwo && !finalState && <Loading></Loading>} */}
         <br />
         <table
             className="tictactoe-grid" //dynamically generates the grid
@@ -107,6 +108,11 @@ export default function TicTacToePage() {
             </tbody>
         </table>
         <h4 style={{ color: 'grey' }} > &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Round: {round}</h4>
+        <div style={{ position: 'absolute', right: '10px', bottom: '10px'}} >
+            <Suspense fallback={<Loading />}>
+                <AudioPlayer />
+            </Suspense>
+        </div>
     </>);
 
     function boardShow(ix) {
@@ -142,7 +148,7 @@ export default function TicTacToePage() {
         setBoard(newBoard);
 
         setPastMoves(pastMoves.concat(to_position));
-        
+
         if (winning(newBoard, player, winningArrangements)) {
             if (player === playerOne) {
                 console.log(resultWords.win);

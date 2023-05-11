@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, lazy } from 'react';
 import { useParams } from 'react-router-dom'
 
 import { Link } from 'react-router-dom';
@@ -10,20 +10,19 @@ import LoadingPage from './LoadingPage';
 
 import axios from 'axios';
 
-import NavMenu from '../components/NavMenu';
-import NotesModule from '../components/NotesModule';
-import MessengerSection from '../components/Messenger';
-
-import { Button, Modal, Spacer, Text, Input, Tooltip, Row, Table, Textarea, useAsyncList, useCollator, Loading, Badge, Dropdown } from '@nextui-org/react';
+import { Button, Modal, Spacer, Text, Input, Tooltip, Row, Table, Textarea, useAsyncList, useCollator, Loading, Badge } from '@nextui-org/react';
 
 import { CustomButton } from '../fields/CustomButton';
 import CustomizedDropdown from '../fields/CustomizedDropdown';
 
-
-import FilterCreationModal from '../components/FilterCreationModal'
 import UserSearchModal from '../components/UserSearchModal';
 import timestampFormatter from '../utils/timestampFormatter';
 import useHandleError from '../utils/handleError';
+
+const MessengerSection = lazy(() => import('../components/Messenger'));
+const NotesModule = lazy(() => import('../components/NotesModule'));
+const NavMenu = lazy(() => import('../components/NavMenu'));
+const FilterCreationModal = lazy(() => import('../components/FilterCreationModal'));
 
 export default function SpecificFeedbackLogPage() {
 
