@@ -105,8 +105,8 @@ function App() {
         <ThemeContext.Provider value={{ isDark, toggleTheme }}> {/*this controls everything custom */}
           <div className="App">
             <Router >
-              <Routes>
-                <Suspense fallback={<Loading size='xl' />} >
+              <Suspense fallback={<Loading size='xl' />} >
+                <Routes>
 
                   <Route path='/' element={<CompanyPublicPage />} exact />
                   <Route path='/company' element={<Navigate to="/" replace />} />
@@ -143,8 +143,8 @@ function App() {
                   <Route path='/testzone' element={<TestZone />} exact />
                   <Route path='/403' element={<ForbiddenPage />} exact />
                   <Route path='/*' element={<NotFoundPage />} />
-                </Suspense>
-              </Routes>
+                </Routes>
+              </Suspense>
             </Router>
           </div>
         </ThemeContext.Provider >
