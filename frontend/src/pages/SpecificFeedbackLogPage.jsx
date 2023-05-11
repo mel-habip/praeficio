@@ -43,7 +43,7 @@ export default function SpecificFeedbackLogPage() {
 
     //fetch the data
     useEffect(() => {
-        axios.get(`https://${process.env.REACT_APP_BUILD_ENV}.praeficio.com/feedback_logs/${feedback_log_id}`).then(response => {
+        axios.get(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/feedback_logs/${feedback_log_id}`).then(response => {
             if (response.status === 200) {
                 let { data: items, ...rest } = response.data;
                 setFeedbackLogOwnDetails(rest);
@@ -52,7 +52,7 @@ export default function SpecificFeedbackLogPage() {
                 console.warn('fetch', response);
             }
         }).catch(handleError);
-        axios.get(`https://${process.env.REACT_APP_BUILD_ENV}.praeficio.com/feedback_log_filters/${feedback_log_id}`).then(response => {
+        axios.get(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/feedback_log_filters/${feedback_log_id}`).then(response => {
             if (response.status === 401) {
                 setIsLoggedIn(false);
             } else if (response.status === 200) {
@@ -100,7 +100,7 @@ export default function SpecificFeedbackLogPage() {
         </Row>
 
         <UserSearchModal is_open={userAdditionModalOpen} set_is_open={setUserAdditionModalOpen} user={user} setIsLoggedIn={setIsLoggedIn} add_button_text={`Add user to ${feedbackLogOwnDetails.name}`} button_function={(user_id) => {
-            axios.post(`https://${process.env.REACT_APP_BUILD_ENV}.praeficio.com/feedback_logs/${feedback_log_id}/add_user`, { user_id }).then(response => {
+            axios.post(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/feedback_logs/${feedback_log_id}/add_user`, { user_id }).then(response => {
                 if (response.status === 401) {
                     setIsLoggedIn(false);
                 } else if (response.status === 201) {
@@ -201,7 +201,7 @@ function FeedbackItemCreationModal({ is_open, set_is_open, setFeedbackLogItems, 
                     auto
                     onPress={async () => {
                         console.log('creating feedback log item', itemHeader);
-                        await axios.post(`https://${process.env.REACT_APP_BUILD_ENV}.praeficio.com/feedback_logs/${current_feedback_log_id}/new_item`, {
+                        await axios.post(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/feedback_logs/${current_feedback_log_id}/new_item`, {
                             content: description,
                             header: itemHeader,
                             status,
@@ -320,7 +320,7 @@ function FeedbackItemUpdateModal({ is_open, set_is_open, updateCachedItems, setI
                     auto
                     onPress={async () => {
                         console.log('updating feedback log item', itemHeader);
-                        await axios.put(`https://${process.env.REACT_APP_BUILD_ENV}.praeficio.com/feedback_log_items/${item_id}`, {
+                        await axios.put(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/feedback_log_items/${item_id}`, {
                             content: description,
                             header: itemHeader,
                             status,
@@ -486,7 +486,7 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
                                             </Tooltip>
                                             <Spacer x={0.5} />
                                             <StatusDropdown disabled={archived} user={user} default_value={item.status} update_func={(stat => {
-                                                axios.put(`https://${process.env.REACT_APP_BUILD_ENV}.praeficio.com/feedback_log_items/${item.feedback_log_item_id}`, {
+                                                axios.put(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/feedback_log_items/${item.feedback_log_item_id}`, {
                                                     status: stat
                                                 }).then(response => {
                                                     console.log('response:', response.data);
@@ -543,7 +543,7 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
 
                     <NotesModule disabled={archived} notes_list={updateDetails?.notes} user={user} title_text="Notes" update_func={(notes) => {
                         console.log('updating feedback log item', selected, notes);
-                        axios.put(`https://${process.env.REACT_APP_BUILD_ENV}.praeficio.com/feedback_log_items/${selected}`, {
+                        axios.put(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/feedback_log_items/${selected}`, {
                             notes
                         }).then(response => {
                             console.log('response:', response.data);
@@ -563,7 +563,7 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
                         title_text="Internal Notes"
                         update_func={(notes) => {
                             console.log('updating feedback log item', selected, notes);
-                            axios.put(`https://${process.env.REACT_APP_BUILD_ENV}.praeficio.com/feedback_log_items/${selected}`, {
+                            axios.put(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/feedback_log_items/${selected}`, {
                                 notes
                             }).then(response => {
                                 console.log('response:', response.data);
@@ -593,7 +593,7 @@ function ThreadsModal({ user, item_id, is_open, set_is_open, setIsLoggedIn, disa
     useEffect(() => {
         if (!item_id || !is_open) return;
         setMessageList(null);
-        axios.get(`https://${process.env.REACT_APP_BUILD_ENV}.praeficio.com/feedback_log_item_messages/${item_id}`).then(response => {
+        axios.get(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/feedback_log_item_messages/${item_id}`).then(response => {
             console.log('response:', response.data);
             setNewMessageText('');
             if ([200].includes(response.status)) {
@@ -638,7 +638,7 @@ function ThreadsModal({ user, item_id, is_open, set_is_open, setIsLoggedIn, disa
                 buttonStyle="btn--transparent"
                 rounded
                 onClick={() => {
-                    axios.get(`https://${process.env.REACT_APP_BUILD_ENV}.praeficio.com/feedback_log_item_messages/${item_id}`).then(response => {
+                    axios.get(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/feedback_log_item_messages/${item_id}`).then(response => {
                         console.log('response:', response.data);
                         setNewMessageText('');
                         if ([200].includes(response.status)) {
@@ -675,7 +675,7 @@ function ThreadsModal({ user, item_id, is_open, set_is_open, setIsLoggedIn, disa
                     shadow
                     onClick={() => {
                         console.log('sending message', newMessageText);
-                        axios.post(`https://${process.env.REACT_APP_BUILD_ENV}.praeficio.com/feedback_log_item_messages/${item_id}`, {
+                        axios.post(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/feedback_log_item_messages/${item_id}`, {
                             content: newMessageText,
                         }).then(response => {
                             console.log('response:', response.data);

@@ -59,7 +59,7 @@ export default function ToDos({ archive }) {
 
 
     function updateToDoStatus(to_do_id, status) {
-        axios.put(`https://${process.env.REACT_APP_BUILD_ENV}.praeficio.com/todos/${to_do_id}`, { completed: status }).then(response => {
+        axios.put(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/todos/${to_do_id}`, { completed: status }).then(response => {
             if (response.status === 401) {
                 setIsLoggedIn(false);
             } else if (response.status === 200) {
@@ -87,7 +87,7 @@ export default function ToDos({ archive }) {
     }
 
     useEffect(() => { //main fetcher on load
-        axios.get(`https://${process.env.REACT_APP_BUILD_ENV}.praeficio.com/todos/my_todos${archive ? '?archived=true' : ''}`).then(response => {
+        axios.get(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/todos/my_todos${archive ? '?archived=true' : ''}`).then(response => {
             if (response.status === 401) {
                 setIsLoggedIn(false);
             } else if (response.status === 200) {
@@ -173,7 +173,7 @@ export default function ToDos({ archive }) {
             disabled={toDoList.every(item => !item.completed)}
             onClick={() => {
 
-                axios.post(`https://${process.env.REACT_APP_BUILD_ENV}.praeficio.com/todos/archive_all_completed`).then(response => {
+                axios.post(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/todos/archive_all_completed`).then(response => {
                     if (response.status === 401) {
                         setIsLoggedIn(false);
                     } else if (response.status === 201) {
@@ -217,7 +217,7 @@ export default function ToDos({ archive }) {
                     auto
                     onPress={async () => {
                         console.log('creating to-do', selectedCategoryValue, content.text);
-                        await axios.post(`https://${process.env.REACT_APP_BUILD_ENV}.praeficio.com/todos/`, {
+                        await axios.post(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/todos/`, {
                             content: content.text,
                             category: selectedCategoryValue,
                             due_on: content.due_on || null,
