@@ -58,7 +58,7 @@ export default function UserSearchModal({ is_open, user, set_is_open, add_button
             setTableLoading(true);
 
             //fetch the data, needs to be a POST to send a body
-            axios.post(`http://${process.env.REACT_APP_BUILD_ENV}.praeficio.com:8000/api/search`, { type: 'User', keyword, columns: ['username', 'first_name', 'last_name', 'email', 'user_id'] }).then(response => {
+            axios.post(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/api/search`, { type: 'User', keyword, columns: ['username', 'first_name', 'last_name', 'email', 'user_id'] }).then(response => {
                 if (response.status === 401) {
                     setIsLoggedIn(false);
                 } else if (response.status === 200) {

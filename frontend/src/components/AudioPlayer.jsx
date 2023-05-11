@@ -2,6 +2,37 @@ import React, { useState, useEffect, useRef, lazy } from 'react';
 
 import './AudioPlayer.css';
 
+const tracks = [
+    {
+        title: 'New World Symphony',
+        artist: 'Antonín Dvořák',
+        audioName: 'dvorak_symphony_9_movement_4',
+        imageName: 'dvorak',
+        color: '#f5b342'
+    },
+    {
+        title: 'Romeo & Juliet',
+        artist: 'Sergei Prokofiev',
+        audioName: 'romeo_and_juliet',
+        imageName: 'prokofiev',
+        color: '#c334eb'
+    },
+    {
+        title: 'Für Beethoven',
+        artist: 'We Are One & Ludwig Van Beethoven',
+        audioName: 'fur_beethoven',
+        imageName: 'we_are_one',
+        color: '#42b6f5'
+    },
+    {
+        title: 'Summer - Piano',
+        artist: 'Antonio Vivaldi',
+        audioName: 'vivaldi_summer_piano',
+        imageName: 'vivaldi',
+        color: '#ebda1e'
+    }
+];
+
 /**
  * Credit & Appreciation
  * Built based on the works of Ryan Finni
@@ -13,17 +44,19 @@ import './AudioPlayer.css';
  * @param {Array<{title:string, artist:string, audioSrc:string, imageSrc:string}>} tracks
  * @note `audioSrc` and `imageSrc` must be relative directories based on this file
  */
-export default function AudioPlayer({ tracks }) {
+export default function AudioPlayer() {
     // State
     const [trackIndex, setTrackIndex] = useState(0);
     const [trackProgress, setTrackProgress] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
 
+    const [isMinimized, setIsMinimized] = useState(false);
+
 
     // Destructure for conciseness
     const { title, artist, color, imageName, audioName } = tracks[trackIndex];
 
-    const fileNameMatcher = (name) => {
+    const fileNameMatcher = (name) => { //we can get rid of this
         switch (name.trim().toLowerCase()) {
             case 'dvorak': return 'dvorak.jpg';
             case 'dvorak_symphony_9_movement_4': return 'dvorak_symphony_9_movement_4.mp3';
@@ -31,6 +64,8 @@ export default function AudioPlayer({ tracks }) {
             case 'romeo_and_juliet': return 'romeo_and_juliet.mp3';
             case 'we_are_one': return 'we_are_one.jpg';
             case 'fur_beethoven': return 'fur_beethoven.mp3';
+            case 'vivaldi': return 'vivaldi.png';
+            case 'vivaldi_summer_piano': return 'vivaldi_summer_piano.mp3';
             default: console.error('Unknown track');
         }
     }
@@ -128,8 +163,26 @@ export default function AudioPlayer({ tracks }) {
     const currentPercentage = duration ? `${(trackProgress / duration) * 100}%` : '0%';
     const trackStyling = `-webkit-gradient(linear, 0% 0%, 100% 0%, color-stop(${currentPercentage}, #fff), color-stop(${currentPercentage}, #777))`;
 
+    if (isMinimized) {
+        return (
+            <div className="minimized audio-player">
+                <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <button className="audio-player-maximize" onClick={() => setIsMinimized(false)}><i className="fa-solid fa-caret-up" /></button>
+                    <h3>{title}</h3>
+                    <h4 className="timestamp">{toMinutes(trackProgress)}</h4>
+                </div>
+                <Backdrop
+                    trackIndex={trackIndex}
+                    activeColor={color}
+                    isPlaying={isPlaying}
+                />
+            </div>
+        );
+    }
+
     return (
         <div className="audio-player">
+            <button className="audio-player-minimize" onClick={() => setIsMinimized(true)} ><i className="fa-solid fa-caret-down" /></button>
             <div className="track-info">
                 {!!imageName &&
                     <img
@@ -229,3 +282,10 @@ function Backdrop({
         <div className={`color-backdrop ${isPlaying ? 'playing' : 'idle'}`} />
     );
 };
+
+function toMinutes(seconds) {
+    let whole_mins = Math.floor(seconds / 60);
+    let leftover_seconds = Math.floor(seconds - (whole_mins * 60));
+
+    return whole_mins + ':' + ((leftover_seconds.toString().length === 2) ? leftover_seconds : '0' + leftover_seconds);
+}

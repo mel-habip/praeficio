@@ -106,35 +106,6 @@ export default function CompanyPublicPage() {
 
     const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
 
-
-    const tracks = [
-        {
-            title: 'New World Symphony',
-            artist: 'Antonín Dvořák',
-            audioName: 'dvorak_symphony_9_movement_4',
-            imageName: 'dvorak',
-            color: '#f5b342'
-        },
-        {
-            title: 'Romeo & Juliet',
-            artist: 'Sergei Prokofiev',
-            audioName: 'romeo_and_juliet',
-            imageName: 'prokofiev',
-            color: '#c334eb'
-        },
-        {
-            title: 'Für Beethoven',
-            artist: 'We Are One & Ludwig Van Beethoven',
-            audioName: 'fur_beethoven',
-            imageName: 'we_are_one',
-            color: '#42b6f5'
-        }
-    ];
-
-
-
-
-
     return (<>
         <video src={videoBg1} autoPlay loop className={`background-video-1 ${isDark ? '' : 'invert'}`} muted playsInline />
         <div style={{ zIndex: 100 }} >
@@ -152,12 +123,11 @@ export default function CompanyPublicPage() {
 
                 <CustomButton buttonStyle="btn--transparent" to='/contact_us'> Contact Us <i className="fa-solid fa-angles-right" /></CustomButton>
 
-                <div style={{ marginTop: 'auto' }} >
-                    <Suspense fallback={<Loading />}>
-                        <AudioPlayer tracks={tracks} />
-                    </Suspense>
-                </div>
-
+            </div>
+            <div style={{ position: 'absolute', right: '10px', bottom: '10px' }} >
+                <Suspense fallback={<Loading />}>
+                    <AudioPlayer />
+                </Suspense>
             </div>
 
             {!!referrer && <Text em size={13} css={{ color: 'lightgreen' }} >{sentences.referral_part_1[lang]} {`"${referrer}"`}, {sentences.referral_part_2[lang]}</Text>}
@@ -213,7 +183,7 @@ function SubscriptionModal({ isOpen, setIsOpen, lang }) {
                         return; //means there are errors}
                     }
                     console.log('submitted');
-                    axios.post(`http://${process.env.REACT_APP_API_LINK}.praeficio.com:8000/subscribers/`, { email: subscriptionInfo.email, name: subscriptionInfo.name })
+                    axios.post(`https://${process.env.REACT_APP_API_LINK}.praeficio.com:8000/subscribers/`, { email: subscriptionInfo.email, name: subscriptionInfo.name })
                         .then(res => {
                             if (res.status === 201) {
                                 setIsOpen(false);

@@ -1,10 +1,10 @@
 // import './App.css';
-import React, { useState, useEffect, lazy } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import ThemeContext from './contexts/ThemeContext';
 import IsLoggedInContext from './contexts/IsLoggedInContext';
-import { NextUIProvider, createTheme } from '@nextui-org/react';
+import { NextUIProvider, createTheme, Loading } from '@nextui-org/react';
 import axios from 'axios';
 
 const CompanyPublicPage = lazy(() => import('./pages/CompanyPublicPage'));
@@ -70,7 +70,7 @@ function App() {
     if (!localUserId) return;
     if (localAccessToken) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${localAccessToken}`;
-      axios.get(`http://${process.env.REACT_APP_BUILD_ENV}.praeficio.com:8000/users/session`).then(response => {
+      axios.get(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/users/session`).then(response => {
         console.log('/session fetch results', response)
         if (response.status === 200) {
           setUser(response.data);
@@ -105,43 +105,46 @@ function App() {
         <ThemeContext.Provider value={{ isDark, toggleTheme }}> {/*this controls everything custom */}
           <div className="App">
             <Router >
-              <Routes>
-                <Route path='/' element={<CompanyPublicPage />} exact />
-                <Route path='/company' element={<Navigate to="/" replace />} />
-                <Route path='/home' element={<Navigate to="/portal" replace />} />
-                <Route path='/portal' element={isLoggedIn ? <Portal /> : <LoginPage />} exact />
-                <Route path='/newsletters' element={<Newsletters />} exact/>
-                <Route path='/newsletters/admin' element={isLoggedIn ? <NewslettersAdmin /> : <LoginPage />} exact/>
-                <Route path='/login' element={<LoginPage />} exact/>
-                <Route path='/positions' element={isLoggedIn ? <Positions /> : <LoginPage />} exact />
-                <Route path='/alerts' element={isLoggedIn ? <Alerts /> : <LoginPage />} exact />
+              <Suspense fallback={<Loading size='xl' />} >
+                <Routes>
 
-                <Route path="/tic-tac-toe" element={<Navigate to="/tictactoe" replace />} />
-                <Route path="/tic_tac_toe" element={<Navigate to="/tictactoe" replace />} />
-                <Route path='/tictactoe' element={<TicTacToePage />} />
+                  <Route path='/' element={<CompanyPublicPage />} exact />
+                  <Route path='/company' element={<Navigate to="/" replace />} />
+                  <Route path='/home' element={<Navigate to="/portal" replace />} />
+                  <Route path='/portal' element={isLoggedIn ? <Portal /> : <LoginPage />} exact />
+                  <Route path='/newsletters' element={<Newsletters />} exact />
+                  <Route path='/newsletters/admin' element={isLoggedIn ? <NewslettersAdmin /> : <LoginPage />} exact />
+                  <Route path='/login' element={<LoginPage />} exact />
+                  <Route path='/positions' element={isLoggedIn ? <Positions /> : <LoginPage />} exact />
+                  <Route path='/alerts' element={isLoggedIn ? <Alerts /> : <LoginPage />} exact />
 
-                <Route path="/workspaces" element={<Navigate to="/workspaces/my_workspaces" replace />} />
+                  <Route path="/tic-tac-toe" element={<Navigate to="/tictactoe" replace />} />
+                  <Route path="/tic_tac_toe" element={<Navigate to="/tictactoe" replace />} />
+                  <Route path='/tictactoe' element={<TicTacToePage />} />
 
-                <Route path="/workspaces/my_workspaces" element={<Workspaces subSection="my_workspaces" />} exact />
-                <Route path="/workspaces/my_favourites" element={<Workspaces subSection="my_favourites" />} exact />
-                <Route path="/workspaces/discover" element={<Workspaces subSection="discover" />} exact />
-                <Route path="/workspaces/:workspace_id" element={<WorkspacesRedirectToMessages />} exact />
-                <Route path="/workspaces/:workspace_id/settings" element={<Workspaces subSection="settings" />} exact />
-                <Route path="/workspaces/:workspace_id/messages" element={<Workspaces subSection="messages" />} exact />
-                <Route path="/workspaces/:workspace_id/members" element={<Workspaces subSection="members" />} exact />
-                <Route path="/workspaces/:workspace_id/positions" element={<Workspaces subSection="positions" />} exact />
+                  <Route path="/workspaces" element={<Navigate to="/workspaces/my_workspaces" replace />} />
+
+                  <Route path="/workspaces/my_workspaces" element={isLoggedIn ? <Workspaces subSection="my_workspaces" /> : <LoginPage />} exact />
+                  <Route path="/workspaces/my_favourites" element={isLoggedIn ? <Workspaces subSection="my_favourites" /> : <LoginPage />} exact />
+                  <Route path="/workspaces/discover" element={isLoggedIn ? <Workspaces subSection="discover" /> : <LoginPage />} exact />
+                  <Route path="/workspaces/:workspace_id" element={<WorkspacesRedirectToMessages />} exact />
+                  <Route path="/workspaces/:workspace_id/settings" element={isLoggedIn ? <Workspaces subSection="settings" /> : <LoginPage />} exact />
+                  <Route path="/workspaces/:workspace_id/messages" element={isLoggedIn ? <Workspaces subSection="messages" /> : <LoginPage />} exact />
+                  <Route path="/workspaces/:workspace_id/members" element={isLoggedIn ? <Workspaces subSection="members" /> : <LoginPage />} exact />
+                  <Route path="/workspaces/:workspace_id/positions" element={isLoggedIn ? <Workspaces subSection="positions" /> : <LoginPage />} exact />
 
 
-                <Route path='/todos' element={isLoggedIn ? <ToDos /> : <LoginPage />} exact />
-                <Route path='/todos/archive' element={isLoggedIn ? <ToDos archive /> : <LoginPage />} exact />
-                <Route path='/settings' element={isLoggedIn ? <Settings /> : <LoginPage />} exact />
-                <Route path='/feedback_logs' element={isLoggedIn ? <FeedbackLogsPage /> : <LoginPage />} exact />
-                <Route path='/feedback_logs/archive' element={isLoggedIn ? <FeedbackLogsPage archive /> : <LoginPage />} exact />
-                <Route path='/feedback_logs/:feedback_log_id' element={isLoggedIn ? <SpecificFeedbackLogPage /> : <LoginPage />} exact />
-                <Route path='/testzone' element={<TestZone />} exact />
-                <Route path='/403' element={<ForbiddenPage />} exact />
-                <Route path='/*' element={<NotFoundPage />} />
-              </Routes>
+                  <Route path='/todos' element={isLoggedIn ? <ToDos /> : <LoginPage />} exact />
+                  <Route path='/todos/archive' element={isLoggedIn ? <ToDos archive /> : <LoginPage />} exact />
+                  <Route path='/settings' element={isLoggedIn ? <Settings /> : <LoginPage />} exact />
+                  <Route path='/feedback_logs' element={isLoggedIn ? <FeedbackLogsPage /> : <LoginPage />} exact />
+                  <Route path='/feedback_logs/archive' element={isLoggedIn ? <FeedbackLogsPage archive /> : <LoginPage />} exact />
+                  <Route path='/feedback_logs/:feedback_log_id' element={isLoggedIn ? <SpecificFeedbackLogPage /> : <LoginPage />} exact />
+                  <Route path='/testzone' element={<TestZone />} exact />
+                  <Route path='/403' element={<ForbiddenPage />} exact />
+                  <Route path='/*' element={<NotFoundPage />} />
+                </Routes>
+              </Suspense>
             </Router>
           </div>
         </ThemeContext.Provider >

@@ -14,6 +14,21 @@
     color: var(--white);
 }
 
+.minimized.audio-player {
+    height: auto;
+    padding: 3px 3px 3px 10px;
+}
+
+.minimized.audio-player h3,
+.minimized.audio-player h4 {
+    margin: 0;
+    text-align: center;
+}
+
+.minimized.audio-player h4 {
+    padding-right: 15px;
+}
+
 .artwork {
     border-radius: 120px;
     display: block;
@@ -46,6 +61,25 @@
     color: var(--text-primary);
 }
 
+.audio-player-maximize,
+.audio-player-minimize {
+    display: block;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 24px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin-right: 0;
+    margin-left: 0;
+}
+
+.audio-player-minimize {
+    position: absolute;
+    z-index: 1000;
+    top: 5%;
+}
+
 .audio-controls .prev svg,
 .audio-controls .next svg {
     width: 35px;
@@ -65,6 +99,7 @@
 input[type=range] {
     height: 5px;
     -webkit-appearance: none;
+    appearance: none;
     width: 100%;
     margin-bottom: 10px;
     border-radius: 8px;
