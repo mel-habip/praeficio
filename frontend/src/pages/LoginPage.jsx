@@ -162,9 +162,11 @@ export default function LoginPage() {
                                 </Grid>
                             </Grid.Container>
                             <Spacer y={0.5} />
+                            {!email && <p>Please note your password, it cannot be reset for accounts without emails.</p>}
+                            <p>Email functionality is coming soon!</p>
                             <Input
                                 rounded
-                                disabled
+                                disabled //temporary until email service is up
                                 value={email}
                                 clearable
                                 type="email"
