@@ -85,7 +85,7 @@ const sentences = {
     },
 };
 
-export default function CompanyPublicPage() {
+export default function PublicPage() {
     document.title = "Praeficio.com";
     const [lang, setLang] = useState('en');
     const toggleLang = () => setLang(lang === 'fr' ? 'en' : 'fr');
@@ -122,6 +122,8 @@ export default function CompanyPublicPage() {
                 <CustomButton buttonStyle="btn--transparent" to='/about_us'> About Us <i className="fa-solid fa-angles-right" /></CustomButton>
 
                 <CustomButton buttonStyle="btn--transparent" to='/contact_us'> Contact Us <i className="fa-solid fa-angles-right" /></CustomButton>
+
+                <CustomButton buttonStyle="btn--transparent" to='/login'> Login <i className="fa-solid fa-angles-right" /></CustomButton>
 
             </div>
             <div style={{ position: 'absolute', right: '10px', bottom: '10px' }} >

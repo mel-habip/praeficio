@@ -7,7 +7,7 @@ import IsLoggedInContext from './contexts/IsLoggedInContext';
 import { NextUIProvider, createTheme, Loading } from '@nextui-org/react';
 import axios from 'axios';
 
-const CompanyPublicPage = lazy(() => import('./pages/CompanyPublicPage'));
+const PublicPage = lazy(() => import('./pages/PublicPage'));
 const Newsletters = lazy(() => import('./pages/Newsletters'));
 const NewslettersAdmin = lazy(() => import('./pages/NewslettersAdmin'));
 const LoginPage = lazy(() => import('./pages/LoginPage.jsx'));
@@ -108,7 +108,7 @@ function App() {
               <Suspense fallback={<Loading size='xl' />} >
                 <Routes>
 
-                  <Route path='/' element={<CompanyPublicPage />} exact />
+                  <Route path='/' element={<PublicPage />} exact />
                   <Route path='/company' element={<Navigate to="/" replace />} />
                   <Route path='/home' element={<Navigate to="/portal" replace />} />
                   <Route path='/portal' element={isLoggedIn ? <Portal /> : <LoginPage />} exact />

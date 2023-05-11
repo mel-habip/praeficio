@@ -76,7 +76,6 @@ export default function LoginPage() {
                             clearable
                             type="text"
                             required
-                            pattern="[a-z0-9]{1,15}"
                             title="waht is this"
                             bordered
                             labelPlaceholder="Username*"
@@ -165,6 +164,7 @@ export default function LoginPage() {
                             <Spacer y={0.5} />
                             <Input
                                 rounded
+                                disabled
                                 value={email}
                                 clearable
                                 type="email"
