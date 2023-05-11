@@ -48,7 +48,7 @@ export default function Workspaces({ subSection }) {
     }, [workspace_id, subSection]);
 
 
-    if (!user.use_beta_features) return (
+    if (!user?.use_beta_features) return (
         <>
             <NavMenu ></NavMenu>
             <h1>WORKSPACES PAGE HERE</h1>
