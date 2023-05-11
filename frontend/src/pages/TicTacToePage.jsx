@@ -93,7 +93,6 @@ export default function TicTacToePage() {
         <CustomButton onClick={reset}>Reset <i className="fa-solid fa-arrows-rotate" /></CustomButton>
         <br />
         {finalState && <Badge color={finalColor} >{finalState}</Badge>}
-        {/* {playerTurn === playerTwo && !finalState && <Loading></Loading>} */}
         <br />
         <table
             className="tictactoe-grid" //dynamically generates the grid

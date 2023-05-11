@@ -117,7 +117,7 @@ export default function LoginPage() {
                                 auto
                                 onPress={async () => {
                                     console.log('logging in');
-                                    await fetch(`http://${process.env.REACT_APP_BUILD_ENV}.praeficio.com:8000/users/login/`, {
+                                    await fetch(`https://${process.env.REACT_APP_BUILD_ENV}.praeficio.com/users/login/`, {
                                         headers: {
                                             'Content-Type': 'application/json'
                                         },
@@ -182,7 +182,7 @@ export default function LoginPage() {
                             <Button
                                 auto
                                 onPress={async () => {
-                                    await fetch(`http://${process.env.REACT_APP_BUILD_ENV}.praeficio.com:8000/users/create_new_user/`, {
+                                    await fetch(`https://${process.env.REACT_APP_BUILD_ENV}.praeficio.com/users/create_new_user/`, {
                                         headers: {
                                             'Content-Type': 'application/json'
                                         },
@@ -197,7 +197,7 @@ export default function LoginPage() {
                                     }).then(async (res) => {
                                         console.log('CREATION', res);
                                         if (res.status === 201) {
-                                            await fetch(`http://${process.env.REACT_APP_BUILD_ENV}.praeficio.com:8000/users/login/`, {
+                                            await fetch(`https://${process.env.REACT_APP_BUILD_ENV}.praeficio.com/users/login/`, {
                                                 headers: {
                                                     'Content-Type': 'application/json'
                                                 },
