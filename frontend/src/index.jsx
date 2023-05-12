@@ -5,7 +5,7 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import './App.css';
 
-import ErrorBoundary from './ErrorBoundary';
+import ErrorBoundary from './ErrorBoundary.jsx';
 
 const ErrorPage = lazy(() => import('./pages/ErrorPage'));
 
