@@ -6,29 +6,29 @@ const tracks = [
     {
         title: 'New World Symphony',
         artist: 'Antonín Dvořák',
-        audioName: 'dvorak_symphony_9_movement_4',
-        imageName: 'dvorak',
+        audioName: 'dvorak_symphony_9_movement_4.mp3',
+        imageName: 'dvorak.jpg',
         color: '#f5b342'
     },
     {
         title: 'Romeo & Juliet',
         artist: 'Sergei Prokofiev',
-        audioName: 'romeo_and_juliet',
-        imageName: 'prokofiev',
+        audioName: 'romeo_and_juliet.mp3',
+        imageName: 'prokofiev.jpg',
         color: '#c334eb'
     },
     {
         title: 'Für Beethoven',
         artist: 'We Are One & Ludwig Van Beethoven',
-        audioName: 'fur_beethoven',
-        imageName: 'we_are_one',
+        audioName: 'fur_beethoven.mp3',
+        imageName: 'we_are_one.jpg',
         color: '#42b6f5'
     },
     {
         title: 'Summer - Piano',
         artist: 'Antonio Vivaldi',
-        audioName: 'vivaldi_summer_piano',
-        imageName: 'vivaldi',
+        audioName: 'vivaldi_summer_piano.mp3',
+        imageName: 'vivaldi.png',
         color: '#ebda1e'
     }
 ];
@@ -56,22 +56,8 @@ export default function AudioPlayer() {
     // Destructure for conciseness
     const { title, artist, color, imageName, audioName } = tracks[trackIndex];
 
-    const fileNameMatcher = (name) => { //we can get rid of this
-        switch (name.trim().toLowerCase()) {
-            case 'dvorak': return 'dvorak.jpg';
-            case 'dvorak_symphony_9_movement_4': return 'dvorak_symphony_9_movement_4.mp3';
-            case 'prokofiev': return 'prokofiev.jpg';
-            case 'romeo_and_juliet': return 'romeo_and_juliet.mp3';
-            case 'we_are_one': return 'we_are_one.jpg';
-            case 'fur_beethoven': return 'fur_beethoven.mp3';
-            case 'vivaldi': return 'vivaldi.png';
-            case 'vivaldi_summer_piano': return 'vivaldi_summer_piano.mp3';
-            default: console.error('Unknown track');
-        }
-    }
-
     // Refs
-    const audioRef = useRef(new Audio(fileNameMatcher(audioName)));
+    const audioRef = useRef(new Audio(audioName));
     const intervalRef = useRef();
     const isReady = useRef(false);
 
@@ -118,7 +104,7 @@ export default function AudioPlayer() {
     useEffect(() => {
         audioRef.current.pause();
 
-        audioRef.current = new Audio(fileNameMatcher(audioName));
+        audioRef.current = new Audio(audioName);
         setTrackProgress(audioRef.current.currentTime);
 
         if (isReady.current) {
@@ -188,7 +174,7 @@ export default function AudioPlayer() {
                     <img
                         className="artwork"
                         loading="lazy"
-                        src={fileNameMatcher(imageName)}
+                        src={imageName}
                         alt={`track artwork for ${title} by ${artist}`}
                     />}
                 <h2 className="title">{title}</h2>

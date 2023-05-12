@@ -44,9 +44,9 @@ export default function LoginPage() {
 
     return (
         <div className="LoginPage">
-            <Button 
-                css={{ width: '4rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white', position: 'fixed', left: '0%', top: '0%', margin: '1rem'}}
-             onPress={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"}></i></Button>
+            <Button
+                css={{ width: '4rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white', position: 'fixed', left: '0%', top: '0%', margin: '1rem' }}
+                onPress={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"}></i></Button>
 
             <div className="app-initial-buttons">
                 <AnimatedButtonBox title="New here?" button_text="Sign-Up Here" subtitle="you'll be prompted to enter your deets" onPress={() => SetSignupClicked(true)} />
@@ -76,7 +76,6 @@ export default function LoginPage() {
                             clearable
                             type="text"
                             required
-                            pattern="[a-z0-9]{1,15}"
                             title="waht is this"
                             bordered
                             labelPlaceholder="Username*"
@@ -132,6 +131,7 @@ export default function LoginPage() {
                                             setAccessToken(res.access_token);
                                             setUserId(res.user_id);
                                             setIsLoggedIn(true);
+                                            if (window.location.pathname === '/login/') window.location.replace('/portal');
                                         } else {
                                             catchError(res)
                                         }
@@ -162,8 +162,11 @@ export default function LoginPage() {
                                 </Grid>
                             </Grid.Container>
                             <Spacer y={0.5} />
+                            {!email && <p>Please note your password, it cannot be reset for accounts without emails.</p>}
+                            <p>Email functionality is coming soon!</p>
                             <Input
                                 rounded
+                                disabled //temporary until email service is up
                                 value={email}
                                 clearable
                                 type="email"
@@ -211,7 +214,7 @@ export default function LoginPage() {
                                                     setAccessToken(res.access_token);
                                                     setUserId(res.user_id);
                                                     setIsLoggedIn(true);
-                                                    window.location.replace('/portal');
+                                                    if (window.location.pathname === '/login/') window.location.replace('/portal');
                                                 } else {
                                                     catchError(res)
                                                 }

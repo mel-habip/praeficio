@@ -7,7 +7,7 @@ import IsLoggedInContext from './contexts/IsLoggedInContext';
 import { NextUIProvider, createTheme, Loading } from '@nextui-org/react';
 import axios from 'axios';
 
-const CompanyPublicPage = lazy(() => import('./pages/CompanyPublicPage'));
+const PublicPage = lazy(() => import('./pages/PublicPage'));
 const Newsletters = lazy(() => import('./pages/Newsletters'));
 const NewslettersAdmin = lazy(() => import('./pages/NewslettersAdmin'));
 const LoginPage = lazy(() => import('./pages/LoginPage.jsx'));
@@ -24,6 +24,7 @@ const SpecificFeedbackLogPage = lazy(() => import('./pages/SpecificFeedbackLogPa
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
 const ForbiddenPage = lazy(() => import('./pages/ForbiddenPage.jsx'));
 const LoadingPage = lazy(() => import('./pages/LoadingPage'));
+const ErrorPage = lazy(() => import('./pages/ErrorPage'));
 
 
 function App() {
@@ -108,7 +109,7 @@ function App() {
               <Suspense fallback={<Loading size='xl' />} >
                 <Routes>
 
-                  <Route path='/' element={<CompanyPublicPage />} exact />
+                  <Route path='/' element={<PublicPage />} exact />
                   <Route path='/company' element={<Navigate to="/" replace />} />
                   <Route path='/home' element={<Navigate to="/portal" replace />} />
                   <Route path='/portal' element={isLoggedIn ? <Portal /> : <LoginPage />} exact />
@@ -142,6 +143,7 @@ function App() {
                   <Route path='/feedback_logs/:feedback_log_id' element={isLoggedIn ? <SpecificFeedbackLogPage /> : <LoginPage />} exact />
                   <Route path='/testzone' element={<TestZone />} exact />
                   <Route path='/403' element={<ForbiddenPage />} exact />
+                  <Route path='/500' element={<ErrorPage />} exact />
                   <Route path='/*' element={<NotFoundPage />} />
                 </Routes>
               </Suspense>
