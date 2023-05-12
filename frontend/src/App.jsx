@@ -24,6 +24,7 @@ const SpecificFeedbackLogPage = lazy(() => import('./pages/SpecificFeedbackLogPa
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
 const ForbiddenPage = lazy(() => import('./pages/ForbiddenPage.jsx'));
 const LoadingPage = lazy(() => import('./pages/LoadingPage'));
+const ErrorPage = lazy(() => import('./pages/ErrorPage'));
 
 
 function App() {
@@ -142,6 +143,7 @@ function App() {
                   <Route path='/feedback_logs/:feedback_log_id' element={isLoggedIn ? <SpecificFeedbackLogPage /> : <LoginPage />} exact />
                   <Route path='/testzone' element={<TestZone />} exact />
                   <Route path='/403' element={<ForbiddenPage />} exact />
+                  <Route path='/500' element={<ErrorPage />} exact />
                   <Route path='/*' element={<NotFoundPage />} />
                 </Routes>
               </Suspense>

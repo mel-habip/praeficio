@@ -108,9 +108,9 @@ export default function TicTacToePage() {
         </table>
         <h4 style={{ color: 'grey' }} > &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Round: {round}</h4>
         <div style={{ position: 'absolute', right: '10px', bottom: '10px'}} >
-            <Suspense fallback={<Loading />}>
+            {/* <Suspense fallback={<Loading />}>
                 <AudioPlayer />
-            </Suspense>
+            </Suspense> */}
         </div>
     </>);
 

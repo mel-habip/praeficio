@@ -1,14 +1,20 @@
 import './wdyr'; // <--- first import
-import React from 'react';
+import React, { lazy } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import './App.css';
 
+import ErrorBoundary from './ErrorBoundary';
+
+const ErrorPage = lazy(() => import('./pages/ErrorPage'));
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode className="root">
-    <App />
+    <ErrorBoundary fallback={<ErrorPage />} >
+      <App />
+    </ErrorBoundary>
   </React.StrictMode>
 );
 
