@@ -131,7 +131,7 @@ export default function LoginPage() {
                                             setAccessToken(res.access_token);
                                             setUserId(res.user_id);
                                             setIsLoggedIn(true);
-                                            if (window.location.pathname === '/login/') window.location.replace('/portal');
+                                            if (window.location.pathname.includes('login')) window.location.replace('/portal');
                                         } else {
                                             catchError(res)
                                         }
@@ -214,7 +214,7 @@ export default function LoginPage() {
                                                     setAccessToken(res.access_token);
                                                     setUserId(res.user_id);
                                                     setIsLoggedIn(true);
-                                                    if (window.location.pathname === '/login/') window.location.replace('/portal');
+                                                    if (window.location.pathname.includes('login')) window.location.replace('/portal');
                                                 } else {
                                                     catchError(res)
                                                 }
