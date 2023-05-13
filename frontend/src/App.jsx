@@ -71,7 +71,7 @@ function App() {
     if (!localUserId) return;
     if (localAccessToken) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${localAccessToken}`;
-      axios.get(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/users/session`).then(response => {
+      axios.get(`${process.env.REACT_APP_API_LINK}/users/session`).then(response => {
         console.log('/session fetch results', response)
         if (response.status === 200) {
           setUser(response.data);
@@ -98,7 +98,8 @@ function App() {
 
   if (isLoggedIn === null && localAccessToken) return (<LoadingPage />);
 
-  if (window.location.href.includes('api.praeficio.com')) return (<div></div>);
+  console.log('api link', process.env.REACT_APP_API_LINK);
+  console.log('build env', process.env.REACT_APP_BUILD_ENV);
 
   return (
     <NextUIProvider theme={isDark ? darkTheme : lightTheme}>
@@ -108,7 +109,6 @@ function App() {
             <Router >
               <Suspense fallback={<Loading size='xl' />} >
                 <Routes>
-
                   <Route path='/' element={<PublicPage />} exact />
                   <Route path='/company' element={<Navigate to="/" replace />} />
                   <Route path='/home' element={<Navigate to="/portal" replace />} />

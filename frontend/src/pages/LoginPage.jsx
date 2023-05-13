@@ -113,7 +113,7 @@ export default function LoginPage() {
                                 auto
                                 onPress={async () => {
                                     console.log('logging in');
-                                    await fetch(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/users/login/`, {
+                                    await fetch(`${process.env.REACT_APP_API_LINK}/users/login/`, {
                                         headers: {
                                             'Content-Type': 'application/json'
                                         },
@@ -131,7 +131,7 @@ export default function LoginPage() {
                                             setAccessToken(res.access_token);
                                             setUserId(res.user_id);
                                             setIsLoggedIn(true);
-                                            if (window.location.pathname === '/login/') window.location.replace('/portal');
+                                            if (window.location.pathname.includes('login')) window.location.replace('/portal');
                                         } else {
                                             catchError(res)
                                         }
@@ -182,7 +182,7 @@ export default function LoginPage() {
                             <Button
                                 auto
                                 onPress={async () => {
-                                    await fetch(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/users/create_new_user/`, {
+                                    await fetch(`${process.env.REACT_APP_API_LINK}/users/create_new_user/`, {
                                         headers: {
                                             'Content-Type': 'application/json'
                                         },
@@ -197,7 +197,7 @@ export default function LoginPage() {
                                     }).then(async (res) => {
                                         console.log('CREATION', res);
                                         if (res.status === 201) {
-                                            await fetch(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/users/login/`, {
+                                            await fetch(`${process.env.REACT_APP_API_LINK}/users/login/`, {
                                                 headers: {
                                                     'Content-Type': 'application/json'
                                                 },
@@ -214,7 +214,7 @@ export default function LoginPage() {
                                                     setAccessToken(res.access_token);
                                                     setUserId(res.user_id);
                                                     setIsLoggedIn(true);
-                                                    if (window.location.pathname === '/login/') window.location.replace('/portal');
+                                                    if (window.location.pathname.includes('login')) window.location.replace('/portal');
                                                 } else {
                                                     catchError(res)
                                                 }

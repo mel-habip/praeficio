@@ -42,7 +42,7 @@ export default function FeedbackLogsPage({ archive }) {
     }
 
     useEffect(() => {
-        axios.get(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/feedback_logs${archive ? '?archived=true' : ''}`).then(response => {
+        axios.get(`${process.env.REACT_APP_API_LINK}/feedback_logs${archive ? '?archived=true' : ''}`).then(response => {
             if (response.status === 401) {
                 setIsLoggedIn(false);
             } else if (response.status === 200) {
@@ -85,7 +85,7 @@ export default function FeedbackLogsPage({ archive }) {
                     auto
                     onPress={async () => {
                         console.log('creating feedback log', newLogName);
-                        await axios[selectedLog ? 'put' : 'post'](`https://${process.env.REACT_APP_API_LINK}.praeficio.com/feedback_logs/${selectedLog || ''}`, {
+                        await axios[selectedLog ? 'put' : 'post'](`${process.env.REACT_APP_API_LINK}/feedback_logs/${selectedLog || ''}`, {
                             name: newLogName
                         }).then(response => {
                             console.log('response:', response.data);
@@ -132,7 +132,7 @@ export default function FeedbackLogsPage({ archive }) {
                         color="error"
                         onPress={async () => {
                             console.log(`deleting ${selectedLog}`);
-                            await axios.put(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/feedback_logs/${selectedLog}`, { archived: true }).then(response => {
+                            await axios.put(`${process.env.REACT_APP_API_LINK}/feedback_logs/${selectedLog}`, { archived: true }).then(response => {
                                 if (response.status === 401) {
                                     setIsLoggedIn(false);
                                 } else if (response.status === 200) {
