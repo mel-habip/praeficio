@@ -134,7 +134,7 @@ function Positions() {
         if (includeInactivePositions) {
             query = query ? `${query}&include_inactive=true` : '?include_inactive=true';
         }
-        axios.get(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/positions/user/${user.id}${query}`, {
+        axios.get(`${process.env.REACT_APP_API_LINK}/positions/user/${user.id}${query}`, {
             headers: { 'Authorization': `Bearer ${accessToken}` }
         }).then(response => {
             if (response.status === 401) {
@@ -150,7 +150,7 @@ function Positions() {
     if (!positions) return (<LoadingPage />);
 
     function togglePosition(position_id, turn_on_off) {
-        axios.put(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/positions/${position_id}/${turn_on_off ? 'reactivate' : 'deactivate'}`).then(response => {
+        axios.put(`${process.env.REACT_APP_API_LINK}/positions/${position_id}/${turn_on_off ? 'reactivate' : 'deactivate'}`).then(response => {
             if (response.status === 401) {
                 kickOut();
             } else if (response.status === 200) {
@@ -162,7 +162,7 @@ function Positions() {
     }
 
     function updateNotes(position_id, notes = []) {
-        axios.put(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/positions/${position_id}`, { notes: JSON.stringify(notes) }).then(response => {
+        axios.put(`${process.env.REACT_APP_API_LINK}/positions/${position_id}`, { notes: JSON.stringify(notes) }).then(response => {
             if (response.status === 401) {
                 kickOut();
             } else if (response.status === 200) {
@@ -175,7 +175,7 @@ function Positions() {
     }
 
     function recoverPosition(position_id) {
-        axios.put(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/positions/${position_id}/recover`).then(response => {
+        axios.put(`${process.env.REACT_APP_API_LINK}/positions/${position_id}/recover`).then(response => {
             if (response.status === 401) {
                 kickOut();
             } else if (response.status === 200) {
@@ -321,7 +321,7 @@ function Positions() {
                             console.log('creating/updating position');
                             const options = {
                                 method: isUpdate ? 'PUT' : 'POST',
-                                url: `https://${process.env.REACT_APP_API_LINK}.praeficio.com/positions/${isUpdate ? selectedPositionID : ''}`,
+                                url: `${process.env.REACT_APP_API_LINK}/positions/${isUpdate ? selectedPositionID : ''}`,
                                 headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
                                 data: { position_id: selectedPositionID, ticker, size: parseFloat(size), user_id: user.id, acquired_on: acquiredOn, sold_on: soldOn, active }
                             };
@@ -422,7 +422,7 @@ function Positions() {
                                     color="error"
                                     onPress={async () => {
                                         console.log(`deleting ${selectedPositionID}`);
-                                        await axios.delete(`https://${process.env.REACT_APP_API_LINK}.praeficio.com/positions/${selectedPositionID}`).then(response => {
+                                        await axios.delete(`${process.env.REACT_APP_API_LINK}/positions/${selectedPositionID}`).then(response => {
                                             if (response.status === 401) {
                                                 kickOut();
                                             } else if (response.status === 200) {

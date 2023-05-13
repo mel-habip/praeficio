@@ -203,7 +203,7 @@ export default class RecordService {
         const limitText = limit ? ` LIMIT ${limit}` : '';
         const offsetText = offset ? ` OFFSET ${offset}` : '';
 
-        const sql = `SELECT * FROM ${table_name} WHERE ` + keys.map(a => a + ' = ?').join(',') + limitText + offsetText;
+        const sql = keys.length ? `SELECT * FROM ${table_name} WHERE ` + keys.map(a => a + ' = ?').join(',') + limitText + offsetText : `SELECT * FROM ${table_name} ` + limitText + offsetText;
         const result = await query(sql, vals);
 
         return {
