@@ -180,7 +180,7 @@ export default function PublicPage() {
     }, []);
 
     return (<>
-        <main className="public-site-body scroll-container" style={{ height: '300svh', scrollSnapType: 'y mandatory', width: '100vw', 'overflow-behavior-y': 'contain' }} >
+        <main className="public-site-body scroll-container" style={{ height: '300svh', scrollSnapType: 'y mandatory', width: '100vw', 'overflowBehaviorY': 'contain' }} >
 
             <div className="audio-player-wrapper" >
                 <Suspense fallback={<Loading />}>
