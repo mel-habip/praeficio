@@ -1,4 +1,4 @@
-import { useContext, lazy } from 'react';
+import { useContext, lazy, useState, useEffect } from 'react';
 import IsLoggedInContext from '../contexts/IsLoggedInContext';
 import ThemeContext from '../contexts/ThemeContext';
 import { Button } from '@nextui-org/react';
@@ -15,8 +15,15 @@ export default function ErrorPage() {
   const { isLoggedIn } = useContext(IsLoggedInContext);
   const { isDark, toggleTheme } = useContext(ThemeContext);
 
-  const randomNumber = Math.floor(Math.random() * images.length);
-  console.log(randomNumber);
+  const [imageSrc, setImageSrc] = useState(null);
+
+  useEffect(() => {
+    const randomNumber = Math.floor(Math.random() * images.length);
+    console.log(randomNumber);
+    import(`../media/${images[randomNumber]}`).then(image => {
+      setImageSrc(image.default);
+    });
+  }, []);
 
   return (
     <>
@@ -28,11 +35,10 @@ export default function ErrorPage() {
       <h2>Something went horribly wrong while servicing your request 😱😱😱 </h2>
       <h6>(this is a 500 error)</h6>
       <img
-        src={images[randomNumber]}
+        src={imageSrc}
         alt="chaos gif on global error page"
         width="500"
         style={{ borderRadius: '15px', filter: `drop-shadow(0 -10px 4.5rem ${isDark ? 'red' : 'orange'})` }} />
-      <br></br>
 
       <div style={{ display: 'flex', flexDirection: 'row', width: '50%', justifyContent: 'space-around' }} >
         {/* <Link className='nav-links' onClick={() => window.history.back()} > Back</Link> */}

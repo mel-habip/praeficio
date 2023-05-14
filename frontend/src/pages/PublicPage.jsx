@@ -1,6 +1,9 @@
-import React, { useState, useContext, lazy, Suspense, useRef } from 'react';
+import React, { useState, useContext, lazy, Suspense, useRef, useEffect } from 'react';
+import { animateScroll, scroller, Element } from 'react-scroll';
 import ThemeContext from '../contexts/ThemeContext';
 import axios from 'axios';
+
+import './stylesheets/PublicPage.css';
 
 import is_valid_email from '../utils/is_valid_email';
 import ErrorModule from '../components/ErrorModule';
@@ -142,97 +145,138 @@ export default function PublicPage() {
 
     const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
 
-    return (<>
-        <body className="public-site-body" style={{ height: '300vh', scrollSnapType: 'y mandatory', width: '100vw' }} >
+    const handleScroll = () => {
+        const currentSection = scroller.getActiveLink();
 
-            <div style={{ position: 'fixed', right: '10px', bottom: '10px', zIndex: 100 }} >
+        document.querySelectorAll('.chapter').forEach((section) => {
+            section.classList.remove('active');
+        });
+
+        const currentSectionElement = document.querySelector(`[name=${currentSection}]`);
+        console.log('triggerred:', currentSection);
+
+        if (currentSectionElement != null) {
+            currentSectionElement.classList.add('active');
+            const currentSectionHeight = document.querySelector('.active').offsetHeight;
+            const currentPosition = window.pageYOffset + currentSectionHeight;
+
+            if (currentPosition >= document.body.offsetHeight - 100) {
+                animateScroll.scrollToTop();
+            } else {
+                scroller.scrollTo(currentSection, {
+                    duration: 500,
+                    delay: 0,
+                    smooth: 'easeInOutQuart',
+                });
+            }
+        }
+    };
+
+    useEffect(() => {
+        window.addEventListener('scroll', handleScroll);
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+        };
+    }, []);
+
+    return (<>
+        <main className="public-site-body scroll-container" style={{ height: '300svh', scrollSnapType: 'y mandatory', width: '100vw', 'overflowBehaviorY': 'contain' }} >
+
+            <div className="audio-player-wrapper" >
                 <Suspense fallback={<Loading />}>
                     <AudioPlayer />
                 </Suspense>
             </div>
-            <section id="main_section" style={{ position: 'relative', width: '100vw', height: '100vh' }} ref={pageMainSection} >
-                <video src={videoBg1} autoPlay loop className={`background-video-1 ${isDark ? '' : 'invert'}`} muted playsInline />
-                <div style={{ position: 'absolute', top: '0%', left: '0%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%' }} >
-                    <Button
-                        css={{ width: '4rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white', position: 'fixed', left: '0%', top: '0%', margin: '1rem' }}
-                        onPress={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"}></i></Button>
-                    <h1>Praeficio.com</h1>
-                    <div style={{ position: 'absolute', top: '3%', right: '2%', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', height: '95%' }}>
-                        <Tooltip content={lang !== 'fr' ? "Veuillez noter que notre capacité en français est limitée." : ""} placement="leftEnd" color="invert" >
-                            <CustomButton onClick={toggleLang} style={{ textTransform: 'uppercase' }} >  {lang}  <i className="fa-solid fa-arrows-spin" /></CustomButton>
-                        </Tooltip>
-                        <CustomButton buttonStyle="btn--transparent" to='/newsletters?show_latest=true'> {sentences.newsletter[lang]} <i className="fa-solid fa-angles-right" /></CustomButton>
+            <Element id="main_section" name="chapter1">
+                <section ref={pageMainSection} className="chapter" >
+                    <video src={videoBg1} autoPlay loop className={`background-video-1 ${isDark ? '' : 'invert'}`} muted playsInline />
+                    <div className="section-contents" style={{ position: 'absolute', top: '0%', left: '0%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%' }} >
+                        <Button
+                            css={{ width: '4rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white', position: 'fixed', left: '0%', top: '0%', margin: '1rem' }}
+                            onPress={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"}></i></Button>
+                        <h1>Praeficio.com</h1>
+                        <div style={{ position: 'absolute', top: '3%', right: '2%', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', height: '95%' }}>
+                            <Tooltip content={lang !== 'fr' ? "Veuillez noter que notre capacité en français est limitée." : ""} placement="leftEnd" color="invert" >
+                                <CustomButton onClick={toggleLang} style={{ textTransform: 'uppercase' }} >  {lang}  <i className="fa-solid fa-arrows-spin" /></CustomButton>
+                            </Tooltip>
+                            <CustomButton buttonStyle="btn--transparent" to='/newsletters?show_latest=true'> {sentences.newsletter[lang]} <i className="fa-solid fa-angles-right" /></CustomButton>
 
-                        <CustomButton buttonStyle="btn--transparent" to='/#about_us' onClick={scrollToAboutUs}> {sentences.about_us[lang]} <i className="fa-solid fa-angles-right" /></CustomButton>
+                            <CustomButton buttonStyle="btn--transparent" to='/#about_us' onClick={scrollToAboutUs}> {sentences.about_us[lang]} <i className="fa-solid fa-angles-right" /></CustomButton>
 
-                        <CustomButton buttonStyle="btn--transparent" to='/#contact_us' onClick={scrollToContactUs} > {sentences.contact_us[lang]} <i className="fa-solid fa-angles-right" /></CustomButton>
+                            <CustomButton buttonStyle="btn--transparent" to='/#contact_us' onClick={scrollToContactUs} > {sentences.contact_us[lang]} <i className="fa-solid fa-angles-right" /></CustomButton>
 
-                        <CustomButton buttonStyle="btn--transparent" to='/login'> {sentences.login[lang]} <i className="fa-solid fa-angles-right" /></CustomButton>
+                            <CustomButton buttonStyle="btn--transparent" to='/login'> {sentences.login[lang]} <i className="fa-solid fa-angles-right" /></CustomButton>
 
-                    </div>
-
-                    {!!referrer && <Text em size={13} css={{ color: 'lightgreen' }} >{sentences.referral_part_1[lang]} {`"${referrer}"`}, {sentences.referral_part_2[lang]}</Text>}
-
-                    {!showIncompletePage ? <h3><i className="fa-solid fa-person-digging"></i>&nbsp;{sentences.being_built[lang]}&nbsp;<i className="fa-solid fa-screwdriver-wrench"></i></h3> : <>
-
-                        <h2>{sentences.slogan3[lang]}</h2>
-                        <div>
-                            <Badge color="warning" >faster</Badge>
-                            <Badge color="success">safer</Badge>
-                            <Badge color="secondary">better</Badge>
                         </div>
-                        <br />
-                        <h4>{sentences.slogan1[lang]}</h4>
 
-                        <h3>{sentences.slogan2[lang]}</h3>
-                        <CustomButton buttonStyle="btn--secondary" onClick={() => setSubscriptionModalOpen(true)} >{sentences.subscribe_button[lang]}</CustomButton>
-                    </>}
+                        {!!referrer && <Text em size={13} css={{ color: 'lightgreen' }} >{sentences.referral_part_1[lang]} {`"${referrer}"`}, {sentences.referral_part_2[lang]}</Text>}
 
-                    <SubscriptionModal isOpen={subscriptionModalOpen} setIsOpen={setSubscriptionModalOpen} lang={lang} />
+                        {!showIncompletePage ? <h3><i className="fa-solid fa-person-digging"></i>&nbsp;{sentences.being_built[lang]}&nbsp;<i className="fa-solid fa-screwdriver-wrench"></i></h3> : <>
 
-                </div>
-            </section>
+                            <h2>{sentences.slogan3[lang]}</h2>
+                            <div>
+                                <Badge color="warning" >faster</Badge>
+                                <Badge color="success">safer</Badge>
+                                <Badge color="secondary">better</Badge>
+                            </div>
+                            <br />
+                            <h4>{sentences.slogan1[lang]}</h4>
 
-            <section id="about_us" style={{ position: 'relative', width: '100%', height: '100vh', backgroundColor: 'grey' }} ref={pageAboutUs}>
-                <div style={{ position: 'absolute', top: '1%', right: '1%' }}>
-                    <CustomButton buttonStyle="btn--secondary" to='/#main_section' onClick={scrollToMainSection} > {sentences.back_up[lang]} <i className="fa-solid fa-angles-up" /></CustomButton>
-                    <CustomButton buttonStyle="btn--secondary" to='/#contact_us' onClick={scrollToContactUs} > {sentences.contact_us[lang]} <i className="fa-solid fa-angles-down" /></CustomButton>
-                </div>
-                <h1>
-                    <em>
-                        <strong>Who on Earth are we?? 🌎🌍🌏</strong>
-                    </em>
-                </h1>
-                <br />
-                <p>well, to be honest we don't know that either : | </p>
-                <br />
-                <p> shall we find that out together?</p>
+                            <h3>{sentences.slogan2[lang]}</h3>
+                            <CustomButton buttonStyle="btn--secondary" onClick={() => setSubscriptionModalOpen(true)} >{sentences.subscribe_button[lang]}</CustomButton>
+                        </>}
 
-            </section>
+                        <SubscriptionModal isOpen={subscriptionModalOpen} setIsOpen={setSubscriptionModalOpen} lang={lang} />
 
-            <section id="contact_us" style={{ position: 'relative', width: '100%', height: '100vh', backgroundColor: 'lightgrey', display: 'flex', flexDirection: 'column', alignItems: 'center' }} ref={pageContactUs}>
-                <h1> Oh what great lengths to reach us 👉👈</h1>
-                <div style={{ position: 'absolute', top: '1%', right: '1%' }}>
-                    <CustomButton buttonStyle="btn--secondary" to='/#about_us' onClick={scrollToAboutUs} > {sentences.about_us[lang]} <i className="fa-solid fa-angle-up" /></CustomButton>
-                    <CustomButton buttonStyle="btn--secondary" to='/#main_section' onClick={scrollToMainSection} > {sentences.back_up[lang]} <i className="fa-solid fa-angles-up" /></CustomButton>
-                </div>
-                {/* <div> */}
-                <Spacer y={10} />
-                <form style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', maxWidth: '900px', minWidth: '450px', alignSelf: 'center', gap: '25px', backgroundColor: 'darkgrey', padding: '20px', borderRadius: '0.75rem' }}  >
-                    <p>Just some small details please</p>
-                    <Input width={"80%"} labelPlaceholder="Name" required />
-                    <div style={{ width: '100%' }} >
-                        <Input width={"80%"} labelPlaceholder="Email" type="email" />
-                        <p>either ☝️ or 👇 </p>
-                        <Input width={"80%"} labelPlaceholder="Telephone" type="tel" />
                     </div>
-                    <Textarea width={"80%"} label="What are you interested in?" minRows={4} placeholder='Please describe' />
-                    {/* add the same length based detection here */}
-                    <Button>Send</Button>
-                </form>
-                {/* </div> */}
-            </section>
-        </body>
+                </section>
+            </Element>
+
+            <Element id="about_us" name="chapter2">
+                <section style={{ backgroundColor: 'grey' }} ref={pageAboutUs} className="chapter">
+                    <div className="nav-button-wrapper">
+                        <CustomButton buttonStyle="btn--secondary" to='/#main_section' onClick={scrollToMainSection} > {sentences.back_up[lang]} <i className="fa-solid fa-angles-up" /></CustomButton>
+                        <CustomButton buttonStyle="btn--secondary" to='/#contact_us' onClick={scrollToContactUs} > {sentences.contact_us[lang]} <i className="fa-solid fa-angles-down" /></CustomButton>
+                    </div>
+                    <div className="section-contents" >
+                        <h1>
+                            <em>
+                                <strong>Who on Earth are we?? 🌎🌍🌏</strong>
+                            </em>
+                        </h1>
+                        <br />
+                        <p>well, to be honest we don't know that either : | </p>
+                        <br />
+                        <p> shall we find that out together?</p>
+                    </div>
+                </section>
+            </Element>
+
+            <Element id="contact_us" name="chapter3">
+                <section style={{ backgroundColor: 'lightgrey', display: 'flex', flexDirection: 'column', alignItems: 'center' }} ref={pageContactUs} className="chapter">
+                    <div className="nav-button-wrapper">
+                        <CustomButton buttonStyle="btn--secondary" to='/#about_us' onClick={scrollToAboutUs} > {sentences.about_us[lang]} <i className="fa-solid fa-angle-up" /></CustomButton>
+                        <CustomButton buttonStyle="btn--secondary" to='/#main_section' onClick={scrollToMainSection} > {sentences.back_up[lang]} <i className="fa-solid fa-angles-up" /></CustomButton>
+                    </div>
+                    <div className="section-contents" >
+                        <h1> Oh what great lengths to reach us 👉👈</h1>
+                        <Spacer y={2} />
+                        <form style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', maxWidth: '900px', minWidth: '450px', alignSelf: 'center', gap: '25px', backgroundColor: 'darkgrey', padding: '20px', borderRadius: '0.75rem' }}  >
+                            <p>Just some small details please</p>
+                            <Input width={"80%"} labelPlaceholder="Name" required />
+                            <div style={{ width: '100%' }} >
+                                <Input width={"80%"} labelPlaceholder="Email" type="email" />
+                                <p>either ☝️ or 👇 </p>
+                                <Input width={"80%"} labelPlaceholder="Telephone" type="tel" />
+                            </div>
+                            <Textarea width={"80%"} label="What are you interested in?" minRows={4} placeholder='Please describe' />
+                            {/* add the same length based detection here */}
+                            <Button>Send</Button>
+                        </form>
+                    </div>
+                </section>
+            </Element>
+        </main>
     </>);
 };
 
