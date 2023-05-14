@@ -1,6 +1,7 @@
 .editor-wrapper {
     width: 80%;
     height: 600px;
+    position: relative;
 }
 
 .editor-screen {

@@ -3,7 +3,7 @@ import axios from 'axios';
 
 import NavMenu from '../components/NavMenu';
 
-import './NewslettersAdmin.css';
+import './stylesheets/NewslettersAdmin.css';
 
 import { CustomButton } from '../fields/CustomButton';
 
@@ -66,7 +66,7 @@ function Editor() {
     };
 
     return (
-        <div className="editor-wrapper" style={{position: 'relative'}}>
+        <div className="editor-wrapper">
             <LexicalComposer initialConfig={initialConfig} >
                 <PlainTextPlugin
                     contentEditable={<ContentEditable className='editor-screen' />}
