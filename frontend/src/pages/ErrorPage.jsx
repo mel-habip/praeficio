@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 
 const NavMenu = lazy(() => import('../components/NavMenu'));
 
-const images = ['./chaos.gif', './sponge_bob_flames.gif'];
+const images = ['chaos.gif', 'sponge_bob_flames.gif'];
 
 
 export default function ErrorPage() {
@@ -18,6 +18,16 @@ export default function ErrorPage() {
   const randomNumber = Math.floor(Math.random() * images.length);
   console.log(randomNumber);
 
+  const [imageSrc, setImageSrc] = useState(null);
+
+  useEffect(() => {
+    const randomNumber = Math.floor(Math.random() * images.length);
+    console.log(randomNumber);
+    import(`../media/${images[randomNumber]}`).then(image => {
+      setImageSrc(image.default);
+    });
+  }, []);
+
   return (
     <>
       {isLoggedIn && <NavMenu></NavMenu>}
@@ -28,16 +38,10 @@ export default function ErrorPage() {
       <h2>Something went horribly wrong while servicing your request 😱😱😱 </h2>
       <h6>(this is a 500 error)</h6>
       <img
-        src={import(images[randomNumber])}
+        src={imageSrc}
         alt="chaos gif on global error page"
         width="500"
         style={{ borderRadius: '15px', filter: `drop-shadow(0 -10px 4.5rem ${isDark ? 'red' : 'orange'})` }} />
-      <img
-        src={images[randomNumber]}
-        alt="test1"
-        width="500"
-        style={{ borderRadius: '15px', filter: `drop-shadow(0 -10px 4.5rem ${isDark ? 'red' : 'orange'})` }} />
-      <br></br>
 
       <div style={{ display: 'flex', flexDirection: 'row', width: '50%', justifyContent: 'space-around' }} >
         {/* <Link className='nav-links' onClick={() => window.history.back()} > Back</Link> */}
