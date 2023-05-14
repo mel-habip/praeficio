@@ -1,4 +1,4 @@
-import { useContext, lazy } from 'react';
+import { useContext, lazy, useState, useEffect } from 'react';
 import IsLoggedInContext from '../contexts/IsLoggedInContext';
 import ThemeContext from '../contexts/ThemeContext';
 import { Button } from '@nextui-org/react';
@@ -14,9 +14,6 @@ export default function ErrorPage() {
 
   const { isLoggedIn } = useContext(IsLoggedInContext);
   const { isDark, toggleTheme } = useContext(ThemeContext);
-
-  const randomNumber = Math.floor(Math.random() * images.length);
-  console.log(randomNumber);
 
   const [imageSrc, setImageSrc] = useState(null);
 
