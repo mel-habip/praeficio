@@ -74,7 +74,7 @@ function App() {
         if (response.status === 200) {
           setUser(response.data);
           setAccessToken(localAccessToken);
-          localStorage.setItem('user_id', response.data.user_id);
+          localStorage.setItem('user_id', response.data.user_id); //not sure what this would truly be useful for
           setUserId(response.data.id);
           setIsLoggedIn(true);
         } else if (response.status === 401) {
