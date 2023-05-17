@@ -19,7 +19,7 @@ export default function LoadingPage() {
         <h1 className="loading-page-text" data-text="Loading..." >Loading...</h1>
         <CustomButton onClick={() => window.history.go(-1)} > <i className="fa-solid fa-backward"></i> &nbsp;Back</CustomButton>
         {potentiallyStuck && <>
-            <CustomButton onClick={() => {setIsLoggedIn(false); window.location.replace('/login');}} > Stuck? Click here to sign-out </CustomButton>
+            <CustomButton onClick={() => { setIsLoggedIn(false); localStorage.removeItem('access_token'); window.location.replace('/login');}} > Stuck? Click here to sign-out </CustomButton>
         </> }
     </div>);
 }

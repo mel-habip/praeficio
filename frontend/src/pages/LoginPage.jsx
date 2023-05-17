@@ -211,6 +211,7 @@ export default function LoginPage() {
                                                 if (res.status === 200) {
                                                     res = await res.json();
                                                     localStorage.setItem('access_token', res.access_token);
+                                                    localStorage.setItem('user_id', res.user_id);
                                                     setAccessToken(res.access_token);
                                                     setUserId(res.user_id);
                                                     setIsLoggedIn(true);

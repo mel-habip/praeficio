@@ -36,8 +36,8 @@ const frmt = (date) => {
 
 function Positions() {
     const [positions, setPositions] = useState(null);
-    const [includeDeletedPositions, setIncludeDeletedPositions] = useState(false);
-    const [includeInactivePositions, setIncludeInactivePositions] = useState(false);
+    const [includeDeletedPositions, setIncludeDeletedPositions] = useState(true);
+    const [includeInactivePositions, setIncludeInactivePositions] = useState(true);
     const [creationUpdateModalOpen, setCreationUpdateModalOpen] = useState(false);
     const [detailViewModalOpen, setDetailViewModalOpen] = useState(false);
     const [deletionModalOpen, setDeletionModalOpen] = useState(false);
@@ -53,8 +53,6 @@ function Positions() {
     const [newNote, setNewNote] = useState('');
     const [tickerError, setTickerError] = useState('');
     const [sizeError, setSizeError] = useState('');
-    const [acquiredOnPickerIsOpen, setAcquiredOnPickerIsOpen] = useState(false);
-    const [soldOnPickerIsOpen, setSoldOnPickerIsOpen] = useState(false);
 
 
     const { setIsLoggedIn, user, accessToken } = useContext(IsLoggedInContext);
@@ -215,17 +213,9 @@ function Positions() {
 
     return (
         <>
-            <NavMenu></NavMenu>
+            <NavMenu />
 
-            <Checkbox
-                color="secondary"
-                onChange={selected => setIncludeDeletedPositions(selected)}
-            ><Text >Include deleted positions</Text></Checkbox>
-
-            <Checkbox
-                color="secondary"
-                onChange={selected => setIncludeInactivePositions(selected)}
-            ><Text >Include inactive positions</Text></Checkbox>
+            <CustomButton><i className="fa-solid fa-gears"/></CustomButton>
 
             <Table
                 aria-label="Example table with dynamic content"
@@ -254,20 +244,20 @@ function Positions() {
                             {columnKey => {
                                 if (columnKey === 'actions') {
 
-                                    return <Table.Cell >
-                                        <Tooltip content="Modify" placement="left" shadow enterDelay={delay}>
-                                            <CustomButton buttonStyle="btn--transparent" disabled={item.deleted} onClick={() => { setIsUpdate(true); setCreationUpdateModalOpen(true); }} ><i className="fa-regular fa-pen-to-square"></i></CustomButton>
-                                        </Tooltip>
-                                        <Tooltip content={item.deleted ? 'Restore' : 'Delete'} placement="top" shadow enterDelay={delay}>
-                                            {item.deleted ? <CustomButton buttonStyle="btn--transparent" onClick={() => recoverPosition(item.position_id)}><i className="fa-solid fa-recycle"></i></CustomButton> : <CustomButton buttonStyle="btn--transparent" onClick={() => setDeletionModalOpen(true)} ><i className="fa-regular fa-trash-can"></i></CustomButton>}
-                                        </Tooltip>
-                                        <Tooltip content="Details" placement="right" shadow enterDelay={delay}>
-                                            <CustomButton buttonStyle="btn--transparent" onClick={() => setDetailViewModalOpen(true) || setNotes(item.notes)}><i className="fa-solid fa-list-ul"></i></CustomButton>
-                                        </Tooltip>
-                                        {item.active ? '' : <Tooltip content="Reactivate" placement="top" shadow enterDelay={delay}> <CustomButton disabled={item.deleted} buttonStyle="btn--transparent" onClick={() => togglePosition(item.position_id, true)} ><i className="fa-solid fa-heart-pulse"></i></CustomButton> </Tooltip>}
-
-
-                                    </Table.Cell>
+                                    return (
+                                        <Table.Cell >
+                                            <Tooltip content="Modify" placement="left" shadow enterDelay={delay}>
+                                                <CustomButton buttonStyle="btn--transparent" disabled={item.deleted} onClick={() => { setIsUpdate(true); setCreationUpdateModalOpen(true); }} ><i className="fa-regular fa-pen-to-square"></i></CustomButton>
+                                            </Tooltip>
+                                            <Tooltip content={item.deleted ? 'Restore' : 'Delete'} placement="top" shadow enterDelay={delay}>
+                                                {item.deleted ? <CustomButton buttonStyle="btn--transparent" onClick={() => recoverPosition(item.position_id)}><i className="fa-solid fa-recycle"></i></CustomButton> : <CustomButton buttonStyle="btn--transparent" onClick={() => setDeletionModalOpen(true)} ><i className="fa-regular fa-trash-can"></i></CustomButton>}
+                                            </Tooltip>
+                                            <Tooltip content="Details" placement="right" shadow enterDelay={delay}>
+                                                <CustomButton buttonStyle="btn--transparent" onClick={() => setDetailViewModalOpen(true) || setNotes(item.notes)}><i className="fa-solid fa-list-ul"></i></CustomButton>
+                                            </Tooltip>
+                                            {item.active ? '' : <Tooltip content="Reactivate" placement="top" shadow enterDelay={delay}> <CustomButton disabled={item.deleted} buttonStyle="btn--transparent" onClick={() => togglePosition(item.position_id, true)} ><i className="fa-solid fa-heart-pulse"></i></CustomButton> </Tooltip>}
+                                        </Table.Cell>
+                                    );
                                 } else if (['acquired_on', 'sold_on'].includes(columnKey)) {
                                     return <Table.Cell> {item[columnKey] ? item[columnKey].substring(0, 10) : ' - '} </Table.Cell>
                                 } else {
@@ -279,7 +269,6 @@ function Positions() {
                 </Table.Body>
 
                 <Table.Pagination shadow noMargin align="center" rowsPerPage={10} onPageChange={(page) => console.log({ page })}></Table.Pagination>
-
 
             </Table>
             <Spacer y={4}></Spacer>
@@ -300,19 +289,13 @@ function Positions() {
                     > <Text size={16}>Active</Text>
                     </Checkbox>
                     <Spacer y={0.5} />
-                    <Input value={acquiredOn} rounded type="text" clearable bordered labelPlaceholder="Acquired On" color={sizeError ? "error" : "primary"} status={sizeError ? "error" : "default"}
+                    <Input value={acquiredOn} rounded type="date" clearable bordered labelPlaceholder="Acquired On" color={sizeError ? "error" : "primary"} status={sizeError ? "error" : "default"}
                         helperText={sizeError} helperColor={sizeError ? "error" : "primary"}
-                        onClick={() => setAcquiredOnPickerIsOpen(true)} onClearClick={() => setAcquiredOn('')}
+                        onChange={(e) => setAcquiredOn(e.target.value)} onClearClick={() => setAcquiredOn('')}
                     />
-                    {/* <DatePicker isOpen={acquiredOnPickerIsOpen} title="Acquired On" onClose={(val) => setAcquiredOn(frmt(val)) || setAcquiredOnPickerIsOpen(false)}
-                        onChange={(val) => setAcquiredOn(frmt(val)) || console.log(acquiredOn) || setAcquiredOnPickerIsOpen(false)}
-                        closeText={<i className="fa-regular fa-circle-check"></i>} clearText={acquiredOn ? <i className="fa-regular fa-trash-can" onClick={(e) => { console.log('clicked', e) }}></i> : ''} colorScheme="#0F52BA" defaultValue={new Date()} minDate={new Date(2000, 10, 10)} maxDate={new Date().addDays(1)} headerFormat='DD, MM dd' /> */}
                     <Spacer y={0.5} />
-                    <Input value={soldOn} rounded type="text" clearable bordered labelPlaceholder="Sold On" color={sizeError ? "error" : "primary"} status={sizeError ? "error" : "default"}
-                        helperText={sizeError} helperColor={sizeError ? "error" : "primary"} onClick={() => setSoldOnPickerIsOpen(true)} onClearClick={() => setSoldOn('')} />
-                    {/* <DatePicker isOpen={soldOnPickerIsOpen} title="Sold On" onClose={(val) => setSoldOn(frmt(val)) || console.log('clicked here', val) || setSoldOnPickerIsOpen(false)}
-                        onChange={(val) => setSoldOn(frmt(val)) || console.log(soldOn) || setSoldOnPickerIsOpen(false)}
-                        colorScheme="#0F52BA" closeText={<i className="fa-regular fa-circle-check"></i>} clearText={soldOn ? <i className="fa-regular fa-trash-can"></i> : ''} defaultValue={new Date()} minDate={new Date(2000, 10, 10)} maxDate={new Date().addDays(1)} headerFormat='DD, MM dd' /> */}
+                    <Input value={soldOn} rounded type="date" clearable bordered labelPlaceholder="Sold On" color={sizeError ? "error" : "primary"} status={sizeError ? "error" : "default"}
+                        helperText={sizeError} helperColor={sizeError ? "error" : "primary"} onChange={(e) => setSoldOn(e.target.value)} onClearClick={() => setSoldOn('')} />
                     <Button
                         disabled={!ticker || !size || size === '0'}
                         shadow
@@ -344,9 +327,6 @@ function Positions() {
                             });
                         }}> {isUpdate ? <>Update Position&nbsp;&nbsp;<i className="fa-regular fa-pen-to-square"></i></> : <>Create Position&nbsp;&nbsp;<i className="fa-regular fa-square-plus"></i></>} </Button> </Modal.Body> </Modal>)
             }
-
-
-
 
 
             {
