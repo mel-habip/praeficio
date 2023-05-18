@@ -9,8 +9,6 @@ if (env_dir) {
     });
 }
 
-import User from '../constants/userClass.js'
-
 /**
  * @function authenticateToken - middleware that converts JWT to user and adds it to request data
  * @returns {null} - adds `user` to request data
@@ -23,7 +21,7 @@ export default async function authenticateToken(req, res, next) { //this is midd
         return res.status(401).send('Unauthenticated: No session token received.');
     }
 
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET_KEY, (async (err, /** @type {User} */ user) => {
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET_KEY, (async (err, user) => {
         if (err) return res.status(401).send('Unauthenticated: Invalid Token');
 
         let [current_details] = await query(`SELECT deleted, active, permissions, first_name, last_name, email, created_on, updated_on, to_do_categories, use_beta_features, username FROM users WHERE user_id = ? LIMIT 1;`, user.id);
@@ -57,7 +55,7 @@ export default async function authenticateToken(req, res, next) { //this is midd
 
         await query(`SELECT feedback_log_id FROM feedback_log_user_associations WHERE user_id = ?;`, user.id).then(response => user.feedback_logs = response.map(a => a.feedback_log_id));
 
-        req.user = new User(user);
+        req.user = user;
 
         next();
     }));
