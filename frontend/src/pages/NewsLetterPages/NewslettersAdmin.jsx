@@ -15,7 +15,7 @@ import toUniqueArray from '../../utils/toUniqueArray';
 
 import NewsLetterCard from '../../components/NewsLetterCard.jsx';
 
-import { Card, Checkbox, Modal, Grid } from '@nextui-org/react';
+import { Checkbox, Modal, Grid } from '@nextui-org/react';
 
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic"
 import { CKEditor } from "@ckeditor/ckeditor5-react"

@@ -114,8 +114,8 @@ function App() {
                   <Route path='/home' element={<Navigate to="/portal" replace />} />
                   <Route path='/portal' element={isLoggedIn ? <Portal /> : <LoginPage />} exact />
                   <Route path='/newsletters' element={<Newsletters />} exact />
-                  <Route path='/newsletters/admin' element={isLoggedIn ? ((['basic_client', 'pro_client'].includes(user?.permissions) && user?.permissions) ? <Navigate to="/403" replace /> : <NewslettersAdmin />) : <LoginPage />} exact />
-                  <Route path='/login' element={<LoginPage />} exact />
+                  <Route path='/newsletters/admin' element={isLoggedIn ? ((user?.permissions?.startsWith('dev_') || user?.is_total) ? <NewslettersAdmin /> : <Navigate to="/403" replace />) : <LoginPage />} exact />
+                  <Route path='/login' element={isLoggedIn ? <Navigate to="/home" replace /> : <LoginPage />} exact />
                   <Route path='/positions' element={isLoggedIn ? <Positions /> : <LoginPage />} exact />
                   <Route path='/alerts' element={isLoggedIn ? <Alerts /> : <LoginPage />} exact />
 
