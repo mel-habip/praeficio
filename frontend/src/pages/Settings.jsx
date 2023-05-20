@@ -78,7 +78,7 @@ function ToDoCategoriesSection() {
                 <CustomButton
                     buttonStyle="btn--transparent"
                     onClick={() => { setCurrentCategories(removeIndex(currentCategories, index)) }} >
-                    <i className="fa-regular fa-trash-can"></i>
+                    <i className="fa-regular fa-trash-can"/>
                 </CustomButton>
             </Row>)}
         <Row css={{ 'margin-top': '15px' }}>

@@ -1,13 +1,20 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
+import '../stylesheets/Newsletters.css';
+
+
 import axios from 'axios';
 
-import NavMenu from '../components/NavMenu';
+import NavMenu from '../../components/NavMenu';
 
-import { CustomButton } from '../fields/CustomButton';
-import { Button, Modal, Spacer, Text, Badge, Card, Grid, Loading } from '@nextui-org/react';
+import { CustomButton } from '../../fields/CustomButton';
+import { Grid, Loading } from '@nextui-org/react';
 
-import LoadingPage from './LoadingPage';
+import LoadingPage from '../LoadingPage';
+
+import toUniqueArray from '../../utils/toUniqueArray';
+
+import NewsLetterCard from '../../components/NewsLetterCard.jsx';
 
 export default function Newsletters() {
     document.title = "Newsletter";
@@ -21,7 +28,7 @@ export default function Newsletters() {
         setIsLoading(true);
         console.log(`Loading page #${pageNumber}`);
         axios.get(`${process.env.REACT_APP_API_LINK}/newsletters?size=25&page=${pageNumber}`).then(response => {
-            setNewsletterArticleList(prevList => [...(prevList || []), ...response.data.data]);
+            setNewsletterArticleList(prevList => toUniqueArray([...(prevList || []), ...response.data.data], 'newsletter_id'));
             setHasMore(response.data.has_more);
             setIsLoading(false);
         }).catch(e => { setIsLoading(false); console.error(e); });
@@ -47,18 +54,14 @@ export default function Newsletters() {
         <>
             <NavMenu />
             <h1>Newsletters</h1>
-            <CustomButton to="/newsletters/admin" >Admin Portal <i className="fa-solid fa-angles-right" /></CustomButton>
-            <Grid >
-                {newsletterArticleList.map(({ newsletter_id, title, description, created_on, read_length, written_by, written_by_avatar, likes_count }, index) => <Card key={newsletter_id} ref={(newsletterArticleList.length === index + 1) ? lastNewsLetterArticleRef : undefined} >
-                    <h3>{title}</h3>
-                    <h2>{description}</h2>
-                    <p>Created At: {created_on}</p>
-                    <p>Written By: {written_by}</p>
-                    <p>{likes_count}</p>
-                    {written_by_avatar && <img src={written_by_avatar}></img>}
-                    {read_length && <p>{read_length}-minute read</p>}
-                </Card>)}
-            </Grid>
+            <CustomButton style={{ position: 'absolute', right: '15px', top: '15px' }} to="/newsletters/admin" >Admin Portal <i className="fa-solid fa-angles-right" /></CustomButton>
+            <Grid.Container justify="center">
+                <Grid >
+                    {newsletterArticleList.map(({ newsletter_id, title, description, created_on, read_length, written_by_username, written_by_avatar, likes_count, content }, index) =>
+                        <NewsLetterCard key={index + '-card'} {...{ lastNewsLetterArticleRef: (newsletterArticleList.length === index + 1) ? lastNewsLetterArticleRef : undefined, newsletter_id, title, description, created_on, read_length, written_by_username, written_by_avatar, likes_count, content, index }} />)}
+                </Grid>
+
+            </Grid.Container>
             {isLoading && <Loading />}
         </>
     )

@@ -292,6 +292,9 @@ CREATE TABLE newsletters (
     content LONGTEXT,
     read_length INT,
     written_by INT,
+    deleted BOOLEAN DEFAULT FALSE,
+    pinned BOOLEAN DEFAULT FALSE,
+    handled_externally BOOLEAN DEFAULT FALSE,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (written_by)

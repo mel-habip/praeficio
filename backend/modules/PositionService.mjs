@@ -9,6 +9,7 @@ export default class PositionService extends RecordService {
         this.record_type = 'Position';
         this.table_name = 'positions';
         this.primary_key = 'position_id';
+        this.fetch_sql = `SELECT positions.*, workspace_position_associations.workspace_id FROM positions LEFT JOIN workspace_position_associations ON positions.position_id = workspace_position_associations.position_id`;
     }
 
     async un_soft_delete(position_id) {

@@ -22,6 +22,7 @@ newsletterRouter.get('/', async (req, res) => {
     const page_to_load = (!req.query.page || isNaN(req.query.page)) ? 1 : req.query.page;
 
     const fetch_job = await helper.fetch_by_criteria({
+        'newsletters.deleted': false,
         limit: (how_many_to_load * page_to_load) + 1,
         offset: how_many_to_load * (page_to_load - 1),
     });
@@ -29,8 +30,17 @@ newsletterRouter.get('/', async (req, res) => {
     if (fetch_job?.success) {
         const has_more = fetch_job.details.length === ((how_many_to_load * page_to_load) + 1);
         if (has_more) fetch_job.details.pop();
+
+        //sorting based on pinned posts
+        const pinned = [];
+        const unpinned = fetch_job.details.filter(post => {
+            if (post.pinned) return !pinned.push(post); //push returns true if pushed
+            return true;
+        });
+
+
         return res.status(200).json({
-            data: fetch_job.details,
+            data: [...pinned, ...unpinned],
             has_more,
             page: page_to_load,
             size: how_many_to_load,

@@ -9,17 +9,25 @@
   overflow-x: hidden;
   overflow-y: auto;
   --nextui-colors-accents0: lightgrey;
+  --ck-color-base-background: lightgrey;
+  --ck-color-base-background: lightgrey;
 }
 
 [data-theme='dark'] {
   --background-color: black;
   --secondary-background-color: rgb(64, 45, 45);
+  --ck-color-base-background: #0d0d0d;
+  --modal-background: #0d0d0d;
   --text-primary: white;
   --text-secondary: grey;
   --accent: darkred;
   --link-color: lightblue;
   --border_color: lightgrey;
   --nextui-colors-accents0: #16181A;
+}
+
+.ck.ck-editor__main>.ck-editor__editable {
+  background-color: var(--modal-background) !important;
 }
 
 body {

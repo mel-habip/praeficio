@@ -17,6 +17,7 @@ const connection = mysql.createConnection({
     user: "admin",
     password: process.env.DB_PASSWORD,
     database: 'praeficio-database-1',
+    charset: 'utf8mb4',
 });
 
 connection.connect(function (err) {
@@ -57,7 +58,7 @@ function cleaner(array = []) {
 
     return array.map(hash => {
         //boolean cleanup
-        ['active', 'deleted', 'invitation_accepted', 'completed', 'archived', 'use_beta_features', 'starred'].forEach(property => {
+        ['active', 'deleted', 'invitation_accepted', 'completed', 'archived', 'use_beta_features', 'starred', 'handled_externally', 'pinned'].forEach(property => {
             if (hash.hasOwnProperty(property)) hash[property] = Boolean(hash[property]);
         });
         //array JSON cleanup
