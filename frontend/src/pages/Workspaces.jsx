@@ -13,13 +13,12 @@ import LoadingPage from './LoadingPage';
 
 import axios from 'axios';
 
-import { Button, Navbar, Card, Modal, Spacer, Text, Input, Grid, Row, Table, Textarea, useAsyncList, useCollator, Loading, Badge, Dropdown, Tooltip } from '@nextui-org/react';
+import { Button, Navbar, Card, Modal, Spacer, Text, Input, Grid, Row, Textarea, Loading, Badge, Dropdown, Tooltip } from '@nextui-org/react';
 
 import { CustomButton } from '../fields/CustomButton';
 import CustomizedDropdown from '../fields/CustomizedDropdown';
 
 import UserSearchModal from '../components/UserSearchModal';
-import InlineLoader from '../components/InlineLoader';
 
 import timestampFormatter from '../utils/timestampFormatter';
 
@@ -82,7 +81,6 @@ export default function Workspaces({ subSection }) {
                     {/* <p>{JSON.stringify([selectedSubSection, selectedIsOther])}</p> */}
 
                     {selectedIsOther &&
-
                         <Dropdown isBordered>
                             <Navbar.Item isActive >
                                 <Dropdown.Button
@@ -555,4 +553,4 @@ function InvitationAcceptConfirmModal({ modalOpen, setModalOpen, setUserWorkspac
             <Text size={12} em css={{ 'text-align': 'center' }}> Note: this action is irreversible. </Text>
         </Modal.Body>
     </Modal>);
-}
+};

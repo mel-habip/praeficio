@@ -75,7 +75,7 @@ export default class RecordService {
 
         switch (this.record_type) {
             case 'Position': {
-                const sql = `SELECT positions.*, workspace_position_associations.workspace_id  FROM positions LEFT JOIN workspace_position_associations ON positions.position_id = workspace_position_associations.position_id WHERE positions.position_id = ? ${constraint_stringifier(constraints)} LIMIT 1;`;
+                const sql = `${this.fetch_sql} WHERE positions.position_id = ? ${constraint_stringifier(constraints)} LIMIT 1;`;
                 const [position] = await query(sql, record_id_1);
 
                 if (inclusions.workspaces) {
@@ -152,14 +152,19 @@ export default class RecordService {
                 if (!FeedbackLogFilter) return null;
             }
             case 'FeedbackLogItem': {
-                const sql = `SELECT feedback_log_items.*, users.username AS created_by_username, archived FROM feedback_log_items LEFT JOIN feedback_logs ON feedback_logs.feedback_log_id = feedback_log_items.feedback_log_item_id LEFT JOIN users ON created_by = users.user_id WHERE feedback_log_item_id = ?`;
+                const sql = `SELECT feedback_log_items.*, users.username AS created_by_username, archived FROM feedback_log_items LEFT JOIN feedback_logs ON feedback_logs.feedback_log_id = feedback_log_items.feedback_log_item_id LEFT JOIN users ON created_by = users.user_id WHERE feedback_log_item_id = ? ${constraint_stringifier(constraints)} LIMIT 1;`;
                 const [feedbackLogItem] = await query(sql, record_id_1);
                 return feedbackLogItem;
             }
             case 'FeedbackLogItemMessage': {
-                const sql = `SELECT feedback_log_item_messages.*, users.username AS sent_by_username FROM feedback_log_item_messages LEFT JOIN users ON sent_by = users.user_id WHERE feedback_log_item_message_id = ?`;
+                const sql = `SELECT feedback_log_item_messages.*, users.username AS sent_by_username FROM feedback_log_item_messages LEFT JOIN users ON sent_by = users.user_id WHERE feedback_log_item_message_id = ? ${constraint_stringifier(constraints)} LIMIT 1;`;
                 const [feedbackLogItemMessage] = await query(sql, record_id_1);
                 return feedbackLogItemMessage;
+            }
+            case 'Newsletter': {
+                const sql = `${this.fetch_sql} WHERE newsletter_id = ? ${constraint_stringifier(constraints)} LIMIT 1;`;
+                const [newsletter] = await query(sql, record_id_1);
+                return newsletter;
             }
             default: {
                 const table_name = this.table_name || recordTypeMap.table_names[this.record_type];
@@ -170,7 +175,6 @@ export default class RecordService {
                     console.log(`${this.record_type} not recognized`);
                     return null;
                 }
-
 
                 const sql = `SELECT * FROM ${table_name}  WHERE ( ${(typeof primary_key === 'string' ? [primary_key] : primary_key).map(a => a + ' = ?').join(' AND ')});`;
 
@@ -203,7 +207,13 @@ export default class RecordService {
         const limitText = limit ? ` LIMIT ${limit}` : '';
         const offsetText = offset ? ` OFFSET ${offset}` : '';
 
-        const sql = keys.length ? `SELECT * FROM ${table_name} WHERE ` + keys.map(a => a + ' = ?').join(',') + limitText + offsetText : `SELECT * FROM ${table_name} ` + limitText + offsetText;
+        let sql_2;
+        
+        if (this.fetch_sql) {
+            sql_2 = `${this.fetch_sql} ${keys.length ? 'WHERE ': ''}` + keys.map(a => a + ' = ?').join(',') + limitText + offsetText
+        }
+
+        const sql = sql_2 || (keys.length ? `SELECT * FROM ${table_name} WHERE ` + keys.map(a => a + ' = ?').join(',') + limitText + offsetText : `SELECT * FROM ${table_name} ` + limitText + offsetText);
         const result = await query(sql, vals);
 
         return {

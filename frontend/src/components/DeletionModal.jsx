@@ -4,6 +4,8 @@ import IsLoggedInContext from '../contexts/IsLoggedInContext';
 
 import { Button, Modal, Text, Row } from '@nextui-org/react';
 
+import axios from 'axios';
+
 
 /**
  * @component
