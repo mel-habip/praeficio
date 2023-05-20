@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useContext } from 'react';
 
 import '../stylesheets/Newsletters.css';
-
+import IsLoggedInContext from '../../contexts/IsLoggedInContext';
+import ThemeContext from '../../contexts/ThemeContext';
 
 import axios from 'axios';
 
@@ -23,6 +24,9 @@ export default function Newsletters() {
     const [pageNumber, setPageNumber] = useState(1);
     const [hasMore, setHasMore] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    
+    const { isLoggedIn } = useContext(IsLoggedInContext);
+    const { isDark, toggleTheme } = useContext(ThemeContext);
 
     useEffect(() => { //main fetcher on load
         setIsLoading(true);
@@ -52,7 +56,10 @@ export default function Newsletters() {
 
     return (
         <>
-            <NavMenu />
+            {isLoggedIn && <NavMenu></NavMenu>}
+            {!isLoggedIn && <Button
+                css={{ width: '4rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white', position: 'fixed', left: '0%', top: '0%', margin: '1rem' }}
+                onPress={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"} /></Button>}
             <h1>Newsletters</h1>
             <CustomButton style={{ position: 'absolute', right: '15px', top: '15px' }} to="/newsletters/admin" >Admin Portal <i className="fa-solid fa-angles-right" /></CustomButton>
             <Grid.Container justify="center">
