@@ -5,8 +5,6 @@ const log = console.log;
 const list = (arr) => new Intl.ListFormat().format(arr.map(x => JSON.stringify(x)));
 
 import authenticateToken from '../jobs/authenticateToken.js';
-import fetchUserDetails from '../jobs/fetchUserDetails.js';
-import fetchWorkspaceIDs from '../jobs/fetchWorkspaceIDs.js';
 import defaultPermissions from '../constants/defaultPermissions.js';
 import isAvailableUsername from '../jobs/isAvailableUsername.js';
 import db_keys from '../constants/db_keys.js';
@@ -37,8 +35,8 @@ userRouter.get('/', authenticateToken, async (req, res) => {
         if (defaultPermissions.access.view_all_user_profiles.includes(req.user.permissions)) {
             return res.json(response);
         } else if (defaultPermissions.access.view_other_users_bulk.includes(req.user.permissions)) {
-            let logged_in_user_workspace_ids = await fetchWorkspaceIDs(req.user.id);
-            return res.json(response.filter(user => user.id === req.user.id || logged_in_user_workspace_ids.some(id => user.workspace_ids.includes(id))));
+            //this side is kinda messy and should be done via the helper instead
+            return res.json(response.filter(user => user.id === req.user.id));
         } else {
             return res.json(response.filter(user => user.user_id === req.user.id));
         }
@@ -46,39 +44,38 @@ userRouter.get('/', authenticateToken, async (req, res) => {
 });
 
 userRouter.get('/session', authenticateToken, (req, res) => {
-
     return res.status(200).json({
         ...req.user
     });
-})
+});
 
 
 userRouter.post('/create_new_user', async (req, res) => {
     log('received: ', req.body || {});
 
     if (!req.body.username) {
-        return res.status(405).json({
+        return res.status(401).json({
             message: `Username required.`,
             error_part: 'username'
         });
     }
 
     if (!req.body.password) {
-        return res.status(405).json({
+        return res.status(401).json({
             message: `Password required.`,
             error_part: 'password'
         });
     }
 
     if (!validatePassword(req.body.password)) {
-        return res.status(405).json({
+        return res.status(401).json({
             message: `Password not strong enough.`,
             error_part: 'password'
         });
     }
 
     if (!await isAvailableUsername(req.body.username)) {
-        return res.status(405).json({
+        return res.status(401).json({
             message: `Username ${req.body.username} already in use`,
             error_part: 'username'
         });
@@ -87,7 +84,7 @@ userRouter.post('/create_new_user', async (req, res) => {
     let is_secured = !!req.body.email; //if email is provided, we will set the account as inactive and await activation
 
     if (is_secured && !is_valid_email(req.body.email)) {
-        return res.status(405).json({
+        return res.status(401).json({
             message: `Invalid email address.`,
             error_part: 'email'
         });
