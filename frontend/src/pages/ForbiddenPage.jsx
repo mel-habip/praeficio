@@ -22,7 +22,7 @@ export default function ForbiddenPage() {
       <h1>Ah! Sorry bud!</h1>
       <h2>Forbidden: You don't have access to this page 🙁 </h2>
       <h6>(this is a 403 error)</h6>
-      <img src={centerpiece} alt="forbidden-no-access" width="500" style={{ 'border-radius': '15px', filter: `drop-shadow(0 -10px 4.5rem ${isDark ? 'blue' : 'orange'})` }} />
+      <img src={centerpiece} alt="forbidden-no-access" width="500" style={{ borderRadius: '15px', filter: `drop-shadow(0 -10px 4.5rem ${isDark ? 'blue' : 'orange'})` }} />
       <br></br>
 
       <div style={{ display: 'flex', flexDirection: 'row', width: '50%' }} >

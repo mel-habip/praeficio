@@ -26,6 +26,9 @@ export default function TicTacToePage() {
     const { isLoggedIn } = useContext(IsLoggedInContext);
     const { isDark, toggleTheme } = useContext(ThemeContext);
 
+    const queryParams = new URLSearchParams(window.location.search);
+    const show_scores = queryParams.get("show_scores")?.trim()?.toLowerCase() === 'true';
+
     const [dimensions, setDimensions] = useState(3); //to later have 4*4, 5*5, 6*6 ... games
 
     const [pastMoves, setPastMoves] = useState([]);
@@ -77,14 +80,14 @@ export default function TicTacToePage() {
                 console.log(`AI player moves to #${bestMove}`);
                 move(bestMove, playerTwo);
             }
+        } else if (show_scores)  {
+            const { boardScores } = AlekSpecial(board, playerOne, playerTwo, winningArrangements);
+            setScoreBoard(boardScores);
         }
     }, [playerTurn]);
 
     return (<>
         {isLoggedIn && <NavMenu></NavMenu>}
-        {/* <pre>Board: {JSON.stringify(board, null, 0)}</pre>
-        <pre>Scores: {JSON.stringify(scoreBoard, null, 0)}</pre>
-        <pre>Last: {lastMove||'none'}</pre> */}
         {!isLoggedIn && <Button
             css={{ width: '4rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white', position: 'fixed', left: '0%', top: '0%', margin: '1rem' }}
             onPress={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"} /></Button>}
@@ -106,8 +109,20 @@ export default function TicTacToePage() {
                 </tr>)}
             </tbody>
         </table>
+        {show_scores && <table
+            className="tictactoe-grid" //table of scores
+        >
+            <tbody>
+                {Array.from({ length: dimensions }, (_, i) => i).map(x => <tr key={x + '-row'}>
+                    {Array.from({ length: dimensions }, (_, i) => i).map(y => <td
+                        onClick={() => move((dimensions * x) + y, playerOne)}
+                        key={y + '-cell'}
+                        className={`cell ${lastMove === ((dimensions * x) + y) ? 'is-last-move' : ''}`}>{scoreBoard[(dimensions * x) + y]?.toFixed(2)}</td>)}
+                </tr>)}
+            </tbody>
+        </table>}
         <h4 style={{ color: 'grey' }} > &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Round: {round}</h4>
-        <div style={{ position: 'absolute', right: '10px', bottom: '10px'}} >
+        <div style={{ position: 'absolute', right: '10px', bottom: '10px' }} >
             {/* <Suspense fallback={<Loading />}>
                 <AudioPlayer />
             </Suspense> */}
@@ -166,6 +181,7 @@ export default function TicTacToePage() {
 
     function reset() {
         console.log('called reset');
+        setPastMoves([]);
         setRound(1);
         setBoard(boardStart);
         setScoreBoard([]);
@@ -210,11 +226,11 @@ function AlekSpecial(board, player, opponent, winningArrangements) {
             }
         });
 
-        console.log(`arrangement & nums:`, arrangement, {
-            playerMarks,
-            opponentMarks,
-            openSpots
-        });
+        // console.log(`arrangement & nums:`, arrangement, {
+        //     playerMarks,
+        //     opponentMarks,
+        //     openSpots
+        // });
 
         if (openSpots === 1 && (!playerMarks || !opponentMarks)) {
             //means we are 1 step from winning or 1 step from loosing, so we should conquer the available spot.\

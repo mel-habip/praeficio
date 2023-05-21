@@ -9,7 +9,7 @@ import axios from 'axios';
 import NavMenu from '../../components/NavMenu';
 
 import { CustomButton } from '../../fields/CustomButton';
-import { Grid, Loading } from '@nextui-org/react';
+import { Grid, Loading, Button } from '@nextui-org/react';
 
 import LoadingPage from '../LoadingPage';
 
@@ -24,7 +24,7 @@ export default function Newsletters() {
     const [pageNumber, setPageNumber] = useState(1);
     const [hasMore, setHasMore] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-    
+
     const { isLoggedIn } = useContext(IsLoggedInContext);
     const { isDark, toggleTheme } = useContext(ThemeContext);
 
@@ -37,7 +37,6 @@ export default function Newsletters() {
             setIsLoading(false);
         }).catch(e => { setIsLoading(false); console.error(e); });
     }, [pageNumber]);
-
 
     const observer = useRef();
 
@@ -62,12 +61,12 @@ export default function Newsletters() {
                 onPress={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"} /></Button>}
             <h1>Newsletters</h1>
             <CustomButton style={{ position: 'absolute', right: '15px', top: '15px' }} to="/newsletters/admin" >Admin Portal <i className="fa-solid fa-angles-right" /></CustomButton>
-            <Grid.Container justify="center">
-                <Grid >
-                    {newsletterArticleList.map(({ newsletter_id, title, description, created_on, read_length, written_by_username, written_by_avatar, likes_count, content }, index) =>
-                        <NewsLetterCard key={index + '-card'} {...{ lastNewsLetterArticleRef: (newsletterArticleList.length === index + 1) ? lastNewsLetterArticleRef : undefined, newsletter_id, title, description, created_on, read_length, written_by_username, written_by_avatar, likes_count, content, index }} />)}
-                </Grid>
-
+            <Grid.Container justify="center" gap={2}>
+                {newsletterArticleList.map(({ newsletter_id, title, description, created_on, read_length, written_by_username, written_by_avatar, likes_count, content }, index) =>
+                    <Grid key={index + '-card'} css={{margin:'10px'}} >
+                        <NewsLetterCard  {...{ lastNewsLetterArticleRef: (newsletterArticleList.length === index + 1) ? lastNewsLetterArticleRef : undefined, newsletter_id, title, description, created_on, read_length, written_by_username, written_by_avatar, likes_count, content, index }} />
+                    </Grid>
+                )}
             </Grid.Container>
             {isLoading && <Loading />}
         </>
