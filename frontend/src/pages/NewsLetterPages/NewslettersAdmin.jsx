@@ -188,6 +188,7 @@ function AdminNewsletterCardWrap({ setNewsletterArticleList, ...card_details }) 
 
     const [deletionModalOpen, setDeletionModalOpen] = useState(false);
 
+    const [updateModalOpen, setUpdateModalOpen] = useState(false);
 
     return (
         <div style={{
@@ -205,12 +206,14 @@ function AdminNewsletterCardWrap({ setNewsletterArticleList, ...card_details }) 
             <div style={{ flexBasis: '100%', margin: '15px', marginBottom: '0' }} >
                 <CustomButton
                     disabled={!!card_details?.handled_externally}
+                    onClick={() => setUpdateModalOpen(true)}
                 ><i className="fa-regular fa-pen-to-square" /></CustomButton>
                 <CustomButton
                     onClick={() => setDeletionModalOpen(true)}
                 ><i className="fa-regular fa-trash-can" /></CustomButton>
             </div>
             <DeletionModal endPoint={`newsletters/${card_details.newsletter_id}`} selfOpen={deletionModalOpen} setSelfOpen={setDeletionModalOpen} titleText={`this Newsletter?`} bodyText={`Title: \t\t${card_details.title} \nDescription: \t${card_details.description} \nWritten By: \t${card_details.written_by_username} \nWritten On: \t${timestampFormatter(card_details.created_on)} \nLast Updated: \t${timestampFormatter(card_details.updated_on) || 'null'}`} outerUpdater={handleDelete} />
+            <NewsletterCreationModal selfOpen={updateModalOpen} setSelfOpen={setUpdateModalOpen} isEdit={true} startingValue={card_details} setNewsletterArticleList={setNewsletterArticleList} />
         </div>
     );
 
@@ -253,9 +256,9 @@ export default function NewslettersAdmin() {
                     <CustomButton style={{ position: 'absolute', right: '15px', bottom: '15px' }} onClick={() => setCreationModalOpen(true)} > Post a new Newsletter <i className="fa-regular fa-square-plus" /></CustomButton>
                     <NewsletterCreationModal selfOpen={creationModalOpen} setSelfOpen={setCreationModalOpen} setNewsletterArticleList={setNewsletterArticleList} isEdit={false} />
                     <Grid.Container justify="center" gap={2}>
-                        {newsletterArticleList.map(({ newsletter_id, title, description, created_on, read_length, written_by_username, written_by_avatar, likes_count, content, handled_externally }, index) =>
+                            {newsletterArticleList.map(({ newsletter_id, title, description, created_on, read_length, written_by_username, written_by_avatar, likes_count, content, handled_externally, pinned }, index) =>
                             <Grid key={index + '-card'}>
-                                <AdminNewsletterCardWrap  {...{ setNewsletterArticleList, newsletter_id, title, description, created_on, read_length, written_by_username, written_by_avatar, likes_count, content, index, handled_externally }} />
+                                <AdminNewsletterCardWrap  {...{ setNewsletterArticleList, newsletter_id, title, description, created_on, read_length, written_by_username, written_by_avatar, likes_count, content, index, handled_externally, pinned }} />
                             </Grid>
                         )}
                     </Grid.Container>
@@ -271,7 +274,7 @@ function NewsletterCreationModal({ selfOpen, setSelfOpen, isEdit = false, starti
 
     function handleEdit() {
         console.log('updating');
-        axios.put(`${process.env.REACT_APP_API_LINK}/newsletters/${formData.newsletter_id}`).then(response => {
+        axios.put(`${process.env.REACT_APP_API_LINK}/newsletters/${formData.newsletter_id}`, formData).then(response => {
             if (response.status === 200) {
                 setNewsletterArticleList(prev => prev.map(post => post.newsletter_id === startingValue.newsletter_id ? formData : post));
                 setSelfOpen(false);
@@ -296,6 +299,7 @@ function NewsletterCreationModal({ selfOpen, setSelfOpen, isEdit = false, starti
     const [formData, setFormData] = useState({ content: '' });
 
     useEffect(() => {
+        console.log('startingValue', startingValue)
         setFormData(startingValue);
     }, []);
 
@@ -306,7 +310,6 @@ function NewsletterCreationModal({ selfOpen, setSelfOpen, isEdit = false, starti
             fullScreen
             open={selfOpen}
             onClose={() => setSelfOpen(false)}
-            // css={{ 'background-color': '#0d0d0d' }} 
             closeButton
             blur
             aria-labelledby="modal-title"
@@ -314,9 +317,9 @@ function NewsletterCreationModal({ selfOpen, setSelfOpen, isEdit = false, starti
             <Modal.Header> <p>Let's post a new Newsletter! </p> </Modal.Header>
             <Modal.Body>
                 <Spacer y={1} />
-                <Input underlined clearable color="primary" labelPlaceholder='Title' onChange={e => setFormData(prev => ({ ...prev, title: e.target.value }))} />
-                <Input css={{ mt: '15px' }} underlined clearable color="primary" labelPlaceholder='Description' onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))} />
-                <Input css={{ mt: '15px' }} type="number" underlined clearable color="primary" labelPlaceholder='How many minutes to read?' onChange={e => setFormData(prev => ({ ...prev, read_length: parseFloat(e.target.value) }))} />
+                <Input value={formData.title} underlined clearable color="primary" labelPlaceholder='Title' onChange={e => setFormData(prev => ({ ...prev, title: e.target.value }))} />
+                <Input value={formData.description} css={{ mt: '15px' }} underlined clearable color="primary" labelPlaceholder='Description' onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))} />
+                <Input value={formData.read_length} css={{ mt: '15px' }} type="number" underlined clearable color="primary" labelPlaceholder='How many minutes to read?' onChange={e => setFormData(prev => ({ ...prev, read_length: parseFloat(e.target.value) }))} />
 
                 {formData.handled_externally ? <>
                     <Textarea
@@ -372,9 +375,9 @@ function NewsletterCreationModal({ selfOpen, setSelfOpen, isEdit = false, starti
                     }
                     }
                 >Save & Publish</CustomButton>
-                <Checkbox isDisabled  onChange={send_email => setFormData(prev => ({ ...prev, send_email }))}>Send as email</Checkbox>
-                <Checkbox onChange={pinned => setFormData(prev => ({ ...prev, pinned }))}>Pinned</Checkbox>
-                <Checkbox onChange={handled_externally => setFormData(prev => ({ ...prev, handled_externally }))} >Use custom HTML</Checkbox>
+                <Checkbox isDisabled onChange={send_email => setFormData(prev => ({ ...prev, send_email }))}>Send as email</Checkbox>
+                <Checkbox isSelected={!!formData.pinned} onChange={pinned => setFormData(prev => ({ ...prev, pinned }))}>Pinned</Checkbox>
+                <Checkbox isSelected={!!formData.handled_externally} onChange={handled_externally => setFormData(prev => ({ ...prev, handled_externally }))} >Use custom HTML</Checkbox>
             </Modal.Footer>
 
         </Modal >

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, lazy } from 'react';
+import React, { useState, useEffect, useContext, lazy, Suspense } from 'react';
 import { useParams } from 'react-router-dom'
 
 import { Link } from 'react-router-dom';
@@ -76,7 +76,9 @@ export default function SpecificFeedbackLogPage() {
     }
 
     return (<>
-        <NavMenu />
+        <Suspense fallback={<Loading />} >
+            <NavMenu />
+        </Suspense>
 
         <h1>{feedbackLogOwnDetails.name}</h1>
         <CustomButton to="/feedback_logs" buttonStyle="btn--outline"><i className="fa-solid fa-angles-left"></i> Back to My Feedback Logs</CustomButton>
@@ -630,7 +632,7 @@ function ThreadsModal({ user, item_id, is_open, set_is_open, setIsLoggedIn, disa
         open={is_open}
         onClose={() => set_is_open(false)}
         width='700px'
-        css={{maxHeight: '700px'}}
+        css={{ maxHeight: '700px' }}
     >
         <Modal.Body>
             <CustomButton
@@ -653,7 +655,9 @@ function ThreadsModal({ user, item_id, is_open, set_is_open, setIsLoggedIn, disa
                 style={{ 'align-self': 'flex-start' }}
             ><i className="fa-solid fa-rotate"></i> </CustomButton>
 
-            <MessengerSection messageList={messageList} user={user} />
+            <Suspense fallback={<Loading />} >
+                <MessengerSection messageList={messageList} user={user} />
+            </Suspense>
             <Row css={{ 'margin-top': '15px' }} justify='space-evenly' >
                 <Textarea
                     bordered

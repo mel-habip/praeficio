@@ -53,6 +53,23 @@ newsletterRouter.get('/', async (req, res) => {
     });
 });
 
+//fetch a single newsletter
+newsletterRouter.get('/:newsletter_id', async (req, res) => {
+    const fetch_job = await helper.fetch_by_id(req.params.newsletter_id, {
+        'newsletters.deleted': false
+    });
+
+    if (!fetch_job) {
+        return res.status(404).json({
+            message: 'Not found'
+        })
+    }
+
+    return res.status(200).json({
+        ...fetch_job
+    });
+});
+
 //create a new Newsletter
 newsletterRouter.post('/', validateAndSanitizeBodyParts({
     title: 'string',
@@ -116,6 +133,48 @@ newsletterRouter.delete('/:newsletter_id', authenticateToken, async (req, res) =
             message: deletion.message || 'Deleted',
             details: deletion.details,
         });
+    }
+
+    return res.status(422).json({
+        message: `Something went wrong`
+    });
+});
+
+
+newsletterRouter.put('/:newsletter_id', validateAndSanitizeBodyParts({
+    title: 'string',
+    description: 'string',
+    content: 'string',
+    read_length: 'number',
+    send_email: 'boolean',
+    pinned: 'boolean',
+    handled_externally: 'boolean',
+}), authenticateToken, async (req, res) => {
+
+    if (!req.user.permissions.startsWith('dev') && !req.user.is_total) {
+        return res.status(403).json({
+            message: `Forbidden: You do not have access to this.`
+        });
+    }
+
+    const fetch_job = await helper.fetch_by_id(req.params.newsletter_id);
+
+    if (!fetch_job) {
+        return res.status(404).json({
+            message: 'Not found'
+        })
+    }
+
+    if (fetch_job.deleted) {
+        return res.status(401).json({
+            message: 'Resource is deleted and cannot be edited.'
+        })
+    }
+
+    const update_job = await helper.update_single(req.body, req.params.newsletter_id);
+
+    if (update_job?.success) {
+        return res.status(200).json(update_job);
     }
 
     return res.status(422).json({
