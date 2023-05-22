@@ -5,9 +5,9 @@ import timestampFormatter from '../utils/timestampFormatter';
 
 
 
-export default function NewsLetterCard({ newsletter_id, title, description, created_on, read_length, written_by_username, written_by_avatar, likes_count = 0, content, lastNewsLetterArticleRef }) {
+export default function NewsLetterCard({ newsletter_id, title, description, created_on, read_length, written_by_username, written_by_avatar, likes_count = 0, content, lastNewsLetterArticleRef, expanded=false }) {
 
-    const [isExpanded, setIsExpanded] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(!!expanded);
 
     const created_on_formatted = useMemo(() => timestampFormatter(created_on), [created_on]);
 
