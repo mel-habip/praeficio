@@ -1,15 +1,23 @@
-import { useState, useEffect, useContext } from 'react';
-
+import { useState, useContext } from 'react';
+import ThemeContext from '../contexts/ThemeContext';
+import IsLoggedInContext from '../contexts/IsLoggedInContext';
 import WordListField from '../fields/WordList';
-
+import NavMenu from '../components/NavMenu';
 import { Button, Loading } from '@nextui-org/react';
 
-
 export default function RandomizerPage() {
+
+    const { isLoggedIn } = useContext(IsLoggedInContext);
+    const { isDark, toggleTheme } = useContext(ThemeContext);
+
+
     const [options, setOptions] = useState([]);
 
     return (
         <>
+            {isLoggedIn ? <NavMenu /> : <Button
+                css={{ width: '4rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white', position: 'fixed', left: '0%', top: '0%', margin: '1rem' }}
+                onPress={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"} /></Button>}
             <WordListField style={{ maxWidth: '400px' }} onListChange={v => setOptions(v)}>Enter your values here and hit "Enter" to detect</WordListField>
             <br />
             <br />
