@@ -208,7 +208,7 @@ export default class RecordService {
         const offsetText = offset ? ` OFFSET ${offset}` : '';
 
         let sql_2;
-        
+
         if (this.fetch_sql) {
             sql_2 = `${this.fetch_sql} ${keys.length ? 'WHERE ': ''}` + keys.map(a => a + ' = ?').join(',') + limitText + offsetText
         }
@@ -241,6 +241,18 @@ export default class RecordService {
             message: result?.affectedRows ? `deleted ${result?.affectedRows}` : 'failed',
             details: result
         };
+    }
+
+    un_soft_delete = async (...record_ids) => {
+        return await this.update_single({
+            deleted: false
+        }, ...record_ids);
+    }
+
+    soft_delete = async (...record_ids) => {
+        return await this.update_single({
+            deleted: true
+        }, ...record_ids);
     }
 
     /**
@@ -327,6 +339,9 @@ export default class RecordService {
         }
     }
 
+    /**
+     * @returns {Promise<{primary_key: number} | undefined>}
+     */
     async confirm_exists_by_id(...record_ids) {
         const table_name = this.table_name || recordTypeMap.table_names[this.record_type];
 

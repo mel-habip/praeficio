@@ -20,6 +20,7 @@ const Workspaces = lazy(() => import('./pages/Workspaces.jsx'));
 const ToDos = lazy(() => import('./pages/ToDos.jsx'));
 const TestZone = lazy(() => import('./pages/TestZone'));
 const TicTacToePage = lazy(() => import('./pages/TicTacToePage.jsx'));
+const RandomizerPage = lazy(() => import('./pages/RandomizerPage.jsx'));
 const FeedbackLogsPage = lazy(() => import('./pages/FeedbackLogsPage.jsx'));
 const SpecificFeedbackLogPage = lazy(() => import('./pages/SpecificFeedbackLogPage.jsx'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
@@ -114,14 +115,16 @@ function App() {
                   <Route path='/home' element={<Navigate to="/portal" replace />} />
                   <Route path='/portal' element={isLoggedIn ? <Portal /> : <LoginPage />} exact />
                   <Route path='/newsletters' element={<Newsletters />} exact />
-                  <Route path='/newsletters/admin' element={isLoggedIn ? ((['basic_client', 'pro_client'].includes(user?.permissions) && user?.permissions) ? <Navigate to="/403" replace /> : <NewslettersAdmin />) : <LoginPage />} exact />
-                  <Route path='/login' element={<LoginPage />} exact />
+                  <Route path='/newsletters/admin' element={isLoggedIn ? ((user?.permissions?.startsWith('dev_') || user?.is_total) ? <NewslettersAdmin /> : <Navigate to="/403" replace />) : <LoginPage />} exact />
+                  <Route path='/login' element={isLoggedIn ? <Navigate to="/home" replace /> : <LoginPage />} exact />
                   <Route path='/positions' element={isLoggedIn ? <Positions /> : <LoginPage />} exact />
                   <Route path='/alerts' element={isLoggedIn ? <Alerts /> : <LoginPage />} exact />
 
                   <Route path="/tic-tac-toe" element={<Navigate to="/tictactoe" replace />} />
                   <Route path="/tic_tac_toe" element={<Navigate to="/tictactoe" replace />} />
                   <Route path='/tictactoe' element={<TicTacToePage />} />
+
+                  <Route path='/randomizer' element={<RandomizerPage />} />
 
                   <Route path="/workspaces" element={<Navigate to="/workspaces/my_workspaces" replace />} />
 

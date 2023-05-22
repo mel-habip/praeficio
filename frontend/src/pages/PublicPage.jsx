@@ -1,12 +1,15 @@
 import React, { useState, useContext, lazy, Suspense, useRef, useEffect } from 'react';
 import { animateScroll, scroller, Element } from 'react-scroll';
 import ThemeContext from '../contexts/ThemeContext';
+import IsLoggedInContext from '../contexts/IsLoggedInContext';
+
 import axios from 'axios';
+
+import NavMenu from '../components/NavMenu';
 
 import './stylesheets/PublicPage.css';
 
 import is_valid_email from '../utils/is_valid_email';
-import ErrorModule from '../components/ErrorModule';
 
 import { CustomButton } from '../fields/CustomButton';
 
@@ -15,6 +18,7 @@ import { Button, Modal, Spacer, Text, Badge, Tooltip, Input, Textarea, Loading }
 import videoBg1 from '../media/sparkly_world_video.mp4';
 
 const AudioPlayer = lazy(() => import('../components/AudioPlayer'));
+const ErrorModule = lazy(() => import('../components/ErrorModule'));
 
 
 const referralCodes = {
@@ -131,6 +135,7 @@ export default function PublicPage() {
 
     const showIncompletePage = process.env.REACT_APP_BUILD_ENV === 'beta';
 
+    const { isLoggedIn } = useContext(IsLoggedInContext);
     const { isDark, toggleTheme } = useContext(ThemeContext);
     const queryParams = new URLSearchParams(window.location.search);
     const referral_code = queryParams.get("referral_code");
@@ -180,7 +185,11 @@ export default function PublicPage() {
     }, []);
 
     return (<>
+
         <main className="public-site-body scroll-container" style={{ height: '300svh', scrollSnapType: 'y mandatory', width: '100vw', 'overflowBehaviorY': 'contain' }} >
+            {isLoggedIn ? <NavMenu /> : <Button
+                css={{ width: '4rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white', position: 'fixed', left: '0%', top: '0%', margin: '1rem' }}
+                onPress={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"} /></Button>}
 
             <div className="audio-player-wrapper" >
                 <Suspense fallback={<Loading />}>
@@ -191,9 +200,6 @@ export default function PublicPage() {
                 <section ref={pageMainSection} className="chapter" >
                     <video src={videoBg1} autoPlay loop className={`background-video-1 ${isDark ? '' : 'invert'}`} muted playsInline />
                     <div className="section-contents" style={{ position: 'absolute', top: '0%', left: '0%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%' }} >
-                        <Button
-                            css={{ width: '4rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white', position: 'fixed', left: '0%', top: '0%', margin: '1rem' }}
-                            onPress={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"}></i></Button>
                         <h1>Praeficio.com</h1>
                         <div style={{ position: 'absolute', top: '3%', right: '2%', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', height: '95%' }}>
                             <Tooltip content={lang !== 'fr' ? "Veuillez noter que notre capacité en français est limitée." : ""} placement="leftEnd" color="invert" >
@@ -273,6 +279,18 @@ export default function PublicPage() {
                             {/* add the same length based detection here */}
                             <Button>Send</Button>
                         </form>
+                        <br />
+                        <div style={{ borderRadius: '1rem', backgroundColor: 'var(--background-color)', fontWeight: 'normal', textAlign: 'left', width: '50%', padding: '20px', position: 'relative', left: '25%' }} >
+                            <p>Public Links: </p>
+                            <ul>
+                                <li> <CustomButton to="/newsLetters">NewsLetters <i className="fa-regular fa-newspaper" /></CustomButton> </li>
+                                <li> <CustomButton to="/tic-tac-toe">Tic-Tac-Toe <i className="fa-solid fa-table-cells-large" /></CustomButton> </li>
+                                <li> <CustomButton to="/randomizer">Randomizer <i className="fa-solid fa-dice" /></CustomButton> </li>
+                                <li> <CustomButton to="/404">An awesome 404 page 😬</CustomButton> </li>
+                                <li> <CustomButton to="/403">An awesome 403 page ✋</CustomButton> </li>
+                                <li> <CustomButton to="/500">An awesome error page 💀</CustomButton> </li>
+                            </ul>
+                        </div>
                     </div>
                 </section>
             </Element>
@@ -300,7 +318,9 @@ function SubscriptionModal({ isOpen, setIsOpen, lang }) {
             <Text size={14} css={{ 'text-align': 'center' }}>{sentences.join_header[lang]}</Text>
         </Modal.Header>
         <Modal.Body>
-            <ErrorModule errorMessage={errorTexts.general}></ErrorModule>
+            <Suspense fallback="1 sec" >
+                <ErrorModule errorMessage={errorTexts.general}></ErrorModule>
+            </Suspense>
             <form
                 style={{ display: 'flex', justifyContent: 'flex-start', flexDirection: 'column' }}
                 onSubmit={e => {

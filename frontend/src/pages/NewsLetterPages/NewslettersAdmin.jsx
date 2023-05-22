@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, lazy, Suspense } from 'react';
 import axios from 'axios';
 
 import IsLoggedInContext from '../../contexts/IsLoggedInContext';
@@ -10,15 +10,22 @@ import LoadingPage from '../LoadingPage';
 
 import '../stylesheets/NewslettersAdmin.css';
 
+import timestampFormatter from '../../utils/timestampFormatter';
+
 import { CustomButton } from '../../fields/CustomButton';
 import toUniqueArray from '../../utils/toUniqueArray';
 
 import NewsLetterCard from '../../components/NewsLetterCard.jsx';
 
-import { Card, Checkbox, Modal, Grid } from '@nextui-org/react';
+import { Checkbox, Modal, Grid, Input, Loading, Spacer, Textarea } from '@nextui-org/react';
 
-import ClassicEditor from "@ckeditor/ckeditor5-build-classic"
-import { CKEditor } from "@ckeditor/ckeditor5-react"
+import ErrorBoundary from '../../ErrorBoundary.jsx';
+
+import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+
+import { CKEditor } from "@ckeditor/ckeditor5-react";
+
+const now = new Date(); //initializing here to avoid updating over and over again
 
 const config = undefined && {
     // https://ckeditor.com/docs/ckeditor5/latest/features/toolbar/toolbar.html#extended-toolbar-configuration-format
@@ -167,7 +174,21 @@ const config = undefined && {
     ]
 };
 
-function AdminNewsletterCardWrap({ ...card_details }) {
+function AdminNewsletterCardWrap({ setNewsletterArticleList, ...card_details }) {
+
+    function handleDelete() {
+        // axios.delete(`${process.env.REACT_APP_API_LINK}/newsletters/${card_details.newsletter_id}`).then(response => {
+        // if (response.status === 200) {
+        setNewsletterArticleList(prev => prev.filter(post => post.newsletter_id !== card_details.newsletter_id))
+        // } else {
+        // console.log('deletion', response);
+        // }
+        // });
+    }
+
+    const [deletionModalOpen, setDeletionModalOpen] = useState(false);
+
+
     return (
         <div style={{
             paddingTop: '5px',
@@ -182,9 +203,14 @@ function AdminNewsletterCardWrap({ ...card_details }) {
         }} >
             <NewsLetterCard {...{ ...card_details }} />
             <div style={{ flexBasis: '100%', margin: '15px', marginBottom: '0' }} >
-                <CustomButton disabled={!!card_details?.handled_externally} ><i className="fa-regular fa-pen-to-square" /></CustomButton>
-                <CustomButton><i className="fa-regular fa-trash-can" /></CustomButton>
+                <CustomButton
+                    disabled={!!card_details?.handled_externally}
+                ><i className="fa-regular fa-pen-to-square" /></CustomButton>
+                <CustomButton
+                    onClick={() => setDeletionModalOpen(true)}
+                ><i className="fa-regular fa-trash-can" /></CustomButton>
             </div>
+            <DeletionModal endPoint={`newsletters/${card_details.newsletter_id}`} selfOpen={deletionModalOpen} setSelfOpen={setDeletionModalOpen} titleText={`this Newsletter?`} bodyText={`Title: \t\t${card_details.title} \nDescription: \t${card_details.description} \nWritten By: \t${card_details.written_by_username} \nWritten On: \t${timestampFormatter(card_details.created_on)} \nLast Updated: \t${timestampFormatter(card_details.updated_on) || 'null'}`} outerUpdater={handleDelete} />
         </div>
     );
 
@@ -225,15 +251,14 @@ export default function NewslettersAdmin() {
 
                     <CustomButton style={{ position: 'absolute', right: '15px', top: '15px' }} to="/newsletters"> To public view <i className="fa-solid fa-angles-right" /></CustomButton>
                     <CustomButton style={{ position: 'absolute', right: '15px', bottom: '15px' }} onClick={() => setCreationModalOpen(true)} > Post a new Newsletter <i className="fa-regular fa-square-plus" /></CustomButton>
-                    <NewsletterCreationModal selfOpen={creationModalOpen} setSelfOpen={setCreationModalOpen} />
-                    <Grid.Container justify="center">
-                        <Grid >
-                            {newsletterArticleList.map(({ newsletter_id, title, description, created_on, read_length, written_by_username, written_by_avatar, likes_count, content, handled_externally }, index) =>
-                                <AdminNewsletterCardWrap key={index + '-card'} {...{ newsletter_id, title, description, created_on, read_length, written_by_username, written_by_avatar, likes_count, content, index, handled_externally }} />)}
-                        </Grid>
-
+                    <NewsletterCreationModal selfOpen={creationModalOpen} setSelfOpen={setCreationModalOpen} setNewsletterArticleList={setNewsletterArticleList} isEdit={false} />
+                    <Grid.Container justify="center" gap={2}>
+                        {newsletterArticleList.map(({ newsletter_id, title, description, created_on, read_length, written_by_username, written_by_avatar, likes_count, content, handled_externally }, index) =>
+                            <Grid key={index + '-card'}>
+                                <AdminNewsletterCardWrap  {...{ setNewsletterArticleList, newsletter_id, title, description, created_on, read_length, written_by_username, written_by_avatar, likes_count, content, index, handled_externally }} />
+                            </Grid>
+                        )}
                     </Grid.Container>
-
                 </>
             }
         </>
@@ -242,10 +267,37 @@ export default function NewslettersAdmin() {
 
 
 
-function NewsletterCreationModal({ selfOpen, setSelfOpen }) {
-    const [text, setText] = useState("");
+function NewsletterCreationModal({ selfOpen, setSelfOpen, isEdit = false, startingValue = {}, setNewsletterArticleList = () => { } }) {
 
-    const [options, setOptions] = useState({});
+    function handleEdit() {
+        console.log('updating');
+        axios.put(`${process.env.REACT_APP_API_LINK}/newsletters/${formData.newsletter_id}`).then(response => {
+            if (response.status === 200) {
+                setNewsletterArticleList(prev => prev.map(post => post.newsletter_id === startingValue.newsletter_id ? formData : post));
+                setSelfOpen(false);
+            } else {
+                console.log('edit request', response);
+            }
+        });
+    }
+
+    function handleCreate() {
+        console.log('creating');
+        axios.post(`${process.env.REACT_APP_API_LINK}/newsletters/`, formData).then(response => {
+            if (response.status === 201) {
+                setNewsletterArticleList(prev => prev.concat({ ...response.data }));
+                setSelfOpen(false);
+            } else {
+                console.log('creation', response);
+            }
+        });
+    }
+
+    const [formData, setFormData] = useState({ content: '' });
+
+    useEffect(() => {
+        setFormData(startingValue);
+    }, []);
 
     const { setIsLoggedIn, user } = useContext(IsLoggedInContext);
 
@@ -261,28 +313,48 @@ function NewsletterCreationModal({ selfOpen, setSelfOpen }) {
         >
             <Modal.Header> <p>Let's post a new Newsletter! </p> </Modal.Header>
             <Modal.Body>
-                {options.handle_externally ? <h2>Type here</h2> :
+                <Spacer y={1} />
+                <Input underlined clearable color="primary" labelPlaceholder='Title' onChange={e => setFormData(prev => ({ ...prev, title: e.target.value }))} />
+                <Input css={{ mt: '15px' }} underlined clearable color="primary" labelPlaceholder='Description' onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))} />
+                <Input css={{ mt: '15px' }} type="number" underlined clearable color="primary" labelPlaceholder='How many minutes to read?' onChange={e => setFormData(prev => ({ ...prev, read_length: parseFloat(e.target.value) }))} />
+
+                {formData.handled_externally ? <>
+                    <Textarea
+                        css={{ mt: '15px' }}
+                        value={formData.content}
+                        onChange={e => setFormData(prev => ({ ...prev, content: e.target.value }))}
+                        bordered
+                        minRows={10}
+                        maxRows={20}
+                        color="default"
+                        labelPlaceholder='Type here' ></Textarea>
+                        <em>Note: Avoid using the line break characters (\n \r \f \b) as they will be removed when saved. </em>
+                </> :
                     <div className="editor">
-                        <CKEditor
-                            editor={ClassicEditor}
-                            data={text}
-                            config={config}
-                            onChange={(event, editor) => {
-                                const data = editor.getData();
-                                console.log(data);
-                                setText(data);
-                            }}
-                        />
+                        <ErrorBoundary fallback={<h1>ERROR!</h1>} >
+                            {/* <Suspense fallback={<Loading />} > */}
+                            <CKEditor
+                                editor={ClassicEditor}
+                                data={formData.content || ''}
+                                config={config}
+                                onChange={(event, editor) => {
+                                    const data = editor.getData();
+                                    setFormData(prev => ({ ...prev, content: data }));
+                                }}
+                            />
+                            {/* </Suspense> */}
+                        </ErrorBoundary>
                     </div>
                 }
                 <div>
                     <h1>Result</h1>
                     <NewsLetterCard
-                        content={text}
-                        created_on={new Date()}
-                        description="description"
+                        title={formData.title}
+                        content={formData.content || ''}
+                        created_on={now}
+                        description={formData.description}
                         likes_count={0}
-                        read_length={0}
+                        read_length={formData.read_length}
                         newsletter_id={999999}
                         index={0}
                         written_by_username={user?.username}
@@ -290,12 +362,21 @@ function NewsletterCreationModal({ selfOpen, setSelfOpen }) {
                 </div>
             </Modal.Body>
             <Modal.Footer>
-                <CustomButton >Save & Publish</CustomButton>
-                <Checkbox onChange={send_email => setOptions(prev => ({ ...prev, send_email }))}>Send as email</Checkbox>
-                <Checkbox onChange={pinned => setOptions(prev => ({ ...prev, pinned }))}>Pinned</Checkbox>
-                <Checkbox onChange={handle_externally => setOptions({ ...options, handle_externally })} >Use custom HTML</Checkbox>
+                <CustomButton
+                    onClick={() => {
+                        if (isEdit) {
+                            handleEdit()
+                        } else {
+                            handleCreate()
+                        }
+                    }
+                    }
+                >Save & Publish</CustomButton>
+                <Checkbox isDisabled  onChange={send_email => setFormData(prev => ({ ...prev, send_email }))}>Send as email</Checkbox>
+                <Checkbox onChange={pinned => setFormData(prev => ({ ...prev, pinned }))}>Pinned</Checkbox>
+                <Checkbox onChange={handled_externally => setFormData(prev => ({ ...prev, handled_externally }))} >Use custom HTML</Checkbox>
             </Modal.Footer>
 
-        </Modal>
+        </Modal >
     );
 }

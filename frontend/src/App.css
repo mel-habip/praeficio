@@ -6,6 +6,7 @@
   --accent: purple;
   --link-color: darkblue;
   --border_color: darkgrey;
+  --modal-background: lightgrey;
   overflow-x: hidden;
   overflow-y: auto;
   --nextui-colors-accents0: lightgrey;
@@ -37,6 +38,10 @@ body {
 
 a {
   color: var(--link-color);
+}
+
+ul li {
+  display: list-item;
 }
 
 .App {

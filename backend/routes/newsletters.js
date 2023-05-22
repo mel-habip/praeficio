@@ -59,51 +59,57 @@ newsletterRouter.post('/', validateAndSanitizeBodyParts({
     description: 'string',
     content: 'string',
     read_length: 'number',
-    send_newsletter_email_out: 'boolean'
-}, ['title', 'description', 'content', 'read_length']), authenticateToken, async (req, res) => {
+    send_email: 'boolean',
+    pinned: 'boolean',
+    handled_externally: 'boolean'
+}, ['title', 'description', 'content']), authenticateToken, async (req, res) => {
+
+    if (!req.user.permissions.startsWith('dev') && !req.user.is_total) {
+        return res.status(403).json({
+            message: `Forbidden: You do not have access to this.`
+        });
+    }
 
     const created = await helper.create_single({
         title: req.body.title,
         description: req.body.description,
-        content: req.body.content,
-        written_by: req.user.id
+        content: removeExtraSpaces(req.body.content),
+        written_by: req.user.id,
+        read_length: req.body.read_length || 0,
+        pinned: req.body.pinned,
+        handled_externally: req.body.handled_externally,
     });
 
-    if (created) {
+    if (created?.success) {
         return res.status(201).json({
-            ...created
+            ...created?.details
         });
     }
 
     return res.status(422).json({
-        message: `Something went wrong`
+        message: `Something went wrong`,
+        details: created
     });
 });
 
-//remove a subscription
-newsletterRouter.delete('/', validateAndSanitizeBodyParts({
-    email: 'email',
-    unsubscription_token: 'string'
-}, ['email', 'unsubscription_token']), async (req, res) => {
+//delete a newsletter
+newsletterRouter.delete('/:newsletter_id', authenticateToken, async (req, res) => {
 
-    { //check if provided token matches 
-        const unsubscription_token = jwt.sign(req.body.email, process.env.UNSUBSCRIPTION_TOKEN_SECRET_KEY);
-        if (unsubscription_token !== req.body.unsubscription_token) return res.status(400).json({
-            message: `Invalid token`
+    if (!['total', 'dev_lead'].includes(req.user.permissions)) {
+        return res.status(403).json({
+            message: `Forbidden: You do not have access to this.`
         });
     }
 
-    { //check if subscription exists
-        const SQL = `SELECT created_on FROM subscribers WHERE email = ?`;
-        const [existing] = await query(SQL, req.body.email);
-        if (!existing) return res.status(400).json({
-            message: 'Subscription not found'
+    const confirm_exists = await helper.confirm_exists_by_id(req.params.newsletter_id);
+
+    if (!confirm_exists) {
+        return res.status(404).json({
+            message: `Not Found: newsletter ${req.params.newsletter_id} does not exist.`
         });
     }
 
-    const deletion = await helper.hard_delete({
-        email: req.body.email
-    });
+    const deletion = await helper.soft_delete(req.params.newsletter_id)
 
     if (deletion?.success) {
         return res.status(200).json({
@@ -119,3 +125,14 @@ newsletterRouter.delete('/', validateAndSanitizeBodyParts({
 
 
 export default newsletterRouter;
+
+
+function removeExtraSpaces(str = '') {
+    str = str.replace(/[\r\n\f\b]/gi, ''); //get ride of line breaks
+
+    while (str.includes('  ')) { //convert all double spaces into single. Not the most efficient way to do it but it's fine
+        str = str.replaceAll('  ', ' ');
+    }
+
+    return str;
+}

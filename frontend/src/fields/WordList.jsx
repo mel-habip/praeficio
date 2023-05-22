@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 
 import './WordList.css';
 
-export default function WordListField({ onListChange = (e) => console.log('got: ', e) }) {
+/**
+ * @param {function} onListChange 
+ */
+export default function WordListField({ style = {}, onListChange = (e) => console.log('got: ', e) }) {
     const [inputValue, setInputValue] = useState('');
     const [wordList, setWordList] = useState([]);
 
@@ -46,31 +49,29 @@ export default function WordListField({ onListChange = (e) => console.log('got: 
     };
 
     return (
-        <div>
-            <div className="word-list-container">
-                {wordList.map((word) => (
-                    <div className="word-list-bubble" key={word}>
-                        {word}
-                        <button
-                            type="button"
-                            className="word-list-bubble-delete-button"
-                            onClick={() => handleDeleteWord(word)}
+        <div className="word-list-container" style={style}>
+            {wordList.map((word) => (
+                <div className="word-list-bubble" key={word}>
+                    {word}
+                    <button
+                        type="button"
+                        className="word-list-bubble-delete-button"
+                        onClick={() => handleDeleteWord(word)}
 
-                        >
-                            X
-                        </button>
-                    </div>
-                ))}
-                <input
-                    type="text"
-                    className="word-list-input"
-                    placeholder="Add a word"
-                    value={inputValue}
-                    onChange={handleInputChange}
-                    // onBlur={handleBlur}
-                    onKeyDown={handleKeyDown}
-                />
-            </div>
+                    >
+                        X
+                    </button>
+                </div>
+            ))}
+            <input
+                type="text"
+                className="word-list-input"
+                placeholder="Add a word"
+                value={inputValue}
+                onChange={handleInputChange}
+                // onBlur={handleBlur}
+                onKeyDown={handleKeyDown}
+            />
         </div>
     );
 }

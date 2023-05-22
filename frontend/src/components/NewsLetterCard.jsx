@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card } from '@nextui-org/react';
 
 import timestampFormatter from '../utils/timestampFormatter';
@@ -8,6 +8,8 @@ import timestampFormatter from '../utils/timestampFormatter';
 export default function NewsLetterCard({ newsletter_id, title, description, created_on, read_length, written_by_username, written_by_avatar, likes_count = 0, content, lastNewsLetterArticleRef }) {
 
     const [isExpanded, setIsExpanded] = useState(false);
+
+    const created_on_formatted = useMemo(() => timestampFormatter(created_on), [created_on]);
 
     const toggleExpansion = () => setIsExpanded(prev => !prev);
 
@@ -26,7 +28,7 @@ export default function NewsLetterCard({ newsletter_id, title, description, crea
                 borderRight: 'none'
             }} onClick={toggleExpansion}>Show {isExpanded ? 'less' : 'more'}...</button>
             {isExpanded && <div dangerouslySetInnerHTML={{ __html: content }} />}
-            <p>Created At: {timestampFormatter(created_on)}</p>
+            <p>Created At: {created_on_formatted}</p>
             <p>Written By: {written_by_username}</p>
             <p>{likes_count} <i className="fa fa-heart" /> </p>
             {written_by_avatar && <img src={written_by_avatar} />}

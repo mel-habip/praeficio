@@ -380,7 +380,6 @@ function FeedbackLogTable({ user, feedbackLogItems = [], updateCachedItems, setI
     const keyword = React.useMemo(() => searchText.trim().toLowerCase(), [searchText]);
 
     useEffect(() => {
-
         if (!keyword || !searchText) {
             list.setFilterText('');
             return;
