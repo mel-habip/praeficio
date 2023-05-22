@@ -210,7 +210,7 @@ export default function ToDos({ archive }) {
                         )}
                     </Dropdown.Menu>
                 </Dropdown>
-
+                <em>Note: You can create custom categories in the <a href="/settings">"Settings"</a>  page.</em>
                 <Button
                     disabled={!content.text || !content.category}
                     shadow
