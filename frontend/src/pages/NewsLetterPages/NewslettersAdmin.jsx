@@ -17,7 +17,7 @@ import toUniqueArray from '../../utils/toUniqueArray';
 
 import NewsLetterCard from '../../components/NewsLetterCard.jsx';
 
-import { Checkbox, Modal, Grid, Input, Loading, Spacer } from '@nextui-org/react';
+import { Checkbox, Modal, Grid, Input, Loading, Spacer, Textarea } from '@nextui-org/react';
 
 import ErrorBoundary from '../../ErrorBoundary.jsx';
 
@@ -318,20 +318,31 @@ function NewsletterCreationModal({ selfOpen, setSelfOpen, isEdit = false, starti
                 <Input css={{ mt: '15px' }} underlined clearable color="primary" labelPlaceholder='Description' onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))} />
                 <Input css={{ mt: '15px' }} type="number" underlined clearable color="primary" labelPlaceholder='How many minutes to read?' onChange={e => setFormData(prev => ({ ...prev, read_length: parseFloat(e.target.value) }))} />
 
-                {formData.handled_externally ? <h2>Type here</h2> :
+                {formData.handled_externally ? <>
+                    <Textarea
+                        css={{ mt: '15px' }}
+                        value={formData.content}
+                        onChange={e => setFormData(prev => ({ ...prev, content: e.target.value }))}
+                        bordered
+                        minRows={10}
+                        maxRows={20}
+                        color="default"
+                        labelPlaceholder='Type here' ></Textarea>
+                        <em>Note: Avoid using the line break characters (\n \r \f \b) as they will be removed when saved. </em>
+                </> :
                     <div className="editor">
                         <ErrorBoundary fallback={<h1>ERROR!</h1>} >
-                            <Suspense fallback={<Loading />} >
-                                <CKEditor
-                                    editor={ClassicEditor}
-                                    data={formData.content || ''}
-                                    config={config}
-                                    onChange={(event, editor) => {
-                                        const data = editor.getData();
-                                        setFormData(prev => ({ ...prev, content: data }));
-                                    }}
-                                />
-                            </Suspense>
+                            {/* <Suspense fallback={<Loading />} > */}
+                            <CKEditor
+                                editor={ClassicEditor}
+                                data={formData.content || ''}
+                                config={config}
+                                onChange={(event, editor) => {
+                                    const data = editor.getData();
+                                    setFormData(prev => ({ ...prev, content: data }));
+                                }}
+                            />
+                            {/* </Suspense> */}
                         </ErrorBoundary>
                     </div>
                 }
@@ -361,7 +372,7 @@ function NewsletterCreationModal({ selfOpen, setSelfOpen, isEdit = false, starti
                     }
                     }
                 >Save & Publish</CustomButton>
-                <Checkbox onChange={send_email => setFormData(prev => ({ ...prev, send_email }))}>Send as email</Checkbox>
+                <Checkbox isDisabled  onChange={send_email => setFormData(prev => ({ ...prev, send_email }))}>Send as email</Checkbox>
                 <Checkbox onChange={pinned => setFormData(prev => ({ ...prev, pinned }))}>Pinned</Checkbox>
                 <Checkbox onChange={handled_externally => setFormData(prev => ({ ...prev, handled_externally }))} >Use custom HTML</Checkbox>
             </Modal.Footer>

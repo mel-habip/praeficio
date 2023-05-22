@@ -73,7 +73,7 @@ newsletterRouter.post('/', validateAndSanitizeBodyParts({
     const created = await helper.create_single({
         title: req.body.title,
         description: req.body.description,
-        content: req.body.content,
+        content: removeExtraSpaces(req.body.content),
         written_by: req.user.id,
         read_length: req.body.read_length || 0,
         pinned: req.body.pinned,
@@ -125,3 +125,14 @@ newsletterRouter.delete('/:newsletter_id', authenticateToken, async (req, res) =
 
 
 export default newsletterRouter;
+
+
+function removeExtraSpaces(str = '') {
+    str = str.replace(/[\r\n\f\b]/gi, ''); //get ride of line breaks
+
+    while (str.includes('  ')) { //convert all double spaces into single. Not the most efficient way to do it but it's fine
+        str = str.replaceAll('  ', ' ');
+    }
+
+    return str;
+}
