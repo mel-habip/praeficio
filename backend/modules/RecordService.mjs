@@ -162,7 +162,7 @@ export default class RecordService {
                 return feedbackLogItemMessage;
             }
             case 'Newsletter': {
-                const sql = `${this.fetch_sql} WHERE newsletter_id = ? ${constraint_stringifier(constraints)} LIMIT 1;`;
+                const sql = `${this.fetch_sql} WHERE newsletter_id = ? ${constraint_stringifier(constraints)} LIMIT 1 ORDER BY created_on ASC;`;
                 const [newsletter] = await query(sql, record_id_1);
                 return newsletter;
             }

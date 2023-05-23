@@ -16,6 +16,8 @@ import is_valid_email from '../utils/is_valid_email.js';
 import emailService from '../jobs/emailService.js';
 import validatePassword from '../../frontend/src/utils/validatePassword.mjs';
 import UserService from '../modules/UserService.mjs';
+import validateAndSanitizeBodyParts from '../jobs/validateAndSanitizeBodyParts.js';
+
 
 const helper = new UserService();
 
@@ -196,18 +198,10 @@ userRouter.post('/pre_signed_create_new_user', authenticateToken, async (req, re
     });
 });
 
-userRouter.post('/login', async (req, res) => {
-    if (!req.body?.username) {
-        return res.status(401).json({
-            message: `Username required.`,
-            error_part: 'username'
-        });
-    } else if (!req.body?.password) {
-        return res.status(401).json({
-            message: `Password required.`,
-            error_part: 'password'
-        });
-    }
+userRouter.post('/login', validateAndSanitizeBodyParts({
+    username: 'string',
+    password: 'string'
+}, ['username', 'password']), async (req, res) => {
 
     let sql = `SELECT * FROM users WHERE username = ?`;
 
@@ -246,6 +240,79 @@ userRouter.post('/login', async (req, res) => {
                 error_part: 'password'
             });
         }
+    });
+});
+
+
+userRouter.post('/login_with_recovery_code', validateAndSanitizeBodyParts({
+    username: 'string',
+    recovery_code: 'string'
+}, ['username', 'recovery_code']), async (req, res) => {
+
+    let sql = `SELECT * FROM users WHERE username = ?`;
+
+    const [user_details] = await query(sql, req.body.username);
+
+    if (!user_details || result?.deleted) {
+        return res.status(401).json({
+            message: `Username not recognized`,
+            error_part: 'username'
+        });
+    };
+
+    if (!result.active) {
+        return res.status(401).json({
+            message: `Cannot Login to Inactive Account. Must Activate first.`,
+            error_part: 'inactive'
+        });
+    };
+
+    const recovery_codes = {};
+
+    const allowed_number_of_recovery_codes = 10;
+
+    let user_remaining_codes = 0;
+
+    for (let i = 1; i <= allowed_number_of_recovery_codes; i++) {
+        if (user_details[`recovery_code_${i}`]) {
+            user_remaining_codes++;
+            recovery_codes[i] = user_details[`recovery_code_${i}`];
+        }
+    }
+
+    if (!user_remaining_codes) { //means user used up all 10 already
+        return res.status(401).json({
+            message: `You do not have any remaining recovery codes.`,
+            error_part: 'all_recovery_codes_used'
+        });
+    }
+
+    for await (const [pos, code] of Object.entries(recovery_codes)) {
+        if (await bcrypt.compare(req.body.recovery_code, code)) {
+            await helper.update_single({ //invalidate the code
+                [`recovery_code_${pos}`]: null
+            }, [user_details.user_id]);
+            const user = {
+                id: user_details.user_id,
+            };
+            const access_token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET_KEY);
+            return res.status(200).json({
+                user_id: user_details.user_id,
+                first_name: user_details.first_name,
+                last_name: user_details.last_name,
+                created_on: user_details.created_on,
+                message: `Recovery Code #${pos} consumed. Successfully logged in.`,
+                access_token,
+                to_do_categories: user_details.to_do_categories,
+                use_beta_features: user_details.use_beta_features,
+                permissions: user_details.permissions,
+            });
+        }
+    };
+
+    return res.status(401).json({
+        message: `Invalid recovery code.`,
+        error_part: 'recovery_code'
     });
 });
 

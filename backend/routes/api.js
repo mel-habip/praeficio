@@ -62,7 +62,7 @@ apiRouter.get('/random_result', (_, res) => {
     });
 });
 
-apiRouter.post('/search', authenticateToken, async(req, res) => { //TODO: Consider some caching here
+apiRouter.post('/search', authenticateToken, async (req, res) => { //TODO: Consider some caching here
     const {
         type,
         keyword,
@@ -98,6 +98,14 @@ apiRouter.post('/search', authenticateToken, async(req, res) => { //TODO: Consid
         data: filtered_data.slice(0, 10)
     });
 
+});
+
+apiRouter.get('/my_ip', async (req, res) => {
+    return res.status(200).send(`<h1>Your IP address --> ${JSON.stringify(req.ip)} <h1/>`);
+});
+
+apiRouter.get('/my_ips', async (req, res) => {
+    return res.status(200).send(`<h1>Your IP addresses --> ${JSON.stringify(req.ips)} <h1/>`);
 });
 
 export default apiRouter;
