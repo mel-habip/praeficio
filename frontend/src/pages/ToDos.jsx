@@ -220,7 +220,7 @@ export default function ToDos({ archive }) {
                         await axios.post(`${process.env.REACT_APP_API_LINK}/todos/`, {
                             content: content.text,
                             category: selectedCategoryValue,
-                            due_on: content.due_on || null,
+                            due_on: content.due_on || undefined,
                         }).then(response => {
                             console.log('response:', response.data);
                             if ([201].includes(response.status)) {
