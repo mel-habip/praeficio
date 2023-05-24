@@ -2,6 +2,7 @@ const PORT = process.env.PORT || 8000;
 
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit'
 
 import userRouter from './routes/users.js';
 import positionRouter from './routes/positions.js';
@@ -22,11 +23,20 @@ import REGULAR_SCHEDULED_JOBS from './scheduled_jobs/regular_internal_jobs.js';
 import extractIP from './jobs/extractIP.js';
 
 const log = console.log;
+const rateLimiter = rateLimit({
+    windowMs: 10 * 60 * 1000, // 10 minutes
+    max: 150, // Limit each IP to 150 requests per `window` (here, per 10 minutes)
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
 
 const APP = express(); //creating and starting the server
+APP.set('trust proxy', 1);
+APP.get('/ip', (request, response) => response.send(request.ip)); //for testing purposes
 APP.use(cors());
 APP.use(express.json());
 APP.use(extractIP);
+APP.use(rateLimiter);
 
 APP.use(function errorHandler(err, req, res, next) {
     if (!err) return next();
