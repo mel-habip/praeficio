@@ -101,13 +101,7 @@ apiRouter.post('/search', authenticateToken, async (req, res) => { //TODO: Consi
 });
 
 apiRouter.get('/my_ip', async (req, res) => {
-    const ipAddresses = req.header('x-forwarded-for') || req.header('x-forwarded') || req.header('forwarded-for') || req.header('forwarded') || req.socket.remoteAddress;
-
-    return res.status(200).send(`<h1>Your IP address --> ${JSON.stringify(ipAddresses)} <h1/>`);
-});
-
-apiRouter.get('/my_ips', async (req, res) => {
-    return res.status(200).send(`<h1>Your IP addresses --> ${JSON.stringify(req.ips)} <h1/>`);
+    return res.status(200).send(`<h1>Your IP address --> ${JSON.stringify(req.custom_ip)} <h1/>`);
 });
 
 export default apiRouter;

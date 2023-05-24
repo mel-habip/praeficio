@@ -19,11 +19,14 @@ import feedbackLogItemMessagesRouter from './routes/feedback_log_item_messages.j
 
 import REGULAR_SCHEDULED_JOBS from './scheduled_jobs/regular_internal_jobs.js';
 
+import extractIP from './jobs/extractIP.js';
+
 const log = console.log;
 
 const APP = express(); //creating and starting the server
 APP.use(cors());
 APP.use(express.json());
+APP.use(extractIP);
 
 APP.use(function errorHandler(err, req, res, next) {
     if (!err) return next();
@@ -31,7 +34,6 @@ APP.use(function errorHandler(err, req, res, next) {
     return res.status(500).render('500', {
         error: err.stack
     });
-    // res.status(422).send(`Unprocessable Entity`); //what was there before
 });
 
 APP.use('/users', userRouter);
