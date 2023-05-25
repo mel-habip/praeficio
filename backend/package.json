@@ -23,6 +23,7 @@
     "fuse.js": "^6.6.2",
     "jsonwebtoken": "^9.0.0",
     "mysql": "^2.18.1",
+    "node-cache": "^5.1.2",
     "node-cron": "^3.0.2",
     "nodemailer": "^6.9.1",
     "papaparse": "^5.3.2",

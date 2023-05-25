@@ -28,6 +28,9 @@ const rateLimiter = rateLimit({
     max: 150, // Limit each IP to 150 requests per `window` (here, per 10 minutes)
     standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+    handler: (req, res, next) => res.status(429).json({
+        message: 'Too many requests, please try again later.'
+    })
 });
 
 const APP = express(); //creating and starting the server

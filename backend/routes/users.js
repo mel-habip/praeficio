@@ -1,6 +1,11 @@
 "use strict"
 import express from 'express';
 const userRouter = express.Router();
+import NodeCache from "node-cache";
+const userRouterCache = new NodeCache();
+
+userRouterCache.set('hello', 'world');
+
 const log = console.log;
 const list = (arr) => new Intl.ListFormat().format(arr.map(x => JSON.stringify(x)));
 
@@ -202,47 +207,84 @@ userRouter.post('/login', validateAndSanitizeBodyParts({
     username: 'string',
     password: 'string'
 }, ['username', 'password']), async (req, res) => {
-
     let sql = `SELECT * FROM users WHERE username = ?`;
 
-    await query(sql, req.body.username).then(async ([result]) => {
-        if (!result || result?.deleted) {
-            return res.status(401).json({
-                message: `Username not recognized`,
-                error_part: 'username'
-            });
-        };
-        if (!result.active) {
-            return res.status(401).json({
-                message: `Cannot Login to Inactive Account. Must Activate first.`,
-                error_part: 'inactive'
-            });
-        }
-        if (await bcrypt.compare(req.body.password, result.password)) {
-            const user = {
-                id: result.user_id,
-            };
-            const access_token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET_KEY);
-            return res.status(200).json({
-                user_id: result.user_id,
-                first_name: result.first_name,
-                last_name: result.last_name,
-                created_on: result.created_on,
-                message: `Successful`,
-                access_token,
-                to_do_categories: result.to_do_categories,
-                use_beta_features: result.use_beta_features,
-                permissions: result.permissions,
-            });
-        } else {
-            return res.status(401).json({
-                message: `Incorrect Password`,
-                error_part: 'password'
-            });
-        }
-    });
-});
+    const [relevantUser] = await query(sql, req.body.username);
 
+    if (!relevantUser || relevantUser?.deleted) {
+        return res.status(401).json({
+            message: `Username not recognized`,
+            error_part: 'username'
+        });
+    };
+    if (!relevantUser.active) {
+        return res.status(401).json({
+            message: `Cannot Login to Inactive Account. Must Activate first.`,
+            error_part: 'inactive'
+        });
+    };
+
+    const isLockedOut = userRouterCache.get(`${relevantUser.user_id}-lock`);
+
+    if (isLockedOut) {
+        return res.status(419).json({
+            message: 'You have been locked out. Please try again in 1 hour.'
+        });
+    }
+
+    const MAX_ATTEMPTS = 5;
+    const cacheKeys = Array.from({
+        length: MAX_ATTEMPTS
+    }, (_, i) => `${relevantUser.user_id}-attempt-${i+1}`);
+
+    const userLoginAttempts = userRouterCache.mget(cacheKeys);
+    console.log('cacheTest', userLoginAttempts);
+
+    if (await bcrypt.compare(req.body.password, relevantUser.password)) {
+        const user = {
+            id: relevantUser.user_id,
+        };
+        const access_token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET_KEY);
+        return res.status(200).json({
+            user_id: relevantUser.user_id,
+            username: relevantUser.username,
+            first_name: relevantUser.first_name,
+            last_name: relevantUser.last_name,
+            created_on: relevantUser.created_on,
+            active: relevantUser.active,
+            message: `Successful`,
+            access_token,
+            to_do_categories: relevantUser.to_do_categories,
+            use_beta_features: relevantUser.use_beta_features,
+            permissions: relevantUser.permissions,
+        });
+    } else {
+        //check how many attempts took place already
+        let next_attempt_number;
+
+        for (let i = 1; i <= MAX_ATTEMPTS; i++) {
+            if (!userLoginAttempts[`${relevantUser.user_id}-attempt-${i}`]) {
+                next_attempt_number = i;
+                break;
+            }
+        };
+
+        if (!next_attempt_number) { //means they are all used
+            userRouterCache.set(`${relevantUser.user_id}-lock`, true, 60 * 60) // 1 hour lock
+            return res.status(401).json({
+                message: `Too many attempts. Your account has been locked.`,
+                error_part: 'too_many_attempts'
+            });
+        }
+
+        userRouterCache.set(`${relevantUser.user_id}-attempt-${next_attempt_number}`, true, 60 * 10) // retain fails for 10 mins
+
+        return res.status(401).json({
+            message: `Incorrect Password`,
+            error_part: 'password'
+        });
+    }
+});
 
 userRouter.post('/login_with_recovery_code', validateAndSanitizeBodyParts({
     username: 'string',
@@ -376,7 +418,7 @@ userRouter.delete('/:user_id', authenticateToken, async (req, res) => {
 
 userRouter.get('/:user_id', authenticateToken, async (req, res) => {
     if (req.user.id === Number(req.params.user_id) || req.user.permissions === 'total') {
-        let sql = `SELECT user_id, username, last_name, first_name, email, permissions, active, created_on, updated_on FROM users WHERE user_id = ? LIMIT 1`;
+        let sql = `SELECT user_id, username, last_name, first_name, email, permissions, active, created_on, updated_on, to_do_categories, use_beta_features FROM users WHERE user_id = ? LIMIT 1`;
         await query(sql, req.params.user_id).then(response => {
             if (!response) {
                 return res.status(422).json({
@@ -475,7 +517,6 @@ userRouter.put('/:user_id', authenticateToken, async (req, res) => {
     });
 });
 
-
 userRouter.get('/:user_id/positions', authenticateToken, async (req, res) => {
     let sql = `SELECT * FROM positions WHERE user_id = ? OR secondary_user_id = ? OR tertiary_user_id = ?`; //TODO: handle joint_confirmed prop
     //GET positions belonging to said user, based on perms
@@ -495,6 +536,16 @@ userRouter.get('/:user_id/positions', authenticateToken, async (req, res) => {
     }
 
     return res.status(422).json(results);
+});
+
+userRouter.post('/:user_id/regenerate_recovery_codes', authenticateToken, async (req, res) => {
+    return res.status(200).json({message: 'this endpoint is not ready yet.'});
+});
+
+userRouter.post('/:user_id/regenerate_last_resort_passcode', authenticateToken, async (req, res) => {
+    return res.status(200).json({
+        message: 'this endpoint is not ready yet.'
+    });
 });
 
 export default userRouter;
