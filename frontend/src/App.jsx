@@ -11,6 +11,7 @@ const PublicPage = lazy(() => import('./pages/PublicPage'));
 const Newsletters = lazy(() => import('./pages/NewsLetterPages/Newsletters'));
 const SpecificNewsletterPage = lazy(() => import('./pages/NewsLetterPages/SpecificNewsletterPage'));
 const NewslettersAdmin = lazy(() => import('./pages/NewsLetterPages/NewslettersAdmin'));
+const InternalAdmin = lazy(() => import('./pages/InternalAdmin'));
 const LoginPage = lazy(() => import('./pages/LoginPage.jsx'));
 const Portal = lazy(() => import('./pages/Portal.jsx'));
 const Positions = lazy(() => import('./pages/Positions.jsx'));
@@ -27,6 +28,7 @@ const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
 const ForbiddenPage = lazy(() => import('./pages/ForbiddenPage.jsx'));
 const LoadingPage = lazy(() => import('./pages/LoadingPage'));
 const ErrorPage = lazy(() => import('./pages/ErrorPage'));
+const ServiceDesk = lazy(() => import('./pages/ServiceDesk'));
 
 
 function App() {
@@ -116,10 +118,12 @@ function App() {
                   <Route path='/portal' element={isLoggedIn ? <Portal /> : <LoginPage />} exact />
                   <Route path='/newsletters' element={<Newsletters />} exact />
                   <Route path='/newsletters/admin' element={isLoggedIn ? ((user?.permissions?.startsWith('dev_') || user?.is_total) ? <NewslettersAdmin /> : <Navigate to="/403" replace />) : <LoginPage />} exact />
+                  <Route path='/internal_admin' element={isLoggedIn ? ((['total', 'dev_lead'].includes(user?.permissions)) ? <InternalAdmin /> : <Navigate to="/403" replace />) : <LoginPage />} exact />
                   <Route path='/newsletters/:newsletter_id' element={<SpecificNewsletterPage />} exact />
                   <Route path='/login' element={isLoggedIn ? <Navigate to="/home" replace /> : <LoginPage />} exact />
                   <Route path='/positions' element={isLoggedIn ? <Positions /> : <LoginPage />} exact />
                   <Route path='/alerts' element={isLoggedIn ? <Alerts /> : <LoginPage />} exact />
+                  <Route path='/service_desk' element={isLoggedIn ? <ServiceDesk /> : <LoginPage />} exact />
 
                   <Route path="/tic-tac-toe" element={<Navigate to="/tictactoe" replace />} />
                   <Route path="/tic_tac_toe" element={<Navigate to="/tictactoe" replace />} />
@@ -148,7 +152,7 @@ function App() {
                   <Route path='/testzone' element={<TestZone />} exact />
                   <Route path='/403' element={<ForbiddenPage />} exact />
                   <Route path='/500' element={<ErrorPage />} exact />
-                  <Route path='/*' element={<NotFoundPage />} />
+                  <Route path='/*' element={<NotFoundPage />} /> 
                 </Routes>
               </Suspense>
             </Router>
