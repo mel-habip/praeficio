@@ -4,7 +4,6 @@ const feedbackLogRouter = express.Router();
 import authenticateToken from '../jobs/authenticateToken.js';
 import FeedbackLogService from '../modules/FeedbackLogService.mjs';
 import query from '../utils/db_connection.js';
-import fetchUserFeedbackLogs from '../jobs/fetchUserFeedbackLogs.js';
 
 const helper = new FeedbackLogService();
 

@@ -74,7 +74,11 @@ todosRouter.put('/:to_do_id/', validateAndSanitizeBodyParts({
 
     if (match.archived) return res.status(400).send(`ToDo is archived and is uneditable`);
 
-    if (req.body.completed && !match.completed) req.body.completed_on = new Date();
+    if (req.body.completed && !match.completed) { //means this is the request that completes it
+        req.body.completed_on = new Date();
+    } else if (req.body.completed === false && match.completed) { //we are undoing the completion
+        req.body.completed_on = null;
+    }
 
     let update_details = await helper.update_single(req.body, req.params.to_do_id);
 

@@ -76,10 +76,10 @@ function cleaner(array = []) {
         [].forEach(property => {
             if (hash.hasOwnProperty(property)) {
                 try {
-                    hash[property] = JSON.parse(hash[property]) ?? [];
+                    hash[property] = JSON.parse(hash[property]) ?? {};
                 } catch (e) {
                     console.log(`\nFailed to parse into JSON\n\tProperty: ${property}\n\tValue: ${hash[property]}`);
-                    hash[property] = [];
+                    hash[property] = {};
                 }
             }
         });

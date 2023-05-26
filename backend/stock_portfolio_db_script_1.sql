@@ -302,6 +302,41 @@ CREATE TABLE newsletters (
         ON DELETE SET NULL
 );
 
+CREATE TABLE debt_accounts (
+	debt_account_id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100),
+    borrower_id INT,
+    lender_id INT,
+    -- balance is always calculated fresh
+    who_can_add_transactions ENUM('borrower', 'lender', 'both') DEFAULT 'both',
+    archived BOOLEAN DEFAULT FALSE,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (borrower_id)
+        REFERENCES users (user_id)
+        ON DELETE CASCADE,
+	FOREIGN KEY (lender_id)
+        REFERENCES users (user_id)
+        ON DELETE CASCADE
+);
+
+CREATE TABLE debt_account_transactions (
+	debt_account_transaction_id INT PRIMARY KEY AUTO_INCREMENT,
+    debt_account_id INT,
+    header VARCHAR(100),
+    details VARCHAR(800),
+    entered_by INT,
+    amount DECIMAL(10,2),
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (entered_by)
+        REFERENCES users (user_id)
+        ON DELETE CASCADE,
+	FOREIGN KEY (debt_account_id)
+        REFERENCES debt_accounts (debt_account_id)
+        ON DELETE CASCADE
+);
+
 
 SET GLOBAL event_scheduler = ON;
 

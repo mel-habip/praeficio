@@ -4,7 +4,6 @@ import WorkspaceMessagesRelationshipOrganizer from '../jobs/WorkspaceMessagesRel
 
 export const recordTypeMap = {
     table_names: { //phase these out once ready.
-        Alert: 'alerts',
         Position: 'positions',
         User: 'users',
         Workspace: 'workspaces',
@@ -15,7 +14,6 @@ export const recordTypeMap = {
     simple_primary_key: {
         Users: 'user_id',
         Position: 'position_id',
-        Alert: 'alert_id',
         Workspace: 'workspace_id',
         FeedbackLog: 'feedback_log_id',
         FeedbackLogItem: 'feedback_log_item',
@@ -62,7 +60,7 @@ export default class RecordService {
      *  deleted?:boolean, 
      *  active?:boolean}>}
      */
-    async fetch_by_id(record_ids, constraints = {}, inclusions = {}) {
+    fetch_by_id = async (record_ids, constraints = {}, inclusions = {}) => {
 
         if (typeof record_ids === 'string' || typeof record_ids === 'number') record_ids = [record_ids]; //so that you can pass an array or others
 
@@ -166,6 +164,31 @@ export default class RecordService {
                 const [newsletter] = await query(sql, record_id_1);
                 return newsletter;
             }
+            case 'DebtAccount': {
+                const sql = `SELECT A.*, Bor.username AS borrower_username, Len.username AS lender_username, SUM(T.amount) AS balance FROM debt_accounts A LEFT JOIN debt_account_transactions T ON A.debt_account_id = T.debt_account_id LEFT JOIN users Bor ON Bor.user_id = A.borrower_id LEFT JOIN users Len ON Len.user_id = A.lender_id WHERE A.debt_account_id = ?;`;
+                const [debtAccount] = await query(sql, record_id_1);
+                return debtAccount;
+            }
+            case 'DebtAccount': {
+                let sql;
+
+                if (inclusions.balance) {
+                    sql = `SELECT A.*, Bor.username AS borrower_username, Len.username AS lender_username, SUM(T.amount) AS balance FROM debt_accounts A LEFT JOIN debt_account_transactions T ON A.debt_account_id = T.debt_account_id LEFT JOIN users Bor ON Bor.user_id = A.borrower_id LEFT JOIN users Len ON Len.user_id = A.lender_id WHERE A.debt_account_id = ?;`;
+                } else {
+                    sql = `SELECT A.*, Bor.username AS borrower_username, Len.username AS lender_username FROM debt_accounts A LEFT JOIN users Bor ON Bor.user_id = A.borrower_id LEFT JOIN users Len ON Len.user_id = A.lender_id WHERE A.debt_account_id = ?;`;
+                }
+                
+                const [debtAccount] = await query(sql, record_id_1);
+
+                if (inclusions.transactions) {
+                    await query(`SELECT debt_account_transactions.*, users.username AS entered_by_username FROM debt_account_transactions LEFT JOIN users ON entered_by = users.user_id WHERE debt_account_id = ?;`, record_id_1)
+                        .then(response => {
+                            debtAccount.transactions = response;
+                        });
+                }
+
+                return debtAccount;
+            }
             default: {
                 const table_name = this.table_name || recordTypeMap.table_names[this.record_type];
 
@@ -189,7 +212,7 @@ export default class RecordService {
      * @method fetch_by_criteria
      * @param {Object} criteria
      */
-    async fetch_by_criteria(criteria = {}) {
+    fetch_by_criteria = async (criteria = {}) => {
 
         const {
             limit,
@@ -227,7 +250,7 @@ export default class RecordService {
      * @method hard_delete
      * @param {Object} criteria
      */
-    async hard_delete(criteria) {
+    hard_delete = async criteria => {
         const table_name = this.table_name || recordTypeMap.table_names[this.record_type];
 
         const keys = Object.keys(criteria);
@@ -259,7 +282,7 @@ export default class RecordService {
      * @method update_single
      * @param {Number} record_ids one or more of the primary keys for the record
      */
-    async update_single(data, ...record_ids) {
+    update_single = async (data, ...record_ids) => {
         const table_name = this.table_name || recordTypeMap.table_names[this.record_type];
 
         const primary_key = this.primary_key || recordTypeMap.simple_primary_key[this.record_type];
@@ -296,7 +319,7 @@ export default class RecordService {
      * @method create_single Inserts 1 record with the provided data into the DB
      * @param {{any:string|number|boolean}} data details of the new record
      */
-    async create_single(data) {
+    create_single = async data => {
         const table_name = this.table_name || recordTypeMap.table_names[this.record_type];
 
         if (!table_name) throw Error(`${this.record_type} not recognized`);
@@ -342,7 +365,7 @@ export default class RecordService {
     /**
      * @returns {Promise<{primary_key: number} | undefined>}
      */
-    async confirm_exists_by_id(...record_ids) {
+    confirm_exists_by_id = async (...record_ids) => {
         const table_name = this.table_name || recordTypeMap.table_names[this.record_type];
 
         const primary_keys = this.primary_key || recordTypeMap.simple_primary_key[this.record_type] || recordTypeMap.complex_primary_key[this.record_type];

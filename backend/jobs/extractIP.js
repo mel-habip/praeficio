@@ -7,7 +7,8 @@ export default function extractIP(req, res, next) {
 
     res.custom_ip = ipAddresses;
 
-    console.log(`Request from: ${res.custom_ip}`);
+    console.log(`custom_ip: ${res.custom_ip}`);
+    console.log(`regular ip: ${res.ip}`);
 
     next();
 }
