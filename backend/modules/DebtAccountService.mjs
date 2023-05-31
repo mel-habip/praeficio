@@ -17,8 +17,12 @@ export default class DebtAccountService extends RecordService {
      * @param {String|Number} debt_account_id_2
      */
     consolidateBetweenAccounts = async (debt_account_id_1, debt_account_id_2) => {
-        const AccountOne = await this.fetch_by_id(debt_account_id_1);
-        const AccountTwo = await this.fetch_by_id(debt_account_id_2);
+        const AccountOne = await this.fetch_by_id(debt_account_id_1, {}, {
+            balance: true
+        });
+        const AccountTwo = await this.fetch_by_id(debt_account_id_2, {}, {
+            balance: true
+        });
 
         {
             //check borrower-lender relationship
@@ -67,9 +71,61 @@ export default class DebtAccountService extends RecordService {
 
 
     fetch_by_user_id = async (user_id, archived = false) => {
-        const sql = `SELECT A.*, Bor.username AS borrower_username, Len.username AS lender_username, SUM(T.amount) AS balance FROM debt_accounts A LEFT JOIN debt_account_transactions T ON A.debt_account_id = T.debt_account_id LEFT JOIN users Bor ON Bor.user_id = A.borrower_id LEFT JOIN users Len ON Len.user_id = A.lender_id WHERE (Len.user_id = ? OR Bor.user_id = ?) AND A.archived = ?;`;
-        const debtAccounts = await query(sql, user_id, user_id, archived);
+        const sql = `SELECT A.*, Bor.username AS borrower_username, Len.username AS lender_username, SUM(T.amount) AS balance FROM debt_accounts A LEFT JOIN debt_account_transactions T ON A.debt_account_id = T.debt_account_id LEFT JOIN users Bor ON Bor.user_id = A.borrower_id LEFT JOIN users Len ON Len.user_id = A.lender_id WHERE ((Len.user_id = ? OR Bor.user_id = ?) AND ) GROUP BY A.account_id;`;
+        const debtAccounts = await query(sql, user_id, user_id);
 
         return debtAccounts;
     }
+
+    /**
+     * @method statistics provides some simple statistics about the transactions array provided
+     * @param {Array<{posted_on: date, amount: number, header: string, details: string}>} transactions
+     * @return {{most_popular_header: string, least_popular_header: string, headers_breakdown: {[name:string]:number}, number_of_transactions: number, number_of_unique_headers: number, average_positive_amount: number, average_negative_amount: number}
+     */
+    statistics = (transactions = []) => {
+
+        const transactionsHeadersMap = {};
+        let positive_amounts = {
+            total: 0,
+            count: 0
+        };
+        let negative_amounts = {
+            total: 0,
+            count: 0
+        };
+
+        transactions.forEach(trans => {
+            if (trans.amount > 0) {
+                positive_amounts.total += trans.amount;
+                positive_amounts.count++;
+            } else if (trans.amount < 0) {
+                negative_amounts.total += (trans.amount * -1);
+                negative_amounts.count++;
+            }
+
+            const header_name_cleaned = cleaner(trans.header);
+            if (transactionsHeadersMap.hasOwnProperty(header_name_cleaned)) {
+                transactionsHeadersMap[header_name_cleaned]++;
+            } else {
+                transactionsHeadersMap[header_name_cleaned] = 1;
+            }
+        });
+
+        return {
+            number_of_transactions: transactions.length,
+            number_of_unique_headers: Object.keys(transactionsHeadersMap).length
+        };
+    }
+}
+
+
+
+function cleaner(str) {
+    str = str.trim().toLowerCase();
+    while (str.includes('  ')) {
+        str = str.replace('  ', ' ');
+    }
+    str = str.replaceAll(' ', '_');
+
+    return str;
 }

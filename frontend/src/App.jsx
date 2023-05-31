@@ -8,6 +8,7 @@ import { NextUIProvider, createTheme, Loading } from '@nextui-org/react';
 import axios from 'axios';
 
 const PublicPage = lazy(() => import('./pages/PublicPage'));
+const QuickNotes = lazy(() => import('./pages/QuickNotes'));
 const Newsletters = lazy(() => import('./pages/NewsLetterPages/Newsletters'));
 const SpecificNewsletterPage = lazy(() => import('./pages/NewsLetterPages/SpecificNewsletterPage'));
 const NewslettersAdmin = lazy(() => import('./pages/NewsLetterPages/NewslettersAdmin'));
@@ -28,7 +29,11 @@ const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
 const ForbiddenPage = lazy(() => import('./pages/ForbiddenPage.jsx'));
 const LoadingPage = lazy(() => import('./pages/LoadingPage'));
 const ErrorPage = lazy(() => import('./pages/ErrorPage'));
+
 const ServiceDesk = lazy(() => import('./pages/ServiceDesk'));
+const SpecificDebtAccountPage = lazy(() => import('./pages/SpecificDebtAccountPage'));
+const DebtAccounts = lazy(() => import('./pages/DebtAccounts'));
+const SpecificUserProfilePage = lazy(() => import('./pages/SpecificUserProfilePage'));
 
 
 function App() {
@@ -117,6 +122,10 @@ function App() {
                   <Route path='/home' element={<Navigate to="/portal" replace />} />
                   <Route path='/portal' element={isLoggedIn ? <Portal /> : <LoginPage />} exact />
                   <Route path='/newsletters' element={<Newsletters />} exact />
+                  <Route path='/notes' element={<QuickNotes />} exact />
+                  <Route path='/quicknotes' element={<QuickNotes />} exact />
+                  <Route path='/quick_notes' element={<QuickNotes />} exact />
+                  <Route path='/quick-notes' element={<QuickNotes />} exact />
                   <Route path='/newsletters/admin' element={isLoggedIn ? ((user?.permissions?.startsWith('dev_') || user?.is_total) ? <NewslettersAdmin /> : <Navigate to="/403" replace />) : <LoginPage />} exact />
                   <Route path='/internal_admin' element={isLoggedIn ? ((['total', 'dev_lead'].includes(user?.permissions)) ? <InternalAdmin /> : <Navigate to="/403" replace />) : <LoginPage />} exact />
                   <Route path='/newsletters/:newsletter_id' element={<SpecificNewsletterPage />} exact />
@@ -146,13 +155,22 @@ function App() {
                   <Route path='/todos' element={isLoggedIn ? <ToDos /> : <LoginPage />} exact />
                   <Route path='/todos/archive' element={isLoggedIn ? <ToDos archive /> : <LoginPage />} exact />
                   <Route path='/settings' element={isLoggedIn ? <Settings /> : <LoginPage />} exact />
+                  <Route path='/feedback-logs' element={<Navigate to="/feedback_logs" replace />} />
                   <Route path='/feedback_logs' element={isLoggedIn ? <FeedbackLogsPage /> : <LoginPage />} exact />
+                  <Route path='/feedback-logs/archive' element={<Navigate to="/feedback_logs/archive" replace />} />
                   <Route path='/feedback_logs/archive' element={isLoggedIn ? <FeedbackLogsPage archive /> : <LoginPage />} exact />
                   <Route path='/feedback_logs/:feedback_log_id' element={isLoggedIn ? <SpecificFeedbackLogPage /> : <LoginPage />} exact />
+
+                  <Route path='/users/:user_id' element={<SpecificUserProfilePage />} exact />
+
+                  <Route path='/debt-accounts' element={<Navigate to="/debt_accounts" replace />} />
+                  <Route path='/debt_accounts' element={isLoggedIn ? <DebtAccounts /> : <LoginPage />} exact />
+                  <Route path='/debt_accounts/:debt_account_id' element={isLoggedIn ? <SpecificDebtAccountPage /> : <LoginPage />} exact />
+
                   <Route path='/testzone' element={<TestZone />} exact />
                   <Route path='/403' element={<ForbiddenPage />} exact />
                   <Route path='/500' element={<ErrorPage />} exact />
-                  <Route path='/*' element={<NotFoundPage />} /> 
+                  <Route path='/*' element={<NotFoundPage />} />
                 </Routes>
               </Suspense>
             </Router>

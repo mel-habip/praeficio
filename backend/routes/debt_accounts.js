@@ -2,7 +2,7 @@
 import express from 'express';
 const debtAccountRouter = express.Router();
 import authenticateToken from '../jobs/authenticateToken.js';
-import DebtAccountService from '../modules/FeedbackLogService.mjs';
+import DebtAccountService from '../modules/DebtAccountService.mjs';
 import query from '../utils/db_connection.js';
 import validateAndSanitizeBodyParts from '../jobs/validateAndSanitizeBodyParts.js';
 
@@ -16,13 +16,35 @@ debtAccountRouter.get('/test', async (_, res) => res.status(200).send('Hello Wor
 debtAccountRouter.get('/', async (req, res) => {
     const show_archived = req.query.archived === 'true';
 
-    let debt_accounts = await helper.fetch_by_user_id(req.user.id, {
-        archived: show_archived
-    });
+    let debt_accounts = await helper.fetch_by_user_id(req.user.id, show_archived);
 
     return res.status(!!debt_accounts ? 200 : 422).json({
         success: !!debt_accounts,
         data: debt_accounts
+    });
+});
+
+//all details of one account
+debtAccountRouter.get('/:debt_account_id', async (req, res) => {
+    const details = await helper.fetch_by_id(req.params.debt_account_id, {}, {
+        balance: true,
+        transactions: true
+    });
+
+    if (!details) return res.status(404).json({
+        message: `Debt Account not found.`
+    });
+    
+    if ([details.borrower_id, details.lender_id].includes(req.user.id) || req.user.is_total || req.user.permissions.startsWith('dev_')) {
+        const statistics = helper.statistics(details.transactions);
+        return res.status(200).json({
+            ...details,
+            statistics
+        });
+    }
+
+    return res.status(404).json({
+        message: `Debt Account not found.`
     });
 });
 
@@ -90,25 +112,9 @@ debtAccountRouter.put('/:debt_account_id', validateAndSanitizeBodyParts({
     });
 });
 
-//delete a debt account
-debtAccountRouter.delete('/:debt_account_id', async (req, res) => {
+//create a new transaction under the account
+debtAccountRouter.post('/:debt_account_id/new_transaction', async (req, res) => {
 
-});
-
-//all details of one account
-debtAccountRouter.get('/:debt_account_id', async (req, res) => {
-    const details = await helper.fetch_by_id(req.params.debt_account_id, {}, {
-        balance: true,
-        transactions: true
-    });
-
-    if (!details) return res.status(404).json({
-        message: `Debt Account not found.`
-    });
-
-    return res.status(200).json({
-        ...details
-    });
 });
 
 export default debtAccountRouter;

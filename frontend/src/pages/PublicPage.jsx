@@ -280,12 +280,15 @@ export default function PublicPage() {
                             <Button>Send</Button>
                         </form>
                         <br />
-                        <div style={{ borderRadius: '1rem', backgroundColor: 'var(--background-color)', fontWeight: 'normal', textAlign: 'left', width: '50%', padding: '20px', position: 'relative', left: '25%' }} >
+                        <div style={{
+                            borderRadius: '0.75rem', backgroundColor: 'var(--background-color)', fontWeight: 'normal', textAlign: 'left', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', maxWidth: '700px', minWidth: '450px', alignSelf: 'center', gap: '25px', padding: '20px',
+                        }} >
                             <p>Public Links: </p>
                             <ul>
                                 <li> <CustomButton to="/newsLetters">NewsLetters <i className="fa-regular fa-newspaper" /></CustomButton> </li>
                                 <li> <CustomButton to="/tic-tac-toe">Tic-Tac-Toe <i className="fa-solid fa-table-cells-large" /></CustomButton> </li>
                                 <li> <CustomButton to="/randomizer">Randomizer <i className="fa-solid fa-dice" /></CustomButton> </li>
+                                <li> <CustomButton to="/randomizer">Quick notes <i className="fa-solid fa-pencil" /></CustomButton> </li>
                                 <li> <CustomButton to="/404">An awesome 404 page 😬</CustomButton> </li>
                                 <li> <CustomButton to="/403">An awesome 403 page ✋</CustomButton> </li>
                                 <li> <CustomButton to="/500">An awesome error page 💀</CustomButton> </li>

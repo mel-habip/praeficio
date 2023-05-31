@@ -1,5 +1,5 @@
-CREATE DATABASE stock_portfolio_db;
-USE stock_portfolio_db;
+CREATE DATABASE `praeficio-database-1`;
+USE `praeficio-database-1`;
 
 SHOW EVENTS;
 DROP EVENT expired_workspace_invitations_cleaning;
@@ -16,6 +16,7 @@ CREATE TABLE users (
     first_name VARCHAR(255),
     email VARCHAR(255),
     use_beta_features BOOLEAN DEFAULT FALSE,
+    to_do_categories JSON NULL,
     permissions VARCHAR(100) DEFAULT 'client',
     active BOOLEAN DEFAULT FALSE,
     deleted BOOLEAN DEFAULT FALSE,
@@ -324,9 +325,10 @@ CREATE TABLE debt_account_transactions (
 	debt_account_transaction_id INT PRIMARY KEY AUTO_INCREMENT,
     debt_account_id INT,
     header VARCHAR(100),
-    details VARCHAR(800),
+    details VARCHAR(800) DEFAULT "-",
     entered_by INT,
     amount DECIMAL(10,2),
+    posted_on DATETIME DEFAULT CURRENT_TIMESTAMP,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (entered_by)
@@ -337,6 +339,18 @@ CREATE TABLE debt_account_transactions (
         ON DELETE CASCADE
 );
 
+CREATE TABLE friendships (
+	user_1_id INT NOT NULL,
+    user_2_id INT NOT NULL,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_1_id , user_2_id),
+    FOREIGN KEY (user_1_id)
+        REFERENCES users (user_id)
+        ON DELETE CASCADE,
+	FOREIGN KEY (user_2_id)
+        REFERENCES users (user_id)
+        ON DELETE CASCADE
+);
 
 SET GLOBAL event_scheduler = ON;
 

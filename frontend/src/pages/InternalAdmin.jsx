@@ -187,6 +187,7 @@ function UsersTable({ usersList = [] }) {
             containerCss={{
                 height: "auto",
                 minWidth: "70%",
+                maxWidth: '95%',
                 'z-index': 10
             }}
         >

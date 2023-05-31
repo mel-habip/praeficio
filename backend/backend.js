@@ -2,8 +2,15 @@ const PORT = process.env.PORT || 8000;
 
 import express from 'express';
 import cors from 'cors';
-import rateLimit from 'express-rate-limit'
 
+//global middlewares
+import rateLimit from 'express-rate-limit'
+import extractIP from './jobs/extractIP.js';
+import {
+    checkDatabaseConnection
+} from './utils/db_connection.js';
+
+//all routers
 import userRouter from './routes/users.js';
 import positionRouter from './routes/positions.js';
 import workspacesRouter from './routes/workspaces.js';
@@ -17,10 +24,12 @@ import feedbackLogRouter from './routes/feedback_logs.js';
 import feedbackLogFilterRouter from './routes/feedback_log_filters.js';
 import feedbackLogItemsRouter from './routes/feedback_log_items.js';
 import feedbackLogItemMessagesRouter from './routes/feedback_log_item_messages.js';
+import debtAccountRouter from './routes/debt_accounts.js'
+import debtAccountTransactionRouter from './routes/debt_account_transactions.js'
+
 
 import REGULAR_SCHEDULED_JOBS from './scheduled_jobs/regular_internal_jobs.js';
 
-import extractIP from './jobs/extractIP.js';
 
 const log = console.log;
 const rateLimiter = rateLimit({
@@ -40,6 +49,7 @@ APP.use(cors());
 APP.use(express.json());
 APP.use(extractIP);
 APP.use(rateLimiter);
+APP.use(checkDatabaseConnection);
 
 APP.use(function errorHandler(err, req, res, next) {
     if (!err) return next();
@@ -62,7 +72,10 @@ APP.use('/feedback_log_items', feedbackLogItemsRouter);
 APP.use('/feedback_log_item_messages', feedbackLogItemMessagesRouter);
 APP.use('/subscribers', subscriberRouter);
 APP.use('/newsletters', newsletterRouter);
+APP.use('/debt_accounts', debtAccountRouter);
+APP.use('/debt_account_transactions', debtAccountTransactionRouter);
 
+//starts the cron jobs
 Object.values(REGULAR_SCHEDULED_JOBS).forEach(job => job.start());
 
 /**
@@ -70,17 +83,14 @@ Object.values(REGULAR_SCHEDULED_JOBS).forEach(job => job.start());
  * 1) Add email sending integration
  *   1.1) Optionally, add SMS sending functionality
  * 2) SQL injection protection
- * 3) Rate-Limiting protection
- * 4) Add scheduled jobs
- *   4.1) Dividend Tracker
- *   4.2) Performance Tracker
- * 5) Add Yahoo Finance or another financial data API here
- * 6) Add Load Balancer and define job priorities
- * 7) Spread DB and Server across 2 machines
- * 8) Host on a domain
- * 9) Create a Sandbox/Staging environment that is ideally not local
- * 10) Create custom permissionning model
- * 11) Create Joint Position Handling where it accumulates a set of positions and sends an email to that user
+ * 3) Add scheduled jobs
+ *   3.1) Dividend Tracker
+ *   3.2) Performance Tracker
+ * 4) Add Yahoo Finance or another financial data API here
+ * 5) Add Load Balancer and define job priorities
+ * 6) Create a Sandbox/Staging environment that is ideally not local
+ * 7) Create custom permissionning model
+ * 8) Create Joint Position Handling where it accumulates a set of positions and sends an email to that user
  */
 
 APP.get('/', (req, res) => {

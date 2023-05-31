@@ -25,7 +25,7 @@ export default function Settings() {
 
     return (
         <>
-            <NavMenu ></NavMenu>
+            <NavMenu />
             <Text h1 css={{ 'margin-top': '4%' }} >{user.first_name ? `${user.first_name}'s` : 'Your'} Settings </Text>
             <hr className="line-primary"></hr>
             <ToDoCategoriesSection />
