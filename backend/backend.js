@@ -26,6 +26,7 @@ import feedbackLogItemsRouter from './routes/feedback_log_items.js';
 import feedbackLogItemMessagesRouter from './routes/feedback_log_item_messages.js';
 import debtAccountRouter from './routes/debt_accounts.js'
 import debtAccountTransactionRouter from './routes/debt_account_transactions.js'
+import votingSessionRouter from './routes/voting_sessions.js'
 
 
 import REGULAR_SCHEDULED_JOBS from './scheduled_jobs/regular_internal_jobs.js';
@@ -74,6 +75,7 @@ APP.use('/subscribers', subscriberRouter);
 APP.use('/newsletters', newsletterRouter);
 APP.use('/debt_accounts', debtAccountRouter);
 APP.use('/debt_account_transactions', debtAccountTransactionRouter);
+APP.use('/voting_sessions', votingSessionRouter);
 
 //starts the cron jobs
 Object.values(REGULAR_SCHEDULED_JOBS).forEach(job => job.start());

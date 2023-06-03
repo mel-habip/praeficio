@@ -69,7 +69,7 @@ export default async function query(sql, ...values) {
     sql = mysql.format(sql, [...values].flat(Infinity));
     let result;
 
-    
+
     try {
         result = await query_promise(sql);
     } catch (err) {
@@ -94,7 +94,7 @@ function cleaner(array = []) {
         ['to_do_categories', 'notes', 'internal_notes', 'topics'].forEach(property => {
             if (hash.hasOwnProperty(property)) {
                 try {
-                    hash[property] = JSON.parse(hash[property]) ?? [];
+                    hash[property] = JSON.parse(hash[property] ?? []) ?? [];
                 } catch (e) {
                     console.log(`\nFailed to parse into JSON\n\tProperty: ${property}\n\tValue: ${hash[property]}`);
                     hash[property] = [];
@@ -102,10 +102,10 @@ function cleaner(array = []) {
             }
         });
         //hash JSON cleanup
-        [].forEach(property => {
+        ['method', 'details'].forEach(property => {
             if (hash.hasOwnProperty(property)) {
                 try {
-                    hash[property] = JSON.parse(hash[property]) ?? {};
+                    hash[property] = JSON.parse(hash[property] ?? {}) ?? {};
                 } catch (e) {
                     console.log(`\nFailed to parse into JSON\n\tProperty: ${property}\n\tValue: ${hash[property]}`);
                     hash[property] = {};

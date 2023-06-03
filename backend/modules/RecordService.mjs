@@ -160,7 +160,7 @@ export default class RecordService {
                 return feedbackLogItemMessage;
             }
             case 'Newsletter': {
-                const sql = `${this.fetch_sql} WHERE newsletter_id = ? ${constraint_stringifier(constraints)} LIMIT 1 ORDER BY created_on ASC;`;
+                const sql = `${this.fetch_sql} WHERE newsletter_id = ? ${constraint_stringifier(constraints)} LIMIT 1;`;
                 const [newsletter] = await query(sql, record_id_1);
                 return newsletter;
             }
@@ -188,6 +188,20 @@ export default class RecordService {
                 }
 
                 return debtAccount;
+            }
+            case 'VotingSession': {
+                const sql = `SELECT * FROM voting_sessions WHERE voting_session_id = ? ${constraint_stringifier(constraints)}`;
+
+                const [votingSession] = await query(sql, record_id_1);
+
+                if (inclusions.votes) {
+                    await query(`SELECT * FROM votes WHERE voting_session_id = ? AND deleted = FALSE;`, record_id_1)
+                        .then(response => {
+                            votingSession.votes = response;
+                        });
+                }
+
+                return votingSession;
             }
             default: {
                 const table_name = this.table_name || recordTypeMap.table_names[this.record_type];

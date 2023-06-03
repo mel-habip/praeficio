@@ -37,6 +37,7 @@ export default async function authenticateToken(req, res, next) { //this is midd
         user.permissions = current_details.permissions;
 
         if (current_details.permissions === 'total') user.is_total = true;
+        if (current_details.permissions.startsWith('dev_') || user.is_total) user.is_dev = true;
 
         user.first_name = current_details.first_name;
         user.last_name = current_details.last_name;

@@ -2,8 +2,8 @@ import Papa from 'papaparse';
 import fs from 'fs';
 import formidable from 'formidable';
 import path from 'path';
-import express from 'express';
-const positionRouter = express.Router();
+import {Router} from 'express';
+const positionRouter = Router();
 const log = console.log;
 var counter = 0; //used for additional randomization on temp files
 

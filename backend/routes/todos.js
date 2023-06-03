@@ -1,6 +1,8 @@
 "use strict"
-import express from 'express';
-const todosRouter = express.Router();
+import {
+    Router
+} from 'express';
+const todosRouter = Router();
 import emailService from '../jobs/emailService.js';
 import authenticateToken from '../jobs/authenticateToken.js';
 

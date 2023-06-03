@@ -1,6 +1,6 @@
 "use strict"
-import express from 'express';
-const userRouter = express.Router();
+import {Router} from 'express';
+const userRouter = Router();
 import NodeCache from "node-cache";
 const userRouterCache = new NodeCache();
 
@@ -22,6 +22,7 @@ import emailService from '../jobs/emailService.js';
 import validatePassword from '../../frontend/src/utils/validatePassword.mjs';
 import UserService from '../modules/UserService.mjs';
 import validateAndSanitizeBodyParts from '../jobs/validateAndSanitizeBodyParts.js';
+import generateTemporaryPassword from '../utils/generateTemporaryPassword.js';
 
 
 const helper = new UserService();

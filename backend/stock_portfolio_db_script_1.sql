@@ -352,6 +352,35 @@ CREATE TABLE friendships (
         ON DELETE CASCADE
 );
 
+CREATE TABLE voting_sessions (
+	voting_session_id INT PRIMARY KEY AUTO_INCREMENT,
+    voter_key VARCHAR(50),
+	name VARCHAR(100) NOT NULL,
+    created_by INT,
+    completed BOOLEAN DEFAULT FALSE,
+    completed_on DATETIME,
+    deleted BOOLEAN DEFAULT FALSE,
+    details JSON, -- contains voting method, options and constraints, and once completed the results too
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by)
+        REFERENCES users (user_id)
+        ON DELETE SET NULL
+);
+
+CREATE TABLE votes (
+	vote_id INT PRIMARY KEY AUTO_INCREMENT,
+    voting_session_id INT NOT NULL,
+    voter_ip_address VARCHAR(40) NOT NULL,
+    deleted BOOLEAN DEFAULT FALSE,
+    details JSON, -- a hash detailing who they voted for
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+	FOREIGN KEY (voting_session_id)
+        REFERENCES voting_sessions (voting_session_id)
+        ON DELETE CASCADE
+);
+
 SET GLOBAL event_scheduler = ON;
 
 -- soft-deletes inactive users after 3 months
