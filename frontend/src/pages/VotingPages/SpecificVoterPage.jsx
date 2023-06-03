@@ -4,6 +4,8 @@ import { useState, useContext, useEffect, useMemo } from 'react';
 
 import ThemeContext from '../../contexts/ThemeContext';
 
+import axios from 'axios';
+
 import { useParams } from 'react-router-dom';
 
 import { Button, Input, Loading, Checkbox } from '@nextui-org/react';
