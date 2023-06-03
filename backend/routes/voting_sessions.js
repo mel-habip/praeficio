@@ -302,7 +302,7 @@ votingSessionRouter.post(`/:voting_session_id/vote`, validateAndSanitizeBodyPart
         message: `Voting Session #${req.params.voting_session_id} is already completed.`
     });
 
-    if (voting_session.details.voter_limit && voting_session.votes?.length === voting_session.details.voter_limit) return res.status(400).json({
+    if (voting_session.details.voter_limit && voting_session.votes?.length >= voting_session.details.voter_limit) return res.status(400).json({
         message: `Voting Session #${req.params.voting_session_id} is has reached the maximum number of votes.`
     });
 
@@ -362,6 +362,36 @@ votingSessionRouter.post(`/:voting_session_id/vote`, validateAndSanitizeBodyPart
     return res.status(422).json({
         message: creation_result?.message || 'Something went wrong.',
         details: creation_result?.details
+    });
+});
+
+//fetches the details for a potential voter
+votingSessionRouter.get('/:voting_session_id/key/:voter_key', async (req, res) => {
+    const voting_session = await sessionHelper.fetch_by_id(req.params.voting_session_id, {
+        deleted: false
+    }, {
+        votes: true
+    });
+
+    if (!voting_session) return res.status(404).json({
+        message: `Voting Session #${req.params.voting_session_id} is not found.`
+    });
+
+    if (req.params.voter_key !== voting_session.voter_key) return res.status(401).json({
+        message: `Invalid Voter Key.`
+    });
+
+    if (voting_session.completed || (voting_session.details.voter_limit && voting_session.details.voter_limit >= voting_session.votes.length)) return res.status(400).json({
+        message: `Voting Session #${req.params.voting_session_id} is already completed.`,
+        error_part: 'is_completed'
+    });
+
+    return res.status(200).json({
+        name: voting_session.name,
+        voting_session_id: voting_session.voting_session_id,
+        method: voting_session.details.method,
+        options: voting_session.details.options,
+        number_of_votes: voting_session.details.method === 'multiple_votes' ? voting_session.details.number_of_votes : undefined,
     });
 });
 

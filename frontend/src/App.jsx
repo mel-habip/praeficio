@@ -35,6 +35,14 @@ const SpecificDebtAccountPage = lazy(() => import('./pages/SpecificDebtAccountPa
 const DebtAccounts = lazy(() => import('./pages/DebtAccounts'));
 const SpecificUserProfilePage = lazy(() => import('./pages/SpecificUserProfilePage'));
 
+const SpecificVoterPage = lazy(() => import('./pages/VotingPages/SpecificVoterPage'));
+const VotingSessionsPage = lazy(() => import('./pages/VotingPages/VotingSessionsPage'));
+const SpecificVotingSessionPage = lazy(() => import('./pages/VotingPages/SpecificVotingSessionPage'));
+const VoterRedirectPageOne = lazy(() => import('./pages/VotingPages/VoterRedirectPageOne'));
+const VoterRedirectPageTwo = lazy(() => import('./pages/VotingPages/VoterRedirectPageTwo'));
+const VotingSessionClosedPage = lazy(() => import('./pages/VotingPages/VotingSessionClosedPage'));
+
+
 
 function App() {
   const browserDarkPreference = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -166,6 +174,13 @@ function App() {
                   <Route path='/debt-accounts' element={<Navigate to="/debt_accounts" replace />} />
                   <Route path='/debt_accounts' element={isLoggedIn ? <DebtAccounts /> : <LoginPage />} exact />
                   <Route path='/debt_accounts/:debt_account_id' element={isLoggedIn ? <SpecificDebtAccountPage /> : <LoginPage />} exact />
+
+                  <Route path='/vote' element={<VoterRedirectPageOne />} exact />
+                  <Route path='/voting_completed' element={<VotingSessionClosedPage />} exact />
+                  <Route path='/voting_sessions/' element={isLoggedIn ? <VotingSessionsPage /> : <LoginPage />} exact />
+                  <Route path='/voting_sessions/:voting_session_id' element={isLoggedIn ? <SpecificVotingSessionPage /> : <LoginPage />} exact />
+                  <Route path='/voting_sessions/:voting_session_id/vote' element={<VoterRedirectPageTwo />} exact />
+                  <Route path='/voting_sessions/:voting_session_id/vote/:voter_key' element={<SpecificVoterPage />} exact />
 
                   <Route path='/testzone' element={<TestZone />} exact />
                   <Route path='/403' element={<ForbiddenPage />} exact />

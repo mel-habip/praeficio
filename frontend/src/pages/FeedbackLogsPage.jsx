@@ -153,8 +153,7 @@ export default function FeedbackLogsPage({ archive }) {
         <Spacer y={2} />
         {user.permissions.endsWith('client') && !feedbackLogs.length && <h2>You have no feedback logs at this time. Please contact your rep to be added to one.</h2>}
     </>);
-}
-
+};
 
 function FeedbackLogCard({ id, name, created_on, user, archive, setArchiveModalOpen, setSelectedLog, setDetailModalOpen }) {
     return (<Card css={{ $$cardColor: '$colors$primary', width: '300px' }} key={id + '-card-inner'} isHoverable isPressable>

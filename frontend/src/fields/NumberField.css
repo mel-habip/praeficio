@@ -1,0 +1,31 @@
+	.number-field button {
+	    cursor: pointer;
+	}
+
+	.number-field .minus,
+	.number-field .plus {
+	    width: 25px;
+	    height: auto;
+	    background: var(--modal-background);
+        color: var(--text-primary);
+        border: 1px solid #ddd;
+	    border-radius: 4px;
+        padding-left: 5px;
+        padding-right: 5px;
+        margin-left: 8px;
+        margin-right: 8px;
+	    display: inline-block;
+	    vertical-align: middle;
+	    text-align: center;
+	}
+
+	.number-field input {
+	    height: 34px;
+	    width: 100px;
+	    text-align: center;
+	    font-size: 26px;
+	    border: 1px solid #ddd;
+	    border-radius: 4px;
+	    display: inline-block;
+	    vertical-align: middle;
+	}
