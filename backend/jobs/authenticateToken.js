@@ -3,6 +3,8 @@ import dotenv from 'dotenv';
 import query from '../utils/db_connection.js';
 import env_dir from '../utils/env_dir.js';
 
+import usersCache from '../stores/usersCache.js';
+
 if (env_dir) {
     dotenv.config({
         path: env_dir
@@ -21,8 +23,19 @@ export default async function authenticateToken(req, res, next) { //this is midd
         return res.status(401).send('Unauthenticated: No session token received.');
     }
 
+
+
+
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET_KEY, (async (err, user) => {
         if (err) return res.status(401).send('Unauthenticated: Invalid Token');
+
+        const checkCache = usersCache.get(`user-${user.id}`);
+
+        if (checkCache?.to_do_categories && checkCache?.workspaces && checkCache?.feedback_logs) {
+            req.user = checkCache;
+            next();
+            return;
+        }
 
         let [current_details] = await query(`SELECT deleted, active, permissions, first_name, last_name, email, created_on, updated_on, to_do_categories, use_beta_features, username FROM users WHERE user_id = ? LIMIT 1;`, user.id);
 
@@ -37,6 +50,7 @@ export default async function authenticateToken(req, res, next) { //this is midd
         user.permissions = current_details.permissions;
 
         if (current_details.permissions === 'total') user.is_total = true;
+        if (current_details.permissions.startsWith('dev_') || user.is_total) user.is_dev = true;
 
         user.first_name = current_details.first_name;
         user.last_name = current_details.last_name;
@@ -56,6 +70,8 @@ export default async function authenticateToken(req, res, next) { //this is midd
         await query(`SELECT feedback_log_id FROM feedback_log_user_associations WHERE user_id = ?;`, user.id).then(response => user.feedback_logs = response.map(a => a.feedback_log_id));
 
         req.user = user;
+
+        usersCache.set(`user-${req.user.id}`, req.user);
 
         next();
     }));

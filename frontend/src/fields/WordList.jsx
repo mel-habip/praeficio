@@ -5,7 +5,7 @@ import './WordList.css';
 /**
  * @param {function} onListChange 
  */
-export default function WordListField({ style = {}, onListChange = (e) => console.log('got: ', e) }) {
+export default function WordListField({ style = {}, onListChange = (e) => console.log('got: ', e), placeholder = 'Add a word', uniqueOnly = true }) {
     const [inputValue, setInputValue] = useState('');
     const [wordList, setWordList] = useState([]);
 
@@ -14,19 +14,23 @@ export default function WordListField({ style = {}, onListChange = (e) => consol
         const newItem = inputValue.trim();
         if (!newItem) return;
         if (event.key === 'Enter') {
-            console.log(event)
             event.preventDefault();
             if (event.shiftKey || event.ctrlKey || event.metaKey) {
                 // Add item to the beginning of the list
-                setWordList([newItem, ...wordList]);
-                setInputValue("");
-                onListChange([newItem, ...wordList]);
+                setWordList(prev => {
+                    const after = uniqueOnly ? Array.from(new Set([newItem, ...prev])) : [newItem, ...prev];
+                    onListChange(after);
+                    return after;
+                });
             } else {
                 // Add item to the end of the list
-                setWordList([...wordList, newItem]);
-                setInputValue("");
-                onListChange([...wordList, newItem]);
+                setWordList(prev => {
+                    const after = uniqueOnly ? Array.from(new Set([...prev, newItem])) : [...prev, newItem];
+                    onListChange(after);
+                    return after;
+                });
             }
+            setInputValue("");
         }
     }
 
@@ -66,7 +70,7 @@ export default function WordListField({ style = {}, onListChange = (e) => consol
             <input
                 type="text"
                 className="word-list-input"
-                placeholder="Add a word"
+                placeholder={placeholder}
                 value={inputValue}
                 onChange={handleInputChange}
                 // onBlur={handleBlur}

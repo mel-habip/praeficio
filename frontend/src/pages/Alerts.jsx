@@ -7,7 +7,7 @@ function Alerts() {
 
     return (
         <>
-            <NavMenu ></NavMenu>
+            <NavMenu />
             <h1>ALERTS PAGE HERE</h1>
             <h2>
             <i className="fa-regular fa-bell"></i>

@@ -1,6 +1,8 @@
 "use strict"
-import express from 'express';
-const userRouter = express.Router();
+import {
+    Router
+} from 'express';
+const userRouter = Router();
 import NodeCache from "node-cache";
 const userRouterCache = new NodeCache();
 
@@ -22,7 +24,9 @@ import emailService from '../jobs/emailService.js';
 import validatePassword from '../../frontend/src/utils/validatePassword.mjs';
 import UserService from '../modules/UserService.mjs';
 import validateAndSanitizeBodyParts from '../jobs/validateAndSanitizeBodyParts.js';
+import generateTemporaryPassword from '../utils/generateTemporaryPassword.js';
 
+import usersCache from '../stores/usersCache.js';
 
 const helper = new UserService();
 
@@ -30,7 +34,7 @@ userRouter.get('/', authenticateToken, async (req, res) => {
 
     const include_deactivated = Boolean(req.query.include_deactivated);
 
-    let sql = `SELECT user_id, username, last_name, first_name, email, permissions, active, created_on, updated_on FROM users`;
+    let sql = `SELECT user_id, username, last_name, first_name, email, permissions, active, deleted, use_beta_features, created_on, updated_on, to_do_categories FROM users`;
 
     if (!include_deactivated) sql += ` WHERE active = 1;`;
 
@@ -134,7 +138,7 @@ userRouter.post('/create_new_user', async (req, res) => {
         });
     }
 
-    //Do we want to then create a table specifically for that user and their data?
+    usersCache.set(`user-${created_user_details.user_id}`, created_user_details);
 
     res.status(201).json({
         ...created_user_details,
@@ -195,7 +199,8 @@ userRouter.post('/pre_signed_create_new_user', authenticateToken, async (req, re
         to: req.body.email,
         message: `Welcome onboard! \n\n\tYour temp password: ${temp_password}\n\n\t Your activation token: ${ActivationToken}`, //TODO: embed this into a button in HTML or at least a hyperlink
     });
-    //Do we want to then create a table specifically for that user and their data?
+
+    usersCache.set(`user-${created_user_details.user_id}`, created_user_details);
 
     return res.status(201).json({
         ...created_user_details,
@@ -224,6 +229,8 @@ userRouter.post('/login', validateAndSanitizeBodyParts({
         });
     };
 
+    const globalCacheCheck = usersCache.get(`user-${relevantUser.user_id}`);
+
     const isLockedOut = userRouterCache.get(`${relevantUser.user_id}-lock`);
 
     if (isLockedOut) {
@@ -245,6 +252,10 @@ userRouter.post('/login', validateAndSanitizeBodyParts({
             id: relevantUser.user_id,
         };
         const access_token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET_KEY);
+        usersCache.set(`user-${relevantUser.user_id}`, {
+            ...(globalCacheCheck || {}),
+            ...relevantUser
+        });
         return res.status(200).json({
             user_id: relevantUser.user_id,
             username: relevantUser.username,
@@ -254,8 +265,8 @@ userRouter.post('/login', validateAndSanitizeBodyParts({
             active: relevantUser.active,
             message: `Successful`,
             access_token,
-            to_do_categories: relevantUser.to_do_categories,
-            use_beta_features: relevantUser.use_beta_features,
+            to_do_categories: relevantUser?.to_do_categories,
+            use_beta_features: relevantUser?.use_beta_features,
             permissions: relevantUser.permissions,
         });
     } else {
@@ -439,7 +450,7 @@ userRouter.get('/:user_id', authenticateToken, async (req, res) => {
 
 userRouter.put('/:user_id', authenticateToken, async (req, res) => {
 
-    let selected_user_details = await helper.fetch_by_id([req.params.user_id]);
+    const selected_user_details = await helper.fetch_by_id([req.params.user_id]);
 
     if (!selected_user_details) {
         return res.status(404).json({
@@ -500,6 +511,9 @@ userRouter.put('/:user_id', authenticateToken, async (req, res) => {
 
     await query(sql, [...Object.values(changes), req.params.user_id]).then(response => {
         if (response.affectedRows) {
+
+            usersCache.del(`user-${req.params.user_id}`);
+
             return res.status(200).json({
                 message: `${list(Object.keys(changes))} updated.`,
                 response,
@@ -539,7 +553,9 @@ userRouter.get('/:user_id/positions', authenticateToken, async (req, res) => {
 });
 
 userRouter.post('/:user_id/regenerate_recovery_codes', authenticateToken, async (req, res) => {
-    return res.status(200).json({message: 'this endpoint is not ready yet.'});
+    return res.status(200).json({
+        message: 'this endpoint is not ready yet.'
+    });
 });
 
 userRouter.post('/:user_id/regenerate_last_resort_passcode', authenticateToken, async (req, res) => {

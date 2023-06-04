@@ -28,6 +28,8 @@ export default function useHandleError() {
             window.location = '/not_found';
         } else if (status === 403) {
             window.location = '/403';
+        } else if (status === 500) {
+            window.location = '/500';
         } else if (status === 401) {
             setIsLoggedIn(false);
         }

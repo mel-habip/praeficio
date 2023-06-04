@@ -1,5 +1,5 @@
-CREATE DATABASE stock_portfolio_db;
-USE stock_portfolio_db;
+CREATE DATABASE `praeficio-database-1`;
+USE `praeficio-database-1`;
 
 SHOW EVENTS;
 DROP EVENT expired_workspace_invitations_cleaning;
@@ -16,6 +16,7 @@ CREATE TABLE users (
     first_name VARCHAR(255),
     email VARCHAR(255),
     use_beta_features BOOLEAN DEFAULT FALSE,
+    to_do_categories JSON NULL,
     permissions VARCHAR(100) DEFAULT 'client',
     active BOOLEAN DEFAULT FALSE,
     deleted BOOLEAN DEFAULT FALSE,
@@ -302,6 +303,83 @@ CREATE TABLE newsletters (
         ON DELETE SET NULL
 );
 
+CREATE TABLE debt_accounts (
+	debt_account_id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100),
+    borrower_id INT,
+    lender_id INT,
+    -- balance is always calculated fresh
+    who_can_add_transactions ENUM('borrower', 'lender', 'both') DEFAULT 'both',
+    archived BOOLEAN DEFAULT FALSE,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (borrower_id)
+        REFERENCES users (user_id)
+        ON DELETE CASCADE,
+	FOREIGN KEY (lender_id)
+        REFERENCES users (user_id)
+        ON DELETE CASCADE
+);
+
+CREATE TABLE debt_account_transactions (
+	debt_account_transaction_id INT PRIMARY KEY AUTO_INCREMENT,
+    debt_account_id INT,
+    header VARCHAR(100),
+    details VARCHAR(800) DEFAULT "-",
+    entered_by INT,
+    amount DECIMAL(10,2),
+    posted_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (entered_by)
+        REFERENCES users (user_id)
+        ON DELETE CASCADE,
+	FOREIGN KEY (debt_account_id)
+        REFERENCES debt_accounts (debt_account_id)
+        ON DELETE CASCADE
+);
+
+CREATE TABLE friendships (
+	user_1_id INT NOT NULL,
+    user_2_id INT NOT NULL,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_1_id , user_2_id),
+    FOREIGN KEY (user_1_id)
+        REFERENCES users (user_id)
+        ON DELETE CASCADE,
+	FOREIGN KEY (user_2_id)
+        REFERENCES users (user_id)
+        ON DELETE CASCADE
+);
+
+CREATE TABLE voting_sessions (
+	voting_session_id INT PRIMARY KEY AUTO_INCREMENT,
+    voter_key VARCHAR(50),
+	name VARCHAR(100) NOT NULL,
+    created_by INT,
+    completed BOOLEAN DEFAULT FALSE,
+    completed_on DATETIME,
+    deleted BOOLEAN DEFAULT FALSE,
+    details JSON, -- contains voting method, options and constraints, and once completed the results too
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by)
+        REFERENCES users (user_id)
+        ON DELETE SET NULL
+);
+
+CREATE TABLE votes (
+	vote_id INT PRIMARY KEY AUTO_INCREMENT,
+    voting_session_id INT NOT NULL,
+    voter_ip_address VARCHAR(40) NOT NULL,
+    deleted BOOLEAN DEFAULT FALSE,
+    details JSON, -- a hash detailing who they voted for
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+	FOREIGN KEY (voting_session_id)
+        REFERENCES voting_sessions (voting_session_id)
+        ON DELETE CASCADE
+);
 
 SET GLOBAL event_scheduler = ON;
 

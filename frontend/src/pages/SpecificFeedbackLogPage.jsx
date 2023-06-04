@@ -31,8 +31,7 @@ export default function SpecificFeedbackLogPage() {
 
     console.log('routeParams', feedback_log_id);
 
-    const { setIsLoggedIn, accessToken, user } = useContext(IsLoggedInContext);
-    axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+    const { setIsLoggedIn, user } = useContext(IsLoggedInContext);
 
     const [feedbackLogItems, setFeedbackLogItems] = useState(null);
     const [feedbackLogFilters, setFeedbackLogFilters] = useState(null);

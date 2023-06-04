@@ -8,9 +8,11 @@ import { NextUIProvider, createTheme, Loading } from '@nextui-org/react';
 import axios from 'axios';
 
 const PublicPage = lazy(() => import('./pages/PublicPage'));
+const QuickNotes = lazy(() => import('./pages/QuickNotes'));
 const Newsletters = lazy(() => import('./pages/NewsLetterPages/Newsletters'));
 const SpecificNewsletterPage = lazy(() => import('./pages/NewsLetterPages/SpecificNewsletterPage'));
 const NewslettersAdmin = lazy(() => import('./pages/NewsLetterPages/NewslettersAdmin'));
+const InternalAdmin = lazy(() => import('./pages/InternalAdmin'));
 const LoginPage = lazy(() => import('./pages/LoginPage.jsx'));
 const Portal = lazy(() => import('./pages/Portal.jsx'));
 const Positions = lazy(() => import('./pages/Positions.jsx'));
@@ -27,6 +29,19 @@ const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
 const ForbiddenPage = lazy(() => import('./pages/ForbiddenPage.jsx'));
 const LoadingPage = lazy(() => import('./pages/LoadingPage'));
 const ErrorPage = lazy(() => import('./pages/ErrorPage'));
+
+const ServiceDesk = lazy(() => import('./pages/ServiceDesk'));
+const SpecificDebtAccountPage = lazy(() => import('./pages/SpecificDebtAccountPage'));
+const DebtAccounts = lazy(() => import('./pages/DebtAccounts'));
+const SpecificUserProfilePage = lazy(() => import('./pages/SpecificUserProfilePage'));
+
+const SpecificVoterPage = lazy(() => import('./pages/VotingPages/SpecificVoterPage'));
+const VotingSessionsPage = lazy(() => import('./pages/VotingPages/VotingSessionsPage'));
+const SpecificVotingSessionPage = lazy(() => import('./pages/VotingPages/SpecificVotingSessionPage'));
+const VoterRedirectPageOne = lazy(() => import('./pages/VotingPages/VoterRedirectPageOne'));
+const VoterRedirectPageTwo = lazy(() => import('./pages/VotingPages/VoterRedirectPageTwo'));
+const VotingSessionClosedPage = lazy(() => import('./pages/VotingPages/VotingSessionClosedPage'));
+
 
 
 function App() {
@@ -115,11 +130,17 @@ function App() {
                   <Route path='/home' element={<Navigate to="/portal" replace />} />
                   <Route path='/portal' element={isLoggedIn ? <Portal /> : <LoginPage />} exact />
                   <Route path='/newsletters' element={<Newsletters />} exact />
+                  <Route path='/notes' element={<QuickNotes />} exact />
+                  <Route path='/quicknotes' element={<QuickNotes />} exact />
+                  <Route path='/quick_notes' element={<QuickNotes />} exact />
+                  <Route path='/quick-notes' element={<QuickNotes />} exact />
                   <Route path='/newsletters/admin' element={isLoggedIn ? ((user?.permissions?.startsWith('dev_') || user?.is_total) ? <NewslettersAdmin /> : <Navigate to="/403" replace />) : <LoginPage />} exact />
+                  <Route path='/internal_admin' element={isLoggedIn ? ((['total', 'dev_lead'].includes(user?.permissions)) ? <InternalAdmin /> : <Navigate to="/403" replace />) : <LoginPage />} exact />
                   <Route path='/newsletters/:newsletter_id' element={<SpecificNewsletterPage />} exact />
                   <Route path='/login' element={isLoggedIn ? <Navigate to="/home" replace /> : <LoginPage />} exact />
                   <Route path='/positions' element={isLoggedIn ? <Positions /> : <LoginPage />} exact />
                   <Route path='/alerts' element={isLoggedIn ? <Alerts /> : <LoginPage />} exact />
+                  <Route path='/service_desk' element={isLoggedIn ? <ServiceDesk /> : <LoginPage />} exact />
 
                   <Route path="/tic-tac-toe" element={<Navigate to="/tictactoe" replace />} />
                   <Route path="/tic_tac_toe" element={<Navigate to="/tictactoe" replace />} />
@@ -142,9 +163,25 @@ function App() {
                   <Route path='/todos' element={isLoggedIn ? <ToDos /> : <LoginPage />} exact />
                   <Route path='/todos/archive' element={isLoggedIn ? <ToDos archive /> : <LoginPage />} exact />
                   <Route path='/settings' element={isLoggedIn ? <Settings /> : <LoginPage />} exact />
+                  <Route path='/feedback-logs' element={<Navigate to="/feedback_logs" replace />} />
                   <Route path='/feedback_logs' element={isLoggedIn ? <FeedbackLogsPage /> : <LoginPage />} exact />
+                  <Route path='/feedback-logs/archive' element={<Navigate to="/feedback_logs/archive" replace />} />
                   <Route path='/feedback_logs/archive' element={isLoggedIn ? <FeedbackLogsPage archive /> : <LoginPage />} exact />
                   <Route path='/feedback_logs/:feedback_log_id' element={isLoggedIn ? <SpecificFeedbackLogPage /> : <LoginPage />} exact />
+
+                  <Route path='/users/:user_id' element={<SpecificUserProfilePage />} exact />
+
+                  <Route path='/debt-accounts' element={<Navigate to="/debt_accounts" replace />} />
+                  <Route path='/debt_accounts' element={isLoggedIn ? <DebtAccounts /> : <LoginPage />} exact />
+                  <Route path='/debt_accounts/:debt_account_id' element={isLoggedIn ? <SpecificDebtAccountPage /> : <LoginPage />} exact />
+
+                  <Route path='/vote' element={<VoterRedirectPageOne />} exact />
+                  <Route path='/voting_completed' element={<VotingSessionClosedPage />} exact />
+                  <Route path='/voting_sessions/' element={isLoggedIn ? <VotingSessionsPage /> : <LoginPage />} exact />
+                  <Route path='/voting_sessions/:voting_session_id' element={isLoggedIn ? <SpecificVotingSessionPage /> : <LoginPage />} exact />
+                  <Route path='/voting_sessions/:voting_session_id/vote' element={<VoterRedirectPageTwo />} exact />
+                  <Route path='/voting_sessions/:voting_session_id/vote/:voter_key' element={<SpecificVoterPage />} exact />
+
                   <Route path='/testzone' element={<TestZone />} exact />
                   <Route path='/403' element={<ForbiddenPage />} exact />
                   <Route path='/500' element={<ErrorPage />} exact />

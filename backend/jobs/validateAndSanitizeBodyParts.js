@@ -18,7 +18,11 @@ export default function validateAndSanitizeBodyParts(all_props = {}, required = 
         if (!all_props.hasOwnProperty(prop)) throw Error(`prop "${prop}" is not specified in the 'all_props' object in this middleware`);
     });
 
-    const reqMessage = [Object.keys(required).slice(0, -1).join(', '), Object.keys(required).pop()].join(' and ') + Object.keys(required).length > 1 ? ' are ' : ' is ' + 'required.';
+    {
+
+    }
+
+    const reqMessage = [Object.keys(required).slice(0, -1).join(', '), Object.keys(required).at(-1)].join(' and ') + (Object.keys(required).length > 1 ? ' are ' : ' is ') + 'required.';
 
     return function (req, res, next) {
         const cleanedBody = {};
@@ -27,7 +31,8 @@ export default function validateAndSanitizeBodyParts(all_props = {}, required = 
 
             if (!req.body.hasOwnProperty(prop) && required[prop]) { //not included in the body at all
                 return res.status(400).json({
-                    message: reqMessage
+                    message: reqMessage,
+                    required,
                 });
             } else if (req.body.hasOwnProperty(prop)) {
                 if (expectedType.startsWith('enum(')) {

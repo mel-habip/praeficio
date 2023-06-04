@@ -9,7 +9,7 @@ import axios from 'axios';
 
 /**
  * @component
- * @param {String} endpoint like /positions/3 (assume DELETE method)
+ * @param {String} endPoint like /positions/3 (assume DELETE method)
  * @param {Function} setSelfOpen setState function for the Modal itself
  * @param {Boolean} selfOpen State value for the modal itself
  * @param {String} titleText how to refer to the item, like "this Position" or "this Workspace"
@@ -26,7 +26,7 @@ export default function DeletionModal({ endPoint, setSelfOpen = () => { }, selfO
                 <Text size={18} > Are you sure you want to delete {titleText}?</Text>
             </Modal.Header>
             <Modal.Body>
-                <Text size={15} css={{ 'white-space': 'pre-wrap', 'padding-left': '5rem' }}> {bodyText} </Text>
+                {!!bodyText && <Text size={15} css={{ 'white-space': 'pre-wrap', 'padding-left': '5rem' }}> {bodyText} </Text>}
                 <Row justify='space-evenly'>
                     <Button
                         auto
