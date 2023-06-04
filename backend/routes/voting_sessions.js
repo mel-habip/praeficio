@@ -65,7 +65,12 @@ votingSessionRouter.post('/', authenticateToken, validateAndSanitizeBodyParts({
     details: 'hash'
 }, ['name', 'details']), async (req, res) => {
 
-    votingSessionsCache.del(votingSessionsCache.keys.filter(str => str.startsWith('user-')));
+    try {
+        votingSessionsCache.del((votingSessionsCache.keys || []).filter(str => str.startsWith('user-')));
+    } catch (e) {
+        console.error(e?.stack || e?.message || e);
+        votingSessionsCache.flushAll();
+    }
 
     const filteredDetails = {};
 
