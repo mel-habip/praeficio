@@ -84,14 +84,14 @@ function SingleVoteFields({ options, submit_func }) {
     const formattedOptions = useMemo(() => {
         return options.map(opt => ({
             key: opt,
-            label: opt,
+            name: opt,
         }))
     }, [options]);
 
     return (<>
         <h2>Please select the option you wish to support</h2>
 
-        <CustomizedDropdown options={formattedOptions} mountDirectly outerUpdater={setSelection} />
+        <CustomizedDropdown optionsList={formattedOptions} mountDirectly outerUpdater={setSelection} />
 
 
         <Button color="success" disabled={!selection} onClick={() => submit_func([selection])}> Submit my vote</Button>

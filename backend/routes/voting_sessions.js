@@ -23,10 +23,10 @@ votingSessionRouter.get('/test', async (_, res) => {
 
 
 //get all sessions user has access to
-votingSessionRouter.get('/', authenticateToken, async (_, res) => {
+votingSessionRouter.get('/', authenticateToken, async (req, res) => {
     let results;
 
-    if (user.is_dev) {
+    if (req.user.is_dev) {
         const sql = `SELECT * FROM ${sessionHelper.table_name};`;
         results = await query(sql);
     } else {
@@ -36,7 +36,7 @@ votingSessionRouter.get('/', authenticateToken, async (_, res) => {
     if (results) {
         return res.status(200).json({
             data: results,
-            message: user.is_dev ? `is_dev --> all ${results.length} results shown.` : `${results.length} results found for user ${req.user.id}.`
+            message: req.user.is_dev ? `is_dev --> all ${results.length} results shown.` : `${results.length} results found for user ${req.user.id}.`
         });
     }
 
@@ -48,7 +48,7 @@ votingSessionRouter.get('/', authenticateToken, async (_, res) => {
 //create a new voting session
 votingSessionRouter.post('/', authenticateToken, validateAndSanitizeBodyParts({
     name: 'string',
-    details: 'json'
+    details: 'hash'
 }, ['name', 'details']), async (req, res) => {
 
     const filteredDetails = {};
@@ -68,7 +68,7 @@ votingSessionRouter.post('/', authenticateToken, validateAndSanitizeBodyParts({
             options
         } = details;
 
-        if (!options || !options?.length || !Array.isArray(options) || !options?.every(opt => !!opt && typeof opt === 'string' && opt.length <= 100) || Array.from(new Set(options.map(x => x.toLowerCase().trim())).length !== details.options.length)) {
+        if (!options || !options?.length || !Array.isArray(options) || !options?.every(opt => !!opt && typeof opt === 'string' && opt.length <= 100) || Array.from(new Set(options.map(x => x.toLowerCase().trim()))).length !== details.options.length) {
             return res.status(400).json({
                 message: `Provided options array is invalid`
             });
@@ -112,7 +112,7 @@ votingSessionRouter.post('/', authenticateToken, validateAndSanitizeBodyParts({
         name: req.body.name,
         voter_key: generateTemporaryPassword(16, true),
         created_by: req.user.id,
-        details: filteredDetails,
+        details: JSON.stringify(filteredDetails),
     });
 
     if (creation_details?.success) return res.status(201).json({
@@ -183,7 +183,7 @@ votingSessionRouter.post(`/:voting_session_id/complete`, authenticateToken, asyn
 
     let current_best = ['indeterminate', 0];
 
-    result.valid_votes = votesEntries.length;
+    result.valid_votes = votesEntries.filter(x => x[1]).length;
 
     votesEntries.forEach(([candidate, votes]) => {
         if (votes > current_best[1]) {
@@ -197,10 +197,10 @@ votingSessionRouter.post(`/:voting_session_id/complete`, authenticateToken, asyn
     result.winner_percentage = ((current_best[1] / result.valid_votes) * 100).toFixed(2) + '%';
 
     const update_details = await sessionHelper.update_single({
-        details: {
+        details: JSON.stringify({
             ...voting_session.details,
             result,
-        },
+        }),
         completed: true,
         completed_on: new Date(),
     }, req.params.voting_session_id);
@@ -213,9 +213,9 @@ votingSessionRouter.post(`/:voting_session_id/complete`, authenticateToken, asyn
 
     return res.status(200).json({
         success: true,
+        ...update_details.details,
         result,
         errors,
-        details: update_details.details
     });
 });
 
@@ -237,7 +237,7 @@ votingSessionRouter.post(`/:voting_session_id/renew_voter_key`, authenticateToke
 
     const update_result = await sessionHelper.update_single({
         voter_key: new_voter_key,
-    });
+    }, req.params.voting_session_id);
 
     if (update_result?.success) return res.status(200).json({
         ...update_result.details,
@@ -454,7 +454,7 @@ votingSessionRouter.get(`/:voting_session_id`, authenticateToken, async (req, re
 
     let current_best = ['indeterminate', 0];
 
-    result.valid_votes = votesEntries.length;
+    result.valid_votes = votesEntries.filter(x => x[1]).length;
 
     votesEntries.forEach(([candidate, votes]) => {
         if (votes > current_best[1]) {
@@ -471,7 +471,8 @@ votingSessionRouter.get(`/:voting_session_id`, authenticateToken, async (req, re
         ...voting_session,
         result,
         distribution: candidatesMap,
-    })
+        errors,
+    });
 });
 
 //remove a vote from the election - in case its wrong, this allows the voter to vote again.

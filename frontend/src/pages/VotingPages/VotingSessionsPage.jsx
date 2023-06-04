@@ -14,9 +14,11 @@ import NavMenu from '../../components/NavMenu';
 import { Button, Modal, Spacer, Text, Input, Checkbox, Row, Grid, Dropdown, Card } from '@nextui-org/react';
 
 import { CustomButton } from '../../fields/CustomButton';
-import CustomizedDropdown from '../../fields/CustomizedDropdown'
+import CustomizedDropdown from '../../fields/CustomizedDropdown';
 
 import timestampFormatter from '../../utils/timestampFormatter';
+import NumberField from '../../fields/NumberField';
+import WordListField from '../../fields/WordList';
 
 export default function VotingSessionsPage() {
     const { setIsLoggedIn, accessToken, user } = useContext(IsLoggedInContext);
@@ -45,6 +47,8 @@ export default function VotingSessionsPage() {
     </>);
 
     return (<>
+        <NavMenu />
+        <VotingSessionCreationModalWithButton />
         <Grid.Container gap={1} justify="center">
             {votingSessions.map((session, index) =>
                 <Grid key={session.voting_session_id + '-grid'}>
@@ -85,8 +89,38 @@ function VotingSessionCreationModalWithButton({ setVotingSessions }) {
 
     const [votingSessionDetails, setVotingSessionDetails] = useState({});
 
+    const methodOptions = [
+        {
+            key: 'simple',
+            name: 'Simple',
+            description: 'Each person votes for 1 option only'
+        },
+        {
+            key: 'multiple_votes',
+            name: 'Multiple Votes',
+            description: `Each voters get ${votingSessionDetails.number_of_votes || 'X'} number of votes`
+        },
+        {
+            key: 'approval',
+            name: 'Approval-Style',
+            description: 'Voters say Yay-Nay to each option individually'
+        },
+        {
+            key: 'preferential',
+            name: 'Preferential',
+            description: 'Being developed.',
+            disabled: true
+        },
+        {
+            key: 'single_transferable_vote',
+            name: 'Single Transferable Vote',
+            description: 'Being developed.',
+            disabled: true
+        }
+    ];
+
     return (<>
-        <Button shadow onClick={() => setModalOpen(true)} >Create a new Voting Session</Button>
+        <CustomButton shadow onClick={() => setModalOpen(true)} >Create a new Voting Session <i className="fa-regular fa-square-plus" /></CustomButton>
 
         <Modal closeButton blur aria-labelledby="modal-title" open={modalOpen} onClose={() => setModalOpen(false)} >
             <Modal.Header css={{ 'z-index': 86, position: 'relative' }}>
@@ -95,6 +129,15 @@ function VotingSessionCreationModalWithButton({ setVotingSessions }) {
                 <Spacer y={0.4} />
                 <pre>{JSON.stringify(votingSessionDetails, null, 2)}</pre>
                 <Input labelPlaceholder="Election Name" color="primary" rounded bordered clearable onChange={e => setVotingSessionDetails(prev => ({ ...prev, name: e.target.value }))} ></Input>
+                <CustomizedDropdown optionsList={methodOptions} mountDirectly outerUpdater={v => setVotingSessionDetails(prev => ({ ...prev, method: v }))} />
+                <Checkbox onChange={b => setVotingSessionDetails(prev => ({ ...prev, limit_voters: b }))} ><p>Limit number of voters?</p></Checkbox>
+                {votingSessionDetails.limit_voters && <NumberField min={2} max={200} default_value={votingSessionDetails.voter_limit || 2} outer_updater={v => setVotingSessionDetails(prev => ({ ...prev, voter_limit: v }))} />}
+                {votingSessionDetails.method === 'multiple_votes' && <>
+                    <p>Number of votes per voter</p>
+                    <NumberField min={2} max={50} default_value={votingSessionDetails.number_of_votes || 2} outer_updater={v => setVotingSessionDetails(prev => ({ ...prev, number_of_votes: v }))} />
+                </>}
+                <p>Options to vote amongst:</p>
+                <WordListField style={{ border: 'none' }} placeholder="Add another option and hit 'Enter' to record" onListChange={ar => setVotingSessionDetails(prev => ({ ...prev, options: ar }))} />
 
                 {/* need additional options here: method, voters limit, if "multiple" than also how many */}
 
@@ -105,7 +148,13 @@ function VotingSessionCreationModalWithButton({ setVotingSessions }) {
                     onPress={async () => {
                         console.log('creating voting session', votingSessionDetails?.name);
                         await axios.post(`${process.env.REACT_APP_API_LINK}/voting_sessions/`, {
-                            name: votingSessionDetails?.name
+                            name: votingSessionDetails?.name,
+                            details: {
+                                method: votingSessionDetails.method,
+                                voter_limit: votingSessionDetails.limit_voters ? votingSessionDetails.voter_limit : undefined,
+                                number_of_votes: votingSessionDetails.method === 'multiple_votes' ? votingSessionDetails.number_of_votes : undefined,
+                                options: votingSessionDetails.options,
+                            }
                         }).then(response => {
                             console.log('response:', response.data);
                             if ([201, 200].includes(response.status)) {

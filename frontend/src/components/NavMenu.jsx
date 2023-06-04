@@ -153,6 +153,15 @@ function NavMenu() {
                             Tic-Tac-Toe&nbsp; <i className="fa-solid fa-table-cells-large" />
                         </Link>
                     </li>
+                    <li className='nav-item'>
+                        <Link
+                            to='/voting_sessions'
+                            className='nav-links'
+                            onClick={closeNavMenu}
+                        >
+                            Voting&nbsp; <i className="fa-solid fa-square-poll-vertical" />
+                        </Link>
+                    </li>
                 </ul>
                 <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', padding: '8%', width: 'calc(100% + 2rem)' }} >
                     <Text css={{ 'white-space': 'pre-wrap', textAlign: 'left' }} blockquote >

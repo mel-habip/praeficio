@@ -5,7 +5,16 @@ import './NumberField.css';
 
 export default function NumberField({ min = null, max = null, default_value = 1, outer_updater = () => { } }) {
 
-    const [innerValue, setInnerValue] = useState(default_value);
+    if (min != null && default_value <= min) {
+        default_value = min;
+    } else if (max != null && default_value >= max) {
+        default_value = max;
+    }
+
+    const [innerValue, setInnerValue] = useState(() => {
+        outer_updater(default_value); //so that the function runs on initialize
+        return default_value; 
+    });
 
     function increment() {
         setInnerValue(prev => {
@@ -18,7 +27,7 @@ export default function NumberField({ min = null, max = null, default_value = 1,
 
     function decrement() {
         setInnerValue(prev => {
-            if (min !=null && prev <= min) return prev;
+            if (min != null && prev <= min) return prev;
             outer_updater(prev - 1);
             return prev - 1
         });
@@ -38,7 +47,7 @@ export default function NumberField({ min = null, max = null, default_value = 1,
                 } else if (isNaN(newValue)) {
                     return;
                 }
-
+                outer_updater(newValue);
                 setInnerValue(newValue);
             }} />
             <button className="plus" onClick={increment} >+</button>
