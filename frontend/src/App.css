@@ -5,7 +5,7 @@
   --text-secondary: royalblue;
   --accent: purple;
   --link-color: darkblue;
-  --border_color: darkgrey;
+  --border-color: darkgrey;
   --modal-background: lightgrey;
   overflow-x: hidden;
   overflow-y: auto;
@@ -23,7 +23,7 @@
   --text-secondary: grey;
   --accent: darkred;
   --link-color: lightblue;
-  --border_color: lightgrey;
+  --border-color: lightgrey;
   --nextui-colors-accents0: #16181A;
 }
 

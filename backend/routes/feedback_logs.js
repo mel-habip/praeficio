@@ -1,9 +1,12 @@
 "use strict"
+
 import express from 'express';
 const feedbackLogRouter = express.Router();
 import authenticateToken from '../jobs/authenticateToken.js';
 import FeedbackLogService from '../modules/FeedbackLogService.mjs';
 import query from '../utils/db_connection.js';
+
+import usersCache from '../stores/usersCache.js';
 
 const helper = new FeedbackLogService();
 
@@ -41,6 +44,8 @@ feedbackLogRouter.get('/', async (req, res) => {
 
 //create new feedback log
 feedbackLogRouter.post('/', async (req, res) => {
+
+    usersCache.del(`user-${req.user.id}`);
 
     if (req.user.permissions.endsWith('client')) {
         return res.status(403).send('You do not have permission to create Feedback Logs');
@@ -143,6 +148,7 @@ feedbackLogRouter.post('/:feedback_log_id/new_item', async (req, res) => {
 //edit a feedback log (change notes or name)
 feedbackLogRouter.put('/:feedback_log_id', async (req, res) => {
 
+    usersCache.del(`user-${req.user.id}`);
 
     if (!req.user.is_total && (['basic_client', 'pro_client'].includes(req.user.permissions) || !req.user.feedback_logs.includes(parseInt(req.params.feedback_log_id)))) {
         return res.status(403).send(`Forbidden: You do not have access to editing this Feedback Log.`);
@@ -196,6 +202,9 @@ feedbackLogRouter.put('/:feedback_log_id', async (req, res) => {
 
 //give user access to feedback log
 feedbackLogRouter.post('/:feedback_log_id/add_user', async (req, res) => {
+
+    usersCache.del(`user-${req.user.id}`);
+    usersCache.del(`user-${req.body.user_id}`);
 
     if (!req.body.user_id) {
         return res.status(400).send('user_id is required');

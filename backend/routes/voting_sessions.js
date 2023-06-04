@@ -10,6 +10,7 @@ import VotingSessionService from '../modules/VotingSessionService.mjs';
 import VoteService from '../modules/VoteService.mjs';
 import validateAndSanitizeBodyParts from '../jobs/validateAndSanitizeBodyParts.js';
 import generateTemporaryPassword from '../utils/generateTemporaryPassword.js';
+import votingSessionsCache from '../stores/votingSessionsCache.js';
 
 const sessionHelper = new VotingSessionService();
 const voteHelper = new VoteService();
@@ -26,12 +27,25 @@ votingSessionRouter.get('/test', async (_, res) => {
 votingSessionRouter.get('/', authenticateToken, async (req, res) => {
     let results;
 
-    if (req.user.is_dev) {
-        const sql = `SELECT * FROM ${sessionHelper.table_name};`;
-        results = await query(sql);
+    const checkCache = votingSessionsCache.get(`user-${req.user.id}-voting-sessions`);
+
+    if (checkCache) {
+        results = checkCache;
     } else {
-        results = sessionHelper.fetch_by_user_id(req.user.id);
+        if (req.user.is_dev) {
+            const sql = `SELECT * FROM ${sessionHelper.table_name};`;
+            results = await query(sql);
+        } else {
+            results = sessionHelper.fetch_by_user_id(req.user.id);
+        }
+
+        votingSessionsCache.set(`user-${req.user.id}-voting-sessions`, results);
+        // results.forEach(session => {
+        //  //can't do this because it will overwrite the cache but without the votes. We can `get` for each to check, but too much computation, not really worth it
+        //     votingSessionsCache.set(`voting-session-${session.voting_session_id}`, session);
+        // });
     }
+
 
     if (results) {
         return res.status(200).json({
@@ -50,6 +64,8 @@ votingSessionRouter.post('/', authenticateToken, validateAndSanitizeBodyParts({
     name: 'string',
     details: 'hash'
 }, ['name', 'details']), async (req, res) => {
+
+    votingSessionsCache.del(votingSessionsCache.keys.filter(str => str.startsWith('user-')));
 
     const filteredDetails = {};
 
@@ -115,20 +131,24 @@ votingSessionRouter.post('/', authenticateToken, validateAndSanitizeBodyParts({
         details: JSON.stringify(filteredDetails),
     });
 
-    if (creation_details?.success) return res.status(201).json({
-        ...creation_details.details
-    });
-
-    return res.status(422).json({
+    if (!creation_details?.success) return res.status(422).json({
         message: creation_details?.message || `Something went wrong`,
         details: creation_details?.details,
+    });
+
+    votingSessionsCache.set(`voting-session-${creation_details.details.voting_session_id}`, creation_details.details);
+
+    return res.status(201).json({
+        ...creation_details.details
     });
 });
 
 //conclude and complete the election - calculate the result
 votingSessionRouter.post(`/:voting_session_id/complete`, authenticateToken, async (req, res) => {
 
-    const voting_session = await sessionHelper.fetch_by_id(req.params.voting_session_id, {
+    const checkCache = votingSessionsCache.get(`voting-session-${req.params.voting_session_id}`);
+
+    const voting_session = checkCache?.votes ? checkCache : await sessionHelper.fetch_by_id(req.params.voting_session_id, {
         deleted: false
     }, {
         votes: true
@@ -211,6 +231,11 @@ votingSessionRouter.post(`/:voting_session_id/complete`, authenticateToken, asyn
         });
     }
 
+    votingSessionsCache.set(`voting-session-${req.params.voting_session_id}`, {
+        ...voting_session,
+        ...update_result.details
+    });
+
     return res.status(200).json({
         success: true,
         ...update_details.details,
@@ -221,7 +246,10 @@ votingSessionRouter.post(`/:voting_session_id/complete`, authenticateToken, asyn
 
 //renew voter key (in case you want to keep the election but submit )
 votingSessionRouter.post(`/:voting_session_id/renew_voter_key`, authenticateToken, async (req, res) => {
-    const voting_session = await sessionHelper.fetch_by_id(req.params.voting_session_id, {
+
+    const checkCache = votingSessionsCache.get(`voting-session-${req.params.voting_session_id}`);
+
+    const voting_session = checkCache || await sessionHelper.fetch_by_id(req.params.voting_session_id, {
         deleted: false
     });
 
@@ -239,19 +267,26 @@ votingSessionRouter.post(`/:voting_session_id/renew_voter_key`, authenticateToke
         voter_key: new_voter_key,
     }, req.params.voting_session_id);
 
-    if (update_result?.success) return res.status(200).json({
+    if (!update_result?.success) return res.status(422).json({
+        message: `Something went wrong`
+    });
+
+    votingSessionsCache.set(`voting-session-${req.params.voting_session_id}`, {
+        ...voting_session,
+        ...update_result.details
+    });
+
+    return res.status(200).json({
         ...update_result.details,
         new_voter_key,
     });
-
-    return res.status(422).json({
-        message: `Something went wrong`
-    });
 });
 
-//delete the election
+//delete the session
 votingSessionRouter.delete(`/:voting_session_id`, authenticateToken, async (req, res) => {
-    const voting_session = await sessionHelper.fetch_by_id(req.params.voting_session_id, {
+    const checkCache = votingSessionsCache.get(`voting-session-${req.params.voting_session_id}`);
+
+    const voting_session = checkCache || await sessionHelper.fetch_by_id(req.params.voting_session_id, {
         deleted: false
     });
 
@@ -269,6 +304,8 @@ votingSessionRouter.delete(`/:voting_session_id`, authenticateToken, async (req,
         message: `Something went wrong`
     });
 
+    votingSessionsCache.del(`voting-session-${req.params.voting_session_id}`);
+
     res.status(204).json({
         success: deletion_result?.success,
         message: `deleted`
@@ -280,7 +317,10 @@ votingSessionRouter.post(`/:voting_session_id/vote`, validateAndSanitizeBodyPart
     voter_key: 'string',
     selections: 'array'
 }, ['voter_key', 'selections']), async (req, res) => {
-    const voting_session = await sessionHelper.fetch_by_id(req.params.voting_session_id, {
+
+    const checkCache = votingSessionsCache.get(`voting-session-${req.params.voting_session_id}`);
+
+    const voting_session = checkCache?.votes ? checkCache : await sessionHelper.fetch_by_id(req.params.voting_session_id, {
         deleted: false
     }, {
         votes: true
@@ -350,24 +390,32 @@ votingSessionRouter.post(`/:voting_session_id/vote`, validateAndSanitizeBodyPart
     const creation_result = await voteHelper.create_single({
         voting_session_id: req.params.voting_session_id,
         voter_ip_address: req.ip || req.custom_ip,
-        details: {
+        details: JSON.stringify({
             selections: req.body.selections
-        }
+        }),
     });
 
-    if (creation_result?.success) return res.status(201).json({
-        ...creation_result.details
-    });
-
-    return res.status(422).json({
+    if (!creation_result?.success) return res.status(422).json({
         message: creation_result?.message || 'Something went wrong.',
         details: creation_result?.details
+    });
+
+    votingSessionsCache.set(`voting-session-${req.params.voting_session_id}`, {
+        ...voting_session,
+        votes: voting_session.votes.concat(creation_result.details)
+    });
+
+    return res.status(201).json({
+        ...creation_result.details
     });
 });
 
 //fetches the details for a potential voter
-votingSessionRouter.get('/:voting_session_id/key/:voter_key', async (req, res) => {
-    const voting_session = await sessionHelper.fetch_by_id(req.params.voting_session_id, {
+votingSessionRouter.get('/:voting_session_id/vote/:voter_key', async (req, res) => {
+
+    const checkCache = votingSessionsCache.get(`voting-session-${req.params.voting_session_id}`);
+
+    const voting_session = checkCache?.votes ? checkCache : await sessionHelper.fetch_by_id(req.params.voting_session_id, {
         deleted: false
     }, {
         votes: true
@@ -381,10 +429,14 @@ votingSessionRouter.get('/:voting_session_id/key/:voter_key', async (req, res) =
         message: `Invalid Voter Key.`
     });
 
-    if (voting_session.completed || (voting_session.details.voter_limit && voting_session.details.voter_limit >= voting_session.votes.length)) return res.status(400).json({
+    if (voting_session.completed || (voting_session.details.voter_limit && voting_session.details.voter_limit <= voting_session.votes.length)) return res.status(400).json({
         message: `Voting Session #${req.params.voting_session_id} is already completed.`,
         error_part: 'is_completed'
     });
+
+    if (!checkCache) {
+        votingSessionsCache.set(`voting-session-${req.params.voting_session_id}`, voting_session);
+    }
 
     return res.status(200).json({
         name: voting_session.name,
@@ -395,13 +447,19 @@ votingSessionRouter.get('/:voting_session_id/key/:voter_key', async (req, res) =
     });
 });
 
-//view the election details
+//view the voting session details
 votingSessionRouter.get(`/:voting_session_id`, authenticateToken, async (req, res) => {
-    const voting_session = await sessionHelper.fetch_by_id(req.params.voting_session_id, {
+    const checkCache = votingSessionsCache.get(`voting-session-${req.params.voting_session_id}`);
+
+    const voting_session = checkCache?.votes ? checkCache : await sessionHelper.fetch_by_id(req.params.voting_session_id, {
         deleted: false
     }, {
         votes: true
     });
+
+    if (!checkCache?.votes) {
+        votingSessionsCache.set(`voting-session-${req.params.voting_session_id}`, voting_session);
+    }
 
     if (!voting_session) return res.status(404).json({
         message: `Voting Session #${req.params.voting_session_id} is not found.`
@@ -475,9 +533,11 @@ votingSessionRouter.get(`/:voting_session_id`, authenticateToken, async (req, re
     });
 });
 
-//remove a vote from the election - in case its wrong, this allows the voter to vote again.
+//remove a vote from the voting session - in case its wrong, this allows the voter to vote again.
 votingSessionRouter.delete(`/:voting_session_id/vote/:vote_id`, authenticateToken, async (req, res) => {
-    const voting_session = await sessionHelper.fetch_by_id(req.params.voting_session_id, {
+    const checkCache = votingSessionsCache.get(`voting-session-${req.params.voting_session_id}`);
+
+    const voting_session = checkCache?.votes ? checkCache : await sessionHelper.fetch_by_id(req.params.voting_session_id, {
         deleted: false
     }, {
         votes: true
@@ -495,7 +555,7 @@ votingSessionRouter.delete(`/:voting_session_id/vote/:vote_id`, authenticateToke
         message: `Voting Session #${req.params.voting_session_id} is already completed.`
     });
 
-    const vote_to_delete = voting_session.votes.find(vote => vote.vote_id === req.params.vote_id);
+    const vote_to_delete = voting_session.votes.find(vote => vote.vote_id === parseInt(req.params.vote_id));
 
     if (!vote_to_delete) return res.status(404).json({
         message: `Vote #${req.params.vote_id} is not found in voting session #${req.params.voting_session_id}.`
@@ -507,7 +567,12 @@ votingSessionRouter.delete(`/:voting_session_id/vote/:vote_id`, authenticateToke
         message: `Something went wrong`
     });
 
-    res.status(204).json({
+    votingSessionsCache.set(`voting-session-${req.params.voting_session_id}`, {
+        ...voting_session,
+        votes: voting_session.votes.filter(vote.vote_id !== parseInt(req.params.vote_id))
+    });
+
+    res.status(200).json({
         success: deletion_result?.success,
         message: `deleted`
     });

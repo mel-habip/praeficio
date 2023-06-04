@@ -27,7 +27,7 @@ export default function ErrorPage() {
 
   return (
     <>
-      {isLoggedIn && <NavMenu></NavMenu>}
+      {isLoggedIn && <NavMenu/>}
       {!isLoggedIn && <Button
         css={{ width: '4rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white', position: 'fixed', left: '0%', top: '0%', margin: '1rem' }}
         onPress={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"}></i></Button>}

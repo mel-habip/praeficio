@@ -1,8 +1,10 @@
 //URL here is like `/voting_session/${voting_session_id}/vote/${voter_key}`
 
-import { useState, useContext, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
-import ThemeContext from '../../contexts/ThemeContext';
+import AnimatedCheckmark from '../../components/AnimatedCheckmark';
+
+import NavMenu from '../../components/NavMenu';
 
 import axios from 'axios';
 
@@ -21,15 +23,19 @@ export default function SpecificVoterPage() {
 
     const [votedAlready, setVotedAlready] = useState(false);
 
+    const [errorMessage, setErrorMessage] = useState('');
+
     useEffect(() => {
-        axios.get(`${process.env.REACT_APP_API_LINK}/voting_sessions/${voting_session_id}/voter_key/${voter_key}`).then(response => {
+        axios.get(`${process.env.REACT_APP_API_LINK}/voting_sessions/${voting_session_id}/vote/${voter_key}`).then(response => {
             if (response.status === 200) {
                 setVotingSessionDetails(response.data ?? {});
             } else {
                 console.log('fetch', response);
             }
         }).catch(err => {
-            if (err.data?.error_part === 'is_completed') {
+            if (err?.response?.data?.message) setErrorMessage(err?.response?.data?.message);
+
+            if (err?.response?.data?.error_part === 'is_completed') {
                 window.location = '/voting_completed';
             } else {
                 console.error(err)
@@ -37,30 +43,58 @@ export default function SpecificVoterPage() {
         });
     }, []);
 
+    if (errorMessage) {
+        return (<>
+            <NavMenu />
+            <div>
+                <h3 style={{ color: 'red' }} >{errorMessage}</h3>
+                <br />
+                <h5>Contact your representative for further details.</h5>
+            </div>
+        </>);
+    }
 
     if (!votingSessionDetails) return <Loading size='xl' />
 
-    if (votingSessionDetails.method === 'single') {
+    if (votedAlready) {
         return (<>
+            <NavMenu />
+            <div>
+                <h2>Your vote has been successfully saved.</h2>
+                <AnimatedCheckmark />
+                <br />
+                <h3>Thank you for taking part in this voting session & have a great day!</h3>
+            </div>
+        </>);
+    }
+
+
+    if (votingSessionDetails.method === 'simple') {
+        return (<>
+            <NavMenu />
             <SingleVoteFields options={votingSessionDetails.options} submit_func={selections => submit(selections)} />
         </>);
     }
 
     if (votingSessionDetails.method === 'multiple_votes') {
         return (<>
+            <NavMenu />
             <MultipleVotesFields options={votingSessionDetails.options} number_of_votes={votingSessionDetails.number_of_votes} submit_func={selections => submit(selections)} />
         </>);
     }
 
     if (votingSessionDetails.method === 'approval') {
         return (<>
+            <NavMenu />
             <ApprovalStyleFields options={votingSessionDetails.options} submit_func={selections => submit(selections)} />
         </>);
     }
 
     return (<>
-
-
+        <NavMenu />
+        <div>
+            <h3 style={{ color: 'red' }} >Invalid Session Details. Please contact your representative.</h3>
+        </div>
     </>);
 
     function submit(selections = []) {
@@ -89,12 +123,13 @@ function SingleVoteFields({ options, submit_func }) {
     }, [options]);
 
     return (<>
-        <h2>Please select the option you wish to support</h2>
+        <h3>Please select the option you wish to support</h3>
 
         <CustomizedDropdown optionsList={formattedOptions} mountDirectly outerUpdater={setSelection} />
 
+        <br />
 
-        <Button color="success" disabled={!selection} onClick={() => submit_func([selection])}> Submit my vote</Button>
+        <Button shadow color="success" disabled={!selection} onClick={() => submit_func([selection])}> Submit my vote</Button>
     </>);
 
 }
@@ -130,8 +165,8 @@ function MultipleVotesFields({ options, number_of_votes, submit_func }) {
 
         <h4>Remaining Votes: {remainingVotes}</h4>
 
-
-        <Button color="success" disabled={formattedSelections.length > number_of_votes} onClick={() => submit_func(formattedSelections)}> Submit my vote</Button>
+        <br />
+        <Button shadow color="success" disabled={formattedSelections.length > number_of_votes} onClick={() => submit_func(formattedSelections)}> Submit my vote</Button>
     </>);
 }
 
@@ -147,7 +182,8 @@ function ApprovalStyleFields({ options, submit_func }) {
         <h2>Please select all of the options you wish to support</h2>
         {options.map((opt, ind) => <Checkbox key={ind} onChange={v => setRawSelections(prev => ({ ...prev, [opt]: v }))} >{opt}</Checkbox>)}
 
-        <Button color="success" onClick={() => submit_func(selectionFormatter(rawSelections))}> Submit my vote</Button>
+        <br />
+        <Button shadow color="success" onClick={() => submit_func(selectionFormatter(rawSelections))}> Submit my vote</Button>
     </>);
 }
 

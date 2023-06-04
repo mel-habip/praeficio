@@ -177,7 +177,7 @@ export default class RecordService {
                 } else {
                     sql = `SELECT A.*, Bor.username AS borrower_username, Len.username AS lender_username FROM debt_accounts A LEFT JOIN users Bor ON Bor.user_id = A.borrower_id LEFT JOIN users Len ON Len.user_id = A.lender_id WHERE A.debt_account_id = ?;`;
                 }
-                
+
                 const [debtAccount] = await query(sql, record_id_1);
 
                 if (inclusions.transactions) {
@@ -194,7 +194,7 @@ export default class RecordService {
 
                 const [votingSession] = await query(sql, record_id_1);
 
-                if (inclusions.votes) {
+                if (votingSession && inclusions.votes) {
                     await query(`SELECT * FROM votes WHERE voting_session_id = ? AND deleted = FALSE;`, record_id_1)
                         .then(response => {
                             votingSession.votes = response;

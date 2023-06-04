@@ -1,0 +1,105 @@
+:root {
+    --check-size: 200px;
+    --check-border-width: 5px;
+    --checkmark-width: calc(var(--check-size) / 2);
+    --checkmark-height: calc(var(--checkmark-width) / 2);
+    --checkmark-left: calc(var(--checkmark-width) / 2);
+    --checkmark-top: 50%;
+    --checkmark-color: #19b8a2;
+}
+
+
+.checkmark-wrapper {
+    width: var(--check-size);
+    height: var(--check-size);
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.checkmark-wrapper::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: var(--check-border-width) solid var(--background-color);
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: block;
+    z-index: 0;
+}
+
+.checkmark-wrapper::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: var(--check-border-width) solid transparent;
+    border-left-color: var(--checkmark-color);
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: block;
+    z-index: 1;
+    animation: circle infinite 8s;
+}
+
+.checkmark {
+    height: var(--checkmark-height);
+    width: var(--checkmark-width);
+    position: absolute;
+    opacity: 0;
+    left: var(--checkmark-left);
+    top: var(--checkmark-top);
+    display: block;
+    border-left: var(--check-border-width) solid var(--checkmark-color);
+    border-bottom: var(--check-border-width) solid var(--checkmark-color);
+    transform-origin: left top;
+    transform: rotate(-45deg);
+    animation: checkmark infinite 8s;
+}
+
+@keyframes checkmark {
+
+    0%,
+    100% {
+        height: 0;
+        width: 0;
+        opacity: 0;
+    }
+
+    10%,
+    90% {
+        height: var(--checkmark-height);
+        width: 0;
+        opacity: 1;
+    }
+
+    20%,
+    80% {
+        height: var(--checkmark-height);
+        width: var(--checkmark-width);
+        opacity: 1;
+    }
+}
+
+@keyframes circle {
+
+    0%,
+    100% {
+        border-color: transparent;
+        border-left-color: transparent;
+    }
+
+    10%,
+    90% {
+        transform: rotate(-360deg);
+        border-color: transparent;
+        border-left-color: var(--checkmark-color);
+    }
+
+    20%,
+    80% {
+        transform: rotate(-360deg);
+        border-color: var(--checkmark-color);
+    }
+}

@@ -3,7 +3,7 @@ import { CustomButton } from '../fields/CustomButton';
 import { Link } from 'react-router-dom';
 import ThemeContext from '../contexts/ThemeContext';
 import IsLoggedInContext from '../contexts/IsLoggedInContext';
-import { Badge, Row, Text, Tooltip } from '@nextui-org/react';
+import { Badge, Row, Text, Button } from '@nextui-org/react';
 
 import praeficio_pronunciation from '../media/praeficio_pronunciation.mp3';
 
@@ -22,7 +22,7 @@ const permissionsMap = {
 function NavMenu() {
 
     const { isDark, toggleTheme } = useContext(ThemeContext);
-    const { setIsLoggedIn, user } = useContext(IsLoggedInContext);
+    const { isLoggedIn, setIsLoggedIn, user } = useContext(IsLoggedInContext);
 
     const [NavMenuOpen, setNavMenuOpen] = useState(false);
 
@@ -39,9 +39,19 @@ function NavMenu() {
 
     const Toggle = () => <div className='nav-menu-toggle'><CustomButton onClick={toggleNavMenu}><i className={NavMenuOpen ? 'fas fa-times' : 'fas fa-bars'} /></CustomButton> </div>
 
+    if (!isLoggedIn) {
+        return (
+            <Button
+                css={{ width: '4rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white', position: 'fixed', left: '0%', top: '0%', margin: '1rem' }}
+                onPress={toggleTheme}
+            > <i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"} />
+            </Button>
+        );
+    }
+
     return (
         <>
-            <Toggle></Toggle>
+            <Toggle />
             <nav className={NavMenuOpen ? 'nav-menu active' : 'nav-menu'}>
 
                 <Row

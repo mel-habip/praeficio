@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, useMemo } from 'react';
+import { useState, useEffect, useContext, useMemo, lazy, Suspens, Suspense } from 'react';
 import IsLoggedInContext from '../../contexts/IsLoggedInContext';
 
 import { Link, useParams } from 'react-router-dom';
@@ -9,16 +9,23 @@ import NavMenu from '../../components/NavMenu';
 import LoadingPage from '../LoadingPage';
 
 import { CustomButton } from '../../fields/CustomButton';
-import { Button, Modal, Spacer, Text, Input, Tooltip, Row, Table, Textarea, useAsyncList, useCollator, Loading, Badge } from '@nextui-org/react';
+import { Spacer, Text, Input, Tooltip, Row, Table, useAsyncList, useCollator, Loading, Badge } from '@nextui-org/react';
 import timestampFormatter from '../../utils/timestampFormatter';
 
-import { PieChart, Pie, ResponsiveContainer, Tooltip as ReChartsTooltip, BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
+import { PieChart, Pie, ResponsiveContainer, Tooltip as ReChartsTooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+
+const ConfirmationModal = lazy(() => import('../../components/ConfirmationModal.jsx'));
+const DeletionModal = lazy(() => import('../../components/DeletionModal.jsx'));
 
 export default function SpecificVotingSessionPage() {
 
     const [votingSessionDetails, setVotingSessionDetails] = useState(null);
     const { voting_session_id } = useParams();
     const { setIsLoggedIn } = useContext(IsLoggedInContext);
+
+    const [completionModalOpen, setCompletionModalOpen] = useState(false);
+    const [deletionModalOpen, setDeletionModalOpen] = useState(false);
+    const [voterKeyRenewModalOpen, setVoterKeyRenewModalOpen] = useState(false);
 
     const [refreshCounter, setRefreshCounter] = useState(0);
 
@@ -43,14 +50,15 @@ export default function SpecificVotingSessionPage() {
     return (<>
         <NavMenu />
         <h1>Voting Session: {votingSessionDetails.name} </h1>
-        <CustomButton to="/voting_sessions"> Back to all elections <i className="fa-solid fa-angles-right" /></CustomButton>
+        <CustomButton to="/voting_sessions"> Back to all voting sessions <i className="fa-solid fa-angles-right" /></CustomButton>
 
         <div style={{
             display: 'flex',
             flexDirection: 'row',
-            flexWrap: 'wrap'
+            flexWrap: 'wrap',
+            justifyContent: 'center',
         }} >
-            <div style={{ border: '1px solid white', borderRadius: '0.7rem', padding: '5px', margin: '5px', maxWidth: '50%' }} >
+            <div style={{ border: '1px solid var(--border-color)', borderRadius: '0.7rem', padding: '5px', margin: '5px', maxWidth: '50%' }} >
                 <h3>Results</h3>
                 <hr />
                 <ResultGraphs distributionData={votingSessionDetails.distribution} />
@@ -60,7 +68,7 @@ export default function SpecificVotingSessionPage() {
                 {votingSessionDetails.errors?.map((err, ind) => <p key={ind} style={{ color: 'red' }} >{err}</p>)}
             </div>
 
-            <div style={{ border: '1px solid white', borderRadius: '0.7rem', padding: '5px', margin: '5px' }} >
+            <div style={{ border: '1px solid var(--border-color)', borderRadius: '0.7rem', padding: '5px', margin: '5px' }} >
                 <h3>Details</h3>
                 <hr />
                 <h4>Voting Session ID: {votingSessionDetails.voting_session_id}</h4>
@@ -104,33 +112,64 @@ export default function SpecificVotingSessionPage() {
                 </div>
             </div>
 
-            <div style={{ border: '1px solid white', borderRadius: '0.7rem', padding: '5px', margin: '5px', display: 'flex', flexDirection: 'column' }} >
+            <div style={{ border: '1px solid var(--border-color)', borderRadius: '0.7rem', padding: '5px', margin: '5px', display: 'flex', flexDirection: 'column' }} >
                 <h3>Controls</h3>
                 <hr />
                 <CustomButton onClick={() => setRefreshCounter(prev => prev + 1)} >Refresh the data <i className="fa-solid fa-arrows-rotate" /></CustomButton>
-                <CustomButton disabled={votingSessionDetails.completed} onClick={() => {
-                    axios.post(`${process.env.REACT_APP_API_LINK}/voting_sessions/${voting_session_id}/renew_voter_key`).then(response => {
-                        if (response.status === 401) {
-                            setIsLoggedIn(false);
-                        } else if (response.status === 200) {
-                            setVotingSessionDetails(prev => ({ ...prev, ...response.data }));
-                        } else {
-                            console.log('fetch', response);
-                        }
-                    });
-                }} >Renew Voter Key <i className="fa-solid fa-key" /></CustomButton>
-                <CustomButton disabled={votingSessionDetails.completed} onClick={() => {
-                    axios.post(`${process.env.REACT_APP_API_LINK}/voting_sessions/${voting_session_id}/complete`).then(response => {
-                        if (response.status === 401) {
-                            setIsLoggedIn(false);
-                        } else if (response.status === 200) {
-                            setVotingSessionDetails(prev => ({ ...prev, ...response.data }));
-                        } else {
-                            console.log('fetch', response);
-                        }
-                    });
-                }}>Complete the voting session <i className="fa-solid fa-flag-checkered" /></CustomButton>
-                <CustomButton style={{ marginTop: 'auto' }} >Delete this voting session <i className="fa-solid fa-trash-can" /></CustomButton>
+                <CustomButton
+                    disabled={votingSessionDetails.completed}
+                    onClick={() => setVoterKeyRenewModalOpen(true)} >Renew Voter Key <i className="fa-solid fa-key" /></CustomButton>
+                <Suspense fallback={<Loading />} >
+                    <ConfirmationModal
+                        selfOpen={voterKeyRenewModalOpen}
+                        setSelfOpen={setVoterKeyRenewModalOpen}
+                        outerUpdater={() => {
+                            axios.post(`${process.env.REACT_APP_API_LINK}/voting_sessions/${voting_session_id}/renew_voter_key`).then(response => {
+                                if (response.status === 401) {
+                                    setIsLoggedIn(false);
+                                } else if (response.status === 200) {
+                                    setVotingSessionDetails(prev => ({ ...prev, ...response.data }));
+                                } else {
+                                    console.log('fetch', response);
+                                }
+                            });
+                        }}
+                    />
+                </Suspense>
+                <CustomButton
+                    disabled={votingSessionDetails.completed}
+                    onClick={() => setCompletionModalOpen(true)}
+                >Complete the voting session <i className="fa-solid fa-flag-checkered" /></CustomButton>
+                <Suspense fallback={<Loading />} >
+                    <ConfirmationModal
+                        selfOpen={completionModalOpen}
+                        setSelfOpen={setCompletionModalOpen}
+                        outerUpdater={() => {
+                            axios.post(`${process.env.REACT_APP_API_LINK}/voting_sessions/${voting_session_id}/complete`).then(response => {
+                                if (response.status === 401) {
+                                    setIsLoggedIn(false);
+                                } else if (response.status === 200) {
+                                    setVotingSessionDetails(prev => ({ ...prev, ...response.data }));
+                                } else {
+                                    console.log('fetch', response);
+                                }
+                            });
+                        }}
+                    />
+                </Suspense>
+                <CustomButton
+                    style={{ marginTop: 'auto' }}
+                    onClick={() => setDeletionModalOpen(true)}
+                >Delete this voting session <i className="fa-solid fa-trash-can" /></CustomButton>
+                <Suspense fallback={<Loading />} >
+                    <DeletionModal
+                        selfOpen={deletionModalOpen}
+                        setSelfOpen={setDeletionModalOpen}
+                        endPoint={`voting_sessions/${voting_session_id}`}
+                        outerUpdater={() => window.location.replace('/voting_sessions')}
+                        titleText="this voting session"
+                    />
+                </Suspense>
             </div>
 
         </div >
@@ -148,9 +187,13 @@ function VotersTable({ votersList = [] }) {
     const [selected, setSelected] = useState(null);
     const { setIsLoggedIn } = useContext(IsLoggedInContext);
 
-    votersList = votersList.filter(x => !x.deleted);
+    const [innerList, setInnerList] = useState(votersList);
 
-    let load = async ({ filterText }) => ({ items: filterText ? votersList.filter(voterRow => [voterRow.voter_ip_address].join('').toLowerCase().includes(filterText.toLowerCase().trim())) : votersList }); //this can normally be an async function that fetches the data, but already we hold the whole page off while it is loading
+    useEffect(() => {
+        setInnerList(votersList)
+    }, [votersList]);
+
+    let load = async ({ filterText }) => ({ items: filterText ? innerList.filter(voterRow => [voterRow.voter_ip_address].join('').toLowerCase().includes(filterText.toLowerCase().trim())) : innerList }); //this can normally be an async function that fetches the data, but already we hold the whole page off while it is loading
 
     //This section is what supports sorting
     const collator = useCollator({ numeric: true });
@@ -260,7 +303,7 @@ function VotersTable({ votersList = [] }) {
             </Table.Header>
             <Table.Body items={list.items} css={{ 'text-align': 'left' }} loadingState={list.loadingState}>
                 {item => (
-                    <Table.Row key={item.user_id} className="position-table-row" css={{ padding: '0px', margin: '0px' }}>
+                    <Table.Row key={item.vote_id} className="position-table-row" css={{ padding: '0px', margin: '0px' }}>
                         {columnKey => {
                             if (columnKey === 'actions') {
                                 return <Table.Cell css={{ 'padding': '0px', wordWrap: 'break-word', margin: '0px' }} >
@@ -269,7 +312,7 @@ function VotersTable({ votersList = [] }) {
                                             if (response.status === 401) {
                                                 setIsLoggedIn(false);
                                             } else if ([200, 204].includes(response.status)) {
-                                                item.deleted = true;
+                                                setInnerList(prev => prev.map(x => x.vote_id === item.vote_id ? ({ ...x, deleted: true }) : x));
                                             } else {
                                                 console.log('delete', response);
                                             }
@@ -296,7 +339,11 @@ function VotersTable({ votersList = [] }) {
 
 function ResultGraphs({ distributionData = {} }) {
 
-    const [data, setData] = useState(() => Object.entries(distributionData).map(([name, value]) => ({ name, value })))
+    const [data, setData] = useState([]);
+
+    useEffect(() => {
+        setData(Object.entries(distributionData).map(([name, value]) => ({ name, value })));
+    }, [distributionData]);
 
     return (<div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap' }}>
         <ResponsiveContainer width="100%" height={250} >
@@ -311,7 +358,7 @@ function ResultGraphs({ distributionData = {} }) {
                     outerRadius={50}
                     fill="#8884d8"
                     label />
-                <ReChartsTooltip />
+                <ReChartsTooltip label={"what"} />
             </PieChart>
         </ResponsiveContainer>
         <ResponsiveContainer width="100%" height={250}>

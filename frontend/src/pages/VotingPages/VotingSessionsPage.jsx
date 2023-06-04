@@ -3,7 +3,6 @@ import { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 
 import IsLoggedInContext from '../../contexts/IsLoggedInContext';
-import ThemeContext from '../../contexts/ThemeContext';
 
 import LoadingPage from '../LoadingPage';
 
@@ -11,7 +10,7 @@ import axios from 'axios';
 
 import NavMenu from '../../components/NavMenu';
 
-import { Button, Modal, Spacer, Text, Input, Checkbox, Row, Grid, Dropdown, Card } from '@nextui-org/react';
+import { Button, Modal, Spacer, Text, Input, Checkbox, Grid, Card } from '@nextui-org/react';
 
 import { CustomButton } from '../../fields/CustomButton';
 import CustomizedDropdown from '../../fields/CustomizedDropdown';
@@ -22,7 +21,6 @@ import WordListField from '../../fields/WordList';
 
 export default function VotingSessionsPage() {
     const { setIsLoggedIn, accessToken, user } = useContext(IsLoggedInContext);
-    const { isDark } = useContext(ThemeContext);
 
     const [votingSessions, setVotingSessions] = useState(null);
 
@@ -48,7 +46,7 @@ export default function VotingSessionsPage() {
 
     return (<>
         <NavMenu />
-        <VotingSessionCreationModalWithButton />
+        <VotingSessionCreationModalWithButton setVotingSessions={setVotingSessions} />
         <Grid.Container gap={1} justify="center">
             {votingSessions.map((session, index) =>
                 <Grid key={session.voting_session_id + '-grid'}>
@@ -83,7 +81,7 @@ function VotingSessionCard({ id, name, created_on, completed, completed_on, deta
     </Card>);
 };
 
-function VotingSessionCreationModalWithButton({ setVotingSessions }) {
+function VotingSessionCreationModalWithButton({ setVotingSessions=()=>{} }) {
     const [modalOpen, setModalOpen] = useState(false);
     const { setIsLoggedIn, accessToken, user } = useContext(IsLoggedInContext);
 
@@ -128,7 +126,7 @@ function VotingSessionCreationModalWithButton({ setVotingSessions }) {
             <Modal.Body>
                 <Spacer y={0.4} />
                 <pre>{JSON.stringify(votingSessionDetails, null, 2)}</pre>
-                <Input labelPlaceholder="Election Name" color="primary" rounded bordered clearable onChange={e => setVotingSessionDetails(prev => ({ ...prev, name: e.target.value }))} ></Input>
+                <Input labelPlaceholder="Session Name" color="primary" rounded bordered clearable onChange={e => setVotingSessionDetails(prev => ({ ...prev, name: e.target.value }))} ></Input>
                 <CustomizedDropdown optionsList={methodOptions} mountDirectly outerUpdater={v => setVotingSessionDetails(prev => ({ ...prev, method: v }))} />
                 <Checkbox onChange={b => setVotingSessionDetails(prev => ({ ...prev, limit_voters: b }))} ><p>Limit number of voters?</p></Checkbox>
                 {votingSessionDetails.limit_voters && <NumberField min={2} max={200} default_value={votingSessionDetails.voter_limit || 2} outer_updater={v => setVotingSessionDetails(prev => ({ ...prev, voter_limit: v }))} />}

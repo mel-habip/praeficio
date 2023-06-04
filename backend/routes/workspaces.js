@@ -14,6 +14,8 @@ import validateAndSanitizeBodyParts from '../jobs/validateAndSanitizeBodyParts.j
 import WorkspaceService from '../modules/WorkspaceService.mjs';
 import WorkspaceUserAssociationService from '../modules/WorkspaceUserAssociationService.mjs';
 
+import usersCache from '../stores/usersCache.js';
+
 const workspaceHelper = new WorkspaceService();
 const workspaceUserHelper = new WorkspaceUserAssociationService();
 
@@ -85,6 +87,8 @@ workspacesRouter.post('/', validateAndSanitizeBodyParts({
     publicity: "enum(public, private)",
     starred: 'boolean'
 }, ['name', 'publicity']), async (req, res) => {
+
+    usersCache.del(`user-${req.user.id}`);
 
     if (req.user.permissions === 'basic_client') {
         return res.status(403).send('Forbidden: You do not have access to this');
@@ -175,6 +179,8 @@ workspacesRouter.get('/:workspace_id', async (req, res) => {
 
 workspacesRouter.put('/:workspace_id', authenticateRole(true), async (req, res) => {
 
+    usersCache.del(`user-${req.user.id}`);
+
     let update = await workspaceHelper.update_single({
         ...req.body
     }, req.params.workspace_id);
@@ -184,7 +190,12 @@ workspacesRouter.put('/:workspace_id', authenticateRole(true), async (req, res) 
 
 
 //add user to WS
-workspacesRouter.post('/:workspace_id/user/:user_id', validateAndSanitizeBodyParts({role: 'string'}), authenticateRole(), async (req, res) => {
+workspacesRouter.post('/:workspace_id/user/:user_id', validateAndSanitizeBodyParts({
+    role: 'string'
+}), authenticateRole(), async (req, res) => {
+
+    usersCache.del(`user-${req.user.id}`);
+    usersCache.del(`user-${req.params.user_id}`);
 
     //check if user exists
     const sql_1 = `SELECT deleted, email FROM users WHERE user_id = ?;`;
@@ -267,10 +278,12 @@ workspacesRouter.delete('/:workspace_id', authenticateRole(true), async (req, re
     let sql_2 = `DELETE FROM workspaces WHERE workspace_id = ?`;
 
     await query(sql_2, req.params.workspace_id).then(result => {
-        if (result) return res.status(200).json({
-            success: true,
-            data: result
-        });
+        if (result) {
+            return res.status(200).json({
+                success: true,
+                data: result
+            });
+        }
         return res.status(422).send({
             message: `Could not delete ${req.params.workspace_id}`,
             error
@@ -283,7 +296,7 @@ export default workspacesRouter;
 function authenticateRole(require_admin = false) {
 
     return (req, res, next) => {
-        if (positions.devs.includes(req.user.permissions)) return next();
+        if (req.user.is_dev) return next();
 
 
         const role = req.user.workspaces.find(workspace => workspace.workspace_id === req.params.workspace_id)?.role;

@@ -1,10 +1,9 @@
 //this is the page for people with neither the voting_session_id nor the key provided
 
-import { useState, useContext } from 'react';
+import { useState } from 'react';
 
 import { Link } from 'react-router-dom';
-
-import ThemeContext from '../../contexts/ThemeContext';
+import NavMenu from '../../components/NavMenu';
 
 import { Button, Input } from '@nextui-org/react';
 
@@ -14,10 +13,13 @@ export default function VoterRedirectPageOne() {
     const [voterKey, setVoterKey] = useState('');
 
     return (<>
-        <Input labelPlaceholder='Election ID' onChange={e => setVotingSessionId(e.target.value)}></Input>
-        <Input labelPlaceholder='Voter Key' onChange={e => setVoterKey(e.target.value)}></Input>
-        <Link to={`/voting_session/${votingSessionId}/vote/${voterKey}`}>
-            <Button>Take me there!</Button>
+        <NavMenu />
+        <Input color="primary" underlined clearable labelPlaceholder='Voting Session ID' onChange={e => setVotingSessionId(e.target.value)}></Input>
+        <br />
+        <Input color="primary" underlined clearable labelPlaceholder='Voter Key' onChange={e => setVoterKey(e.target.value)}></Input>
+        <br />
+        <Link to={`/voting_sessions/${votingSessionId}/vote/${voterKey}`}>
+            <Button shadow >Take me there!</Button>
         </Link>
     </>);
 }
