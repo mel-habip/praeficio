@@ -55,9 +55,7 @@ export default function SpecificVoterPage() {
             </div>
         </>);
     }
-
-    if (!votingSessionDetails) return <Loading size='xl' />
-
+    
     if (votedAlready) {
         return (<>
             <NavMenu />
@@ -69,8 +67,9 @@ export default function SpecificVoterPage() {
             </div>
         </>);
     }
-
-
+    
+    if (!votingSessionDetails) return <Loading size='xl' />
+    
     if (votingSessionDetails.method === 'simple') {
         return (<>
             <NavMenu />
