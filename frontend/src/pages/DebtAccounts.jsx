@@ -13,7 +13,7 @@ import axios from 'axios';
 
 import { CustomButton } from '../fields/CustomButton';
 import CustomizedDropdown from '../fields/CustomizedDropdown';
-import { Button, Navbar, Card, Modal, Spacer, Text, Input, Grid, Row, Textarea, Loading, Badge, Dropdown, Tooltip } from '@nextui-org/react';
+import { Button, Card, Modal, Spacer, Text, Input, Grid, Row, Textarea, Loading, Badge, Dropdown, Tooltip } from '@nextui-org/react';
 
 export default function DebtAccounts() {
     const { setIsLoggedIn, user } = useContext(IsLoggedInContext);

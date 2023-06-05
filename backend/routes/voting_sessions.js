@@ -66,7 +66,7 @@ votingSessionRouter.post('/', authenticateToken, validateAndSanitizeBodyParts({
 }, ['name', 'details']), async (req, res) => {
 
     try {
-        votingSessionsCache.del((votingSessionsCache.keys || []).filter(str => str.startsWith('user-')));
+        votingSessionsCache.del((votingSessionsCache.keys() || []).filter(str => str.startsWith('user-')));
     } catch (e) {
         console.error(e?.stack || e?.message || e);
         votingSessionsCache.flushAll();
@@ -238,7 +238,7 @@ votingSessionRouter.post(`/:voting_session_id/complete`, authenticateToken, asyn
 
     votingSessionsCache.set(`voting-session-${req.params.voting_session_id}`, {
         ...voting_session,
-        ...update_result.details
+        ...update_details.details
     });
 
     return res.status(200).json({
@@ -579,7 +579,7 @@ votingSessionRouter.delete(`/:voting_session_id/vote/:vote_id`, authenticateToke
 
     votingSessionsCache.set(`voting-session-${req.params.voting_session_id}`, {
         ...voting_session,
-        votes: voting_session.votes.filter(vote.vote_id !== parseInt(req.params.vote_id))
+        votes: voting_session.votes.filter(vote => vote.vote_id !== parseInt(req.params.vote_id))
     });
 
     res.status(200).json({
