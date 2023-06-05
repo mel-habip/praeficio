@@ -46,7 +46,7 @@ export default function VotingSessionsPage() {
 
     return (<>
         <NavMenu />
-        <VotingSessionCreationModalWithButton setVotingSessions={setVotingSessions} />
+        <VotingSessionCreationModalWithButton setVotingSessions={setVotingSessions} votingSessions={votingSessions} />
         <Grid.Container gap={1} justify="center">
             {votingSessions.map((session, index) =>
                 <Grid key={session.voting_session_id + '-grid'}>
@@ -81,7 +81,7 @@ function VotingSessionCard({ id, name, created_on, completed, completed_on, deta
     </Card>);
 };
 
-function VotingSessionCreationModalWithButton({ setVotingSessions=()=>{} }) {
+function VotingSessionCreationModalWithButton({ setVotingSessions = () => { }, votingSessions = [] }) {
     const [modalOpen, setModalOpen] = useState(false);
     const { setIsLoggedIn, accessToken, user } = useContext(IsLoggedInContext);
 
@@ -157,7 +157,7 @@ function VotingSessionCreationModalWithButton({ setVotingSessions=()=>{} }) {
                             console.log('response:', response.data);
                             if ([201, 200].includes(response.status)) {
                                 console.log('successful');
-                                setVotingSessions(prev => prev.concat(response.data));
+                                setVotingSessions(votingSessions.concat(response.data));
                                 setModalOpen(false);
                             } else if (response.status === 401) {
                                 setIsLoggedIn(false);

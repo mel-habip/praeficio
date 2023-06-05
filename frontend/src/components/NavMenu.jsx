@@ -165,6 +165,15 @@ function NavMenu() {
                     </li>
                     <li className='nav-item'>
                         <Link
+                            to='/debt_accounts'
+                            className='nav-links'
+                            onClick={closeNavMenu}
+                        >
+                            Debt Accounts&nbsp; <i className="fa-solid fa-file-invoice-dollar" />
+                        </Link>
+                    </li>
+                    <li className='nav-item'>
+                        <Link
                             to='/voting_sessions'
                             className='nav-links'
                             onClick={closeNavMenu}
