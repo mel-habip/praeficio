@@ -36,7 +36,7 @@ votingSessionRouter.get('/', authenticateToken, async (req, res) => {
             const sql = `SELECT * FROM ${sessionHelper.table_name};`;
             results = await query(sql);
         } else {
-            results = sessionHelper.fetch_by_user_id(req.user.id);
+            results = await sessionHelper.fetch_by_user_id(req.user.id);
         }
 
         votingSessionsCache.set(`user-${req.user.id}-voting-sessions`, results);
@@ -432,6 +432,11 @@ votingSessionRouter.get('/:voting_session_id/vote/:voter_key', async (req, res) 
 
     if (req.params.voter_key !== voting_session.voter_key) return res.status(401).json({
         message: `Invalid Voter Key.`
+    });
+
+    if (voting_session.votes.some(vote => [req.ip, req.custom_ip].includes(vote.voter_ip_address))) return res.status(400).json({
+        message: `You have already voted in this session.`,
+        error_part: 'already_voted'
     });
 
     if (voting_session.completed || (voting_session.details.voter_limit && voting_session.details.voter_limit <= voting_session.votes.length)) return res.status(400).json({

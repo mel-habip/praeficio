@@ -48,8 +48,17 @@ export default function validateAndSanitizeBodyParts(all_props = {}, required = 
                             message: `Invalid email provided for prop "${prop}"`
                         });
                     } //if it is valid, we're good
+                } else if (expectedType === 'date') {
+                    //a lot of non-date strings can be coerced into dates, so we need to handle that specially
+                    const dateObject = new Date(val);
+                    if (dateObject.toString() === 'Invalid Date') {
+                        return res.status(400).json({
+                            message: `Invalid date provided for prop "${prop}"`
+                        });
+                    }
                 } else {
                     const trueType = typeFind(req.body[prop]); //the type provided in the request
+
                     if (expectedType !== trueType) { //wrong type
                         return res.status(400).json({
                             message: `Expected '${expectedType}' but got '${trueType}' for prop '${prop}'`
@@ -81,16 +90,11 @@ function typeFind(val) {
 
     const primType = typeof val;
 
-    if (['boolean', 'number'].includes(primType)) return primType;
+    //dates aren't handled here
+
+    if (['boolean', 'number', 'string'].includes(primType)) return primType;
 
     if (primType === 'object') return 'hash';
-
-    if (primType === 'string') {
-        const dateObject = new Date(val);
-        console.log('dateified', val, dateObject);
-        if (dateObject.toString() !== 'Invalid Date') return 'date';
-        return 'string';
-    }
 
     throw Error(`Expected unknown type with value: ${val}`, )
 }

@@ -157,8 +157,8 @@ function VotingSessionCreationModalWithButton({ setVotingSessions=()=>{} }) {
                             console.log('response:', response.data);
                             if ([201, 200].includes(response.status)) {
                                 console.log('successful');
-                                setModalOpen(false);
                                 setVotingSessions(prev => prev.concat(response.data));
+                                setModalOpen(false);
                             } else if (response.status === 401) {
                                 setIsLoggedIn(false);
                             } else {

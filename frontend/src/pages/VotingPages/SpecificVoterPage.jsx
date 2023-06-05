@@ -33,12 +33,14 @@ export default function SpecificVoterPage() {
                 console.log('fetch', response);
             }
         }).catch(err => {
-            if (err?.response?.data?.message) setErrorMessage(err?.response?.data?.message);
-
             if (err?.response?.data?.error_part === 'is_completed') {
                 window.location = '/voting_completed';
+            } else if (err?.response?.data?.error_part === 'already_voted') {
+                setVotedAlready(true);
+            } else if (err?.response?.data?.message) {
+                setErrorMessage(err?.response?.data?.message);
             } else {
-                console.error(err)
+                console.error(err);
             }
         });
     }, []);
