@@ -72,6 +72,7 @@ export default function SpecificVotingSessionPage() {
                 <h3>Details</h3>
                 <hr />
                 <h4>Voting Session ID: {votingSessionDetails.voting_session_id}</h4>
+                <h4>Created On: {timestampFormatter(votingSessionDetails.created_on)}</h4>
                 <h4>Voter Key:
                     <Tooltip trigger="click" content={`Copied!`} >
                         <Link>
@@ -81,9 +82,10 @@ export default function SpecificVotingSessionPage() {
                     </Tooltip>
                 </h4>
                 <h4>Status: <span style={{ color: votingSessionDetails.completed ? 'green' : 'cyan' }} > {votingSessionDetails.completed ? 'Completed' : 'In Progress'} </span> </h4>
+                {!!votingSessionDetails.completed && <h4>Completed On: {timestampFormatter(votingSessionDetails.completed_on)}</h4>}
                 <h4>Method: {votingSessionDetails.details.method}</h4>
                 {votingSessionDetails.details.method === 'multiple_votes' && <h4>Number of selections per vote: {votingSessionDetails.details.number_of_votes}</h4>}
-                <h4>Number of votes: {votingSessionDetails.details.voter_limit || 'unlimited'}</h4>
+                <h4>Voter Limit: {votingSessionDetails.details.voter_limit || 'unlimited'}</h4>
                 <div style={{
                     width: 'fit-content', marginLeft: 'auto',
                     marginRight: 'auto',
@@ -93,8 +95,6 @@ export default function SpecificVotingSessionPage() {
                             <span onClick={() => navigator.clipboard.writeText(url_to_vote)} > Link to vote </span>
                         </Link>
                     </Tooltip>
-
-
                 </div>
 
 

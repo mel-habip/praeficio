@@ -1,46 +1,42 @@
-import React, { useState, useContext } from 'react';
+import { useState, useContext, useMemo } from 'react';
 import IsLoggedInContext from '../contexts/IsLoggedInContext';
 import ThemeContext from '../contexts/ThemeContext';
 import AnimatedButtonBox from '../fields/AnimatedButtonBox';
-import { Button, Input, Spacer, Modal, Text, Row, Checkbox, Grid } from '@nextui-org/react';
+import { Button, Input, Spacer, Modal, Text, Row, Checkbox, Tooltip } from '@nextui-org/react';
 import ErrorModule from '../components/ErrorModule';
 
 import validatePassword from '../utils/validatePassword.mjs';
+
+import axios from 'axios';
 
 export default function LoginPage() {
     document.title = "Praeficio.com | Log-In";
 
     const { isDark, toggleTheme } = useContext(ThemeContext);
-    const { setIsLoggedIn, setUserId, setAccessToken } = useContext(IsLoggedInContext);
+    const { setIsLoggedIn, setAccessToken } = useContext(IsLoggedInContext);
 
-    const [loginClicked, SetLoginClicked] = useState(false);
-    const [signupClicked, SetSignupClicked] = useState(false);
-    const [username, setUsername] = useState('');
-    const [generalErrorMessage, setGeneralErrorMessage] = useState('');
-    const [emailError, setEmailError] = useState('');
-    const [usernameError, setUsernameError] = useState('');
-    const [passwordError, setPasswordError] = useState('');
-    const [password, setPassword] = useState('');
-    const [email, setEmail] = useState('');
-    const [first_name, setFirstName] = useState(null);
-    const [last_name, setLastName] = useState(null);
+    const [clickedType, setClickedType] = useState('');
 
-    async function catchError(response) {
-        const data = await response.json();
+    const [formValues, setFormValues] = useState({});
+    const [errors, setErrors] = useState({});
+
+    function catchError(response) {
+        const data = response?.data || response?.response?.data;
         console.log('inside the function: ', data);
-        if (data?.error_part === 'username') {
-            setUsernameError(data?.message);
-        } else if (data?.error_part === 'email') {
-            setEmailError(data?.message);
-        } else if (data?.error_part === 'password') {
-            setPasswordError(data?.message);
+
+        if (['username', 'email', 'password'].includes(data?.error_part)) {
+            setErrors(prev => ({ ...prev, [data?.error_part]: data?.message }));
         } else {
-            setGeneralErrorMessage(`ERROR - ${data?.message || 'unknown'}`);
+            setErrors(prev => ({ ...prev, general: `ERROR - ${data?.message || 'unknown'}` }));
             setTimeout(() => {
-                setGeneralErrorMessage('');
+                setErrors(prev => ({ ...prev, general: undefined }));
             }, 5000);
         }
     }
+
+    const passwordGood = useMemo(() => {
+        return validatePassword(formValues.password, true);
+    }, [formValues.password]);
 
     return (
         <div className="LoginPage">
@@ -49,91 +45,85 @@ export default function LoginPage() {
                 onPress={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"}></i></Button>
 
             <div className="app-initial-buttons">
-                <AnimatedButtonBox title="New here?" button_text="Sign-Up Here" subtitle="you'll be prompted to enter your deets" onPress={() => SetSignupClicked(true)} />
+                <AnimatedButtonBox title="New here?" button_text="Sign-Up Here" subtitle="you'll be prompted to enter your deets" onPress={() => setClickedType('signup')} />
 
                 <Modal
                     closeButton
                     blur
                     aria-labelledby="modal-title"
-                    open={signupClicked || loginClicked}
-                    onClose={() => { setUsernameError(''); setPasswordError(''); SetSignupClicked(false); SetLoginClicked(false); }}
+                    open={!!clickedType}
+                    onClose={() => { setErrors({}); setClickedType(null) }}
                 >
                     <Modal.Header>
                         <Text b id="modal-title" size={18}>
-                            Welcome {loginClicked ? 'Back!' : 'to the show!'}
+                            Welcome {clickedType === 'login' ? 'Back!' : 'to the show!'}
                             <Text size={14}>
                                 Please enter the information below
                             </Text>
                         </Text>
                     </Modal.Header>
                     <Modal.Body>
-                        <ErrorModule errorMessage={generalErrorMessage}></ErrorModule>
+                        <ErrorModule errorMessage={errors.general}></ErrorModule>
                         <Spacer y={0.4} />
                         <Input
                             rounded
-                            value={username}
                             initialValue=""
                             clearable
                             type="text"
                             required
-                            title="waht is this"
                             bordered
                             labelPlaceholder="Username*"
-                            color={usernameError ? "error" : "primary"}
-                            status={usernameError ? "error" : "default"}
-                            helperText={usernameError}
-                            helperColor={usernameError ? "error" : "primary"}
-                            onChange={(e) => setUsernameError('') || setUsername(e.target.value)} />
+                            color={errors.username ? "error" : "primary"}
+                            status={errors.username ? "error" : "default"}
+                            helperText={errors.username}
+                            helperColor={errors.username ? "error" : "primary"}
+                            onChange={e => setFormValues(prev => ({ ...prev, username: e.target.value }))} />
                         <Spacer y={0.5} />
 
-                        <Input.Password
-                            rounded
-                            initialValue=""
-                            value={password}
-                            clearable
-                            required
-                            bordered
-                            labelPlaceholder="Password*"
-                            color={passwordError ? "error" : "primary"}
-                            status={passwordError ? "error" : "default"}
-                            helperText={passwordError}
-                            helperColor={passwordError ? "error" : "primary"}
-                            onChange={(e) => setPasswordError('') || setPassword(e.target.value)} />
+                        <div style={{ display: 'flex', justifyContent: 'space-around', flexFlow: 'nowrap', alignItems: 'center', gap: '1rem' }} >
+                            <Input.Password
+                                rounded
+                                initialValue=""
+                                clearable
+                                fullWidth
+                                required
+                                bordered
+                                labelPlaceholder="Password*"
+                                color={errors.password ? "error" : "primary"}
+                                status={errors.password ? "error" : "default"}
+                                helperText={errors.password}
+                                helperColor={errors.password ? "error" : "primary"}
+                                onChange={e => setFormValues(prev => ({ ...prev, password: e.target.value }))} />
+                            <Tooltip content={<p style={{ whiteSpace: 'pre' }} >{`A strong password should have: \n\t${passwordGood.hasLength ? '✔️' : '❌'} 6-15 digits \n\t${passwordGood.hasSymbol ? '✔️' : '❌'} one symbol, \n\t${passwordGood.hasNumber ? '✔️' : '❌'} one number, \n\t${passwordGood.hasUppercase ? '✔️' : '❌'} one uppercase and \n\t${passwordGood.hasLowercase ? '✔️' : '❌'} one lowercase character`}</p>} css={{ zIndex: 9999 }} >
+                                <div>
+                                    <i style={{ color: passwordGood.hasAll ? 'green' : 'red' }} className="fa-solid fa-shield-halved" />
+                                </div>
+                            </Tooltip>
+                        </div>
 
                         <Row justify="space-between">
 
                             <Checkbox> <Text size={14}>Remember me</Text> </Checkbox>
 
-                            {loginClicked ? <Text size={14}>Forgot password?</Text> : ''}
+                            {clickedType === 'login' ? <Text size={14}>Forgot password?</Text> : ''}
 
                         </Row>
-                        {loginClicked ? <>
+                        {clickedType === 'login' ? <>
                             <Button
-                                disabled={!validatePassword(password)}
+                                disabled={!validatePassword(formValues.password)}
                                 auto
                                 onPress={async () => {
                                     console.log('logging in');
-                                    await fetch(`${process.env.REACT_APP_API_LINK}/users/login/`, {
-                                        headers: {
-                                            'Content-Type': 'application/json'
-                                        },
-                                        body: JSON.stringify({
-                                            username: username,
-                                            password
-                                        }),
-                                        method: 'POST'
-                                    }).then(async (res) => {
-                                        console.log('response', res);
-                                        if (res.status === 200) {
-                                            res = await res.json();
-                                            localStorage.setItem('access_token', res.access_token); //used for long-term storage
-                                            localStorage.setItem('user_id', res.user_id);
-                                            setAccessToken(res.access_token);
-                                            setUserId(res.user_id);
+                                    await axios.post(`${process.env.REACT_APP_API_LINK}/users/login`, formValues).then(async response => {
+                                        console.log('response', response);
+                                        if (response.status === 200) {
+                                            const { access_token } = response.data;
+                                            localStorage.setItem('access_token', access_token); //used for long-term storage
+                                            setAccessToken(access_token);
                                             setIsLoggedIn(true);
                                             if (window.location.pathname.includes('login')) window.location.replace('/portal');
                                         } else {
-                                            catchError(res)
+                                            catchError(response)
                                         }
                                     }).catch(catchError)
                                 }}>
@@ -141,99 +131,73 @@ export default function LoginPage() {
                             </Button>
                         </> : <>
                             <Spacer y={0.01} />
-                            <Grid.Container gap={0.72} justify="center" direction="row">
-                                <Grid >
-                                    <Input
-                                        size="sm"
-                                        clearable
-                                        bordered
-                                        labelPlaceholder="First Name"
-                                        color="primary"
-                                        onChange={(e) => setFirstName(e.target.value)} />
-                                </Grid>
-                                <Grid>
-                                    <Input
-                                        size="sm"
-                                        clearable
-                                        bordered
-                                        labelPlaceholder="Last Name"
-                                        color="primary"
-                                        onChange={(e) => setLastName(e.target.value)} />
-                                </Grid>
-                            </Grid.Container>
-                            <Spacer y={0.5} />
-                            {!email && <p>Please note your password, it cannot be reset for accounts without emails.</p>}
+                            <div style={{ display: 'flex', justifyContent: 'center', flexDirection: 'column', gap: '25px', flexFlow: 'wrap' }} >
+                                <Input
+                                    size="sm"
+                                    clearable
+                                    width="45%"
+                                    bordered
+                                    labelPlaceholder="First Name"
+                                    color="primary"
+                                    onChange={e => setFormValues(prev => ({ ...prev, first_name: e.target.value }))} />
+                                <Input
+                                    size="sm"
+                                    clearable
+                                    width="45%"
+                                    bordered
+                                    labelPlaceholder="Last Name"
+                                    color="primary"
+                                    onChange={e => setFormValues(prev => ({ ...prev, last_name: e.target.value }))} />
+                            </div>
+                            {!formValues.email && <p>Please note your password, it cannot be reset for accounts without emails.</p>}
                             <p>Email functionality is coming soon!</p>
                             <Input
                                 rounded
                                 disabled //temporary until email service is up
-                                value={email}
                                 clearable
                                 type="email"
                                 bordered
                                 labelPlaceholder="Email"
                                 placeholder='you@domain.ca'
-                                color={emailError ? "error" : "primary"}
-                                status={emailError ? "error" : "default"}
-                                helperText={emailError}
-                                helperColor={emailError ? "error" : "primary"}
-                                onChange={(e) => setEmailError('') || setEmail(e.target.value)} />
+                                color={errors.email ? "error" : "primary"}
+                                status={errors.email ? "error" : "default"}
+                                helperText={errors.email}
+                                helperColor={errors.email ? "error" : "primary"}
+                                onChange={e => setFormValues(prev => ({ ...prev, email: e.target.value }))} />
                             <Spacer y={0.1} />
                             <Button
                                 auto
                                 onPress={async () => {
-                                    await fetch(`${process.env.REACT_APP_API_LINK}/users/create_new_user/`, {
-                                        headers: {
-                                            'Content-Type': 'application/json'
-                                        },
-                                        body: JSON.stringify({
-                                            username,
-                                            password,
-                                            email,
-                                            first_name,
-                                            last_name,
-                                        }),
-                                        method: 'POST'
-                                    }).then(async (res) => {
-                                        console.log('CREATION', res);
-                                        if (res.status === 201) {
-                                            await fetch(`${process.env.REACT_APP_API_LINK}/users/login/`, {
-                                                headers: {
-                                                    'Content-Type': 'application/json'
-                                                },
-                                                body: JSON.stringify({
-                                                    username,
-                                                    password
-                                                }),
-                                                method: 'POST'
-                                            }).then(async (res) => {
-                                                console.log('LOG IN', res);
-                                                if (res.status === 200) {
-                                                    res = await res.json();
-                                                    localStorage.setItem('access_token', res.access_token);
-                                                    localStorage.setItem('user_id', res.user_id);
-                                                    setAccessToken(res.access_token);
-                                                    setUserId(res.user_id);
-                                                    setIsLoggedIn(true);
-                                                    if (window.location.pathname.includes('login')) window.location.replace('/portal');
-                                                } else {
-                                                    catchError(res)
-                                                }
-                                            }).catch(catchError);
-                                        } else {
-                                            catchError(res);
-                                        }
-                                    }).catch(catchError);
+                                    await axios.post(`${process.env.REACT_APP_API_LINK}/users/create_new_user`, formValues)
+                                        .then(async creationResponse => {
+                                            console.log('CREATION', creationResponse);
+                                            if (creationResponse.status === 201) {
+                                                await axios.post(`${process.env.REACT_APP_API_LINK}/users/login`, formValues)
+                                                    .then(async loginRes => {
+                                                        console.log('LOG IN', loginRes);
+                                                        if (loginRes.status === 200) {
+                                                            const { access_token } = loginRes.data;
+                                                            localStorage.setItem('access_token', access_token);
+                                                            setAccessToken(access_token);
+                                                            setIsLoggedIn(true);
+                                                            if (window.location.pathname.includes('login')) window.location.replace('/portal');
+                                                        } else {
+                                                            catchError(loginRes)
+                                                        }
+                                                    }).catch(catchError);
+                                            } else {
+                                                catchError(creationResponse);
+                                            }
+                                        }).catch(catchError);
                                 }}
                             >
                                 Sign-Up
                             </Button>
                         </>}
-
                     </Modal.Body>
                 </Modal>
 
-                <AnimatedButtonBox title="Coming Back?" button_text="Log-In Here" subtitle="you'll be prompted to enter your creds" onPress={() => SetLoginClicked(true)} />
+                <AnimatedButtonBox title="Coming Back?" button_text="Log-In Here" subtitle="you'll be prompted to enter your creds" onPress={() => setClickedType('login')} />
             </div>
         </div>
     );

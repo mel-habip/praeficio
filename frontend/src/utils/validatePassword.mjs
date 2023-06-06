@@ -3,10 +3,11 @@ const lowercaseRegex = /[a-z]/;
 const numberRegex = /[0-9]/;
 const symbolRegex = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/;
 
-export default function validatePassword(string = '') {
+export default function validatePassword(string = '', showDetailed = false) {
     //requires a number, an uppercase, a lowercase and a special character, min 6, max 15
-    if (string.length < 6) return false;
-    if (string.length > 15) return false;
+    const hasLength = (string.length > 6) && (string.length < 15);
+    if (!showDetailed && !hasLength) return false;
+
 
     //technically this setup means we keep testing even though it failed already, but its too little of a gain to optimize further
     const hasUppercase = uppercaseRegex.test(string);
@@ -14,5 +15,18 @@ export default function validatePassword(string = '') {
     const hasNumber = numberRegex.test(string);
     const hasSymbol = symbolRegex.test(string);
 
-    return hasUppercase && hasLowercase && hasNumber && hasSymbol;
+    const hasAll = hasLength && hasUppercase && hasLowercase && hasNumber && hasSymbol;
+
+    if (showDetailed) {
+        return {
+            hasUppercase,
+            hasLowercase,
+            hasNumber,
+            hasSymbol,
+            hasLength,
+            hasAll,
+        }
+    }
+
+    return hasAll;
 }

@@ -64,6 +64,9 @@ ul li {
 
 .AnimatedButtonBox {
   border-color: var(--border-color);
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   border-style: solid;
@@ -75,12 +78,6 @@ ul li {
   padding-right: 30px;
   border-radius: 4px;
   animation: ease-in-out 3s normal infinite;
-}
-
-.AnimatedButtonBox-subbutton {
-  color: var(--text-primary);
-  position: relative;
-  width: 100%;
 }
 
 .AnimatedButtonBox:hover {
