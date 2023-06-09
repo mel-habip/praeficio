@@ -5,7 +5,6 @@ import './stylesheets/ServiceDesk.css';
 import NavMenu from '../components/NavMenu';
 
 import IsLoggedInContext from '../contexts/IsLoggedInContext';
-import ThemeContext from '../contexts/ThemeContext';
 
 import axios from 'axios';
 
@@ -23,7 +22,7 @@ export default function SpecificUserProfilePage() {
         return (
             <>
                 <NavMenu />
-                <UserSelfPage />
+                <UserSelfPage details={user} />
             </>
         );
     }
@@ -39,6 +38,12 @@ export default function SpecificUserProfilePage() {
 //if looking at themselves
 function UserSelfPage({ details }) {
 
+    return (<>
+        <h1>{details?.username}</h1>
+        <h4>{details?.first_name}</h4>
+        <h4>{details?.last_name}</h4>
+        <h4>{details?.email}</h4>
+    </>);
 }
 
 //looking at a user that is not themselves
@@ -51,7 +56,7 @@ function OtherUserPage({ details }) {
 
 
     return (<>
-        {!token && <discoveryTokenEntryModal setToken={setToken} />}
+        {/* {!token && <discoveryTokenEntryModal setToken={setToken} />} */}
         <CustomButton>Add Friend</CustomButton>
         <h1>{details?.username || 'Not provided.'}</h1>
         <p>First Name: {details?.first_name || 'Not provided.'}</p>

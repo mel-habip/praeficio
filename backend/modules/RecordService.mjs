@@ -2,6 +2,8 @@ import query from '../utils/db_connection.js';
 
 import WorkspaceMessagesRelationshipOrganizer from '../jobs/WorkspaceMessagesRelationshipOrganizer.js';
 
+import fetchUserFriends from '../jobs/fetchUserFriendships.js';
+
 export const recordTypeMap = {
     table_names: { //phase these out once ready.
         Position: 'positions',
@@ -93,7 +95,7 @@ export default class RecordService {
                 return to_do;
             }
             case 'User': {
-                const sql_1 = `SELECT user_id, username, last_name, first_name, email, permissions, active, created_on, updated_on, use_beta_features, to_do_categories FROM users WHERE user_id = ? ${constraint_stringifier(constraints)} LIMIT 1;`;
+                const sql_1 = `SELECT user_id, username, last_name, first_name, email, discovery_token, permissions, active, created_on, updated_on, use_beta_features, to_do_categories FROM users WHERE user_id = ? ${constraint_stringifier(constraints)} LIMIT 1;`;
 
                 const [user] = await query(sql_1, record_id_1);
 
@@ -102,6 +104,10 @@ export default class RecordService {
                 if (inclusions.workspaces) {
                     const sql_2 = `SELECT workspace_id, role FROM workspace_user_associations WHERE user_id = ?;`;
                     await query(sql_2, record_id_1).then(response => user.workspaces = response);
+                }
+
+                if (inclusions.friendships || inclusions.friends) {
+                    await fetchUserFriends(record_id_1).then(response => user.friendships = response);
                 }
 
                 return user;

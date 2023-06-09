@@ -183,6 +183,8 @@ function App() {
                   <Route path='/voting_sessions/:voting_session_id/vote/:voter_key' element={<SpecificVoterPage />} exact />
 
                   <Route path='/testzone' element={<TestZone />} exact />
+                  <Route path='/ip' element={<Navigate to="https://api.praeficio.com/api/my_ip" replace />} />
+                  <Route path='/my_ip' element={<Navigate to="https://api.praeficio.com/api/my_ip" replace />} exact />
                   <Route path='/403' element={<ForbiddenPage />} exact />
                   <Route path='/500' element={<ErrorPage />} exact />
                   <Route path='/*' element={<NotFoundPage />} />

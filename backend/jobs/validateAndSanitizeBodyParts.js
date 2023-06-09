@@ -18,10 +18,6 @@ export default function validateAndSanitizeBodyParts(all_props = {}, required = 
         if (!all_props.hasOwnProperty(prop)) throw Error(`prop "${prop}" is not specified in the 'all_props' object in this middleware`);
     });
 
-    {
-
-    }
-
     const reqMessage = [Object.keys(required).slice(0, -1).join(', '), Object.keys(required).at(-1)].join(' and ') + (Object.keys(required).length > 1 ? ' are ' : ' is ') + 'required.';
 
     return function (req, res, next) {

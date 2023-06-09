@@ -15,6 +15,7 @@ CREATE TABLE users (
     last_name VARCHAR(255),
     first_name VARCHAR(255),
     email VARCHAR(255),
+    discovery_token VARCHAR(45) NOT NULL,
     use_beta_features BOOLEAN DEFAULT FALSE,
     to_do_categories JSON NULL,
     permissions VARCHAR(100) DEFAULT 'client',

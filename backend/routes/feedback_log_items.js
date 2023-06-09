@@ -5,7 +5,6 @@ import authenticateToken from '../jobs/authenticateToken.js';
 import FeedbackLogItemService from '../modules/FeedbackLogItemService.mjs';
 import FeedbackLogService from '../modules/FeedbackLogService.mjs';
 import query from '../utils/db_connection.js';
-import fetchUserFeedbackLogs from '../jobs/fetchUserFeedbackLogs.js';
 
 const itemsHelper = new FeedbackLogItemService();
 const logsHelper = new FeedbackLogService();

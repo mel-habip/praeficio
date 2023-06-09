@@ -516,6 +516,12 @@ votingSessionRouter.get(`/:voting_session_id`, authenticateToken, async (req, re
             }
         });
         delete voting_session.votes[ix].details; //removing so that the admin doesn't see what the IP addresses voted for
+
+        //hide the last section of the voter's IP to protect them
+        const sectionsOfIp = voting_session.votes[ix].voter_ip_address.split('.');
+        sectionsOfIp.pop();
+        sectionsOfIp.push('***');
+        voting_session.votes[ix].voter_ip_address = sectionsOfIp.join('.');
     });
 
     const votesEntries = Object.entries(candidatesMap);

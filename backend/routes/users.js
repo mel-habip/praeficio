@@ -6,8 +6,6 @@ const userRouter = Router();
 import NodeCache from "node-cache";
 const userRouterCache = new NodeCache();
 
-userRouterCache.set('hello', 'world');
-
 const log = console.log;
 const list = (arr) => new Intl.ListFormat().format(arr.map(x => JSON.stringify(x)));
 
@@ -25,6 +23,7 @@ import validatePassword from '../../frontend/src/utils/validatePassword.mjs';
 import UserService from '../modules/UserService.mjs';
 import validateAndSanitizeBodyParts from '../jobs/validateAndSanitizeBodyParts.js';
 import generateTemporaryPassword from '../utils/generateTemporaryPassword.js';
+import fetchUserFriends from '../jobs/fetchUserFriendships.js';
 
 import usersCache from '../stores/usersCache.js';
 
@@ -106,29 +105,27 @@ userRouter.post('/create_new_user', async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(req.body.password, 10); //default strength for salt creation is 10
 
+    const creation_result = await helper.create_single({
+        username: req.body.username,
+        password: hashedPassword,
+        first_name: req.body.first_name,
+        last_name: req.body.last_name,
+        permissions: 'basic_client',
+        email: req.body.email,
+        active: !is_secured,
+        discovery_token: generateTemporaryPassword(16, true),
+    });
 
-    let sql = `INSERT INTO users (username, password, first_name, last_name, permissions, email, active) VALUES ('${req.body.username}', '${hashedPassword}', ${sql_wrap(req.body.first_name)}, ${sql_wrap(req.body.last_name)}, 'basic_client', ${sql_wrap(req.body.email)}, ${!is_secured});`;
-
-
-    let creation = await query(sql);
-
-    if (!creation) {
+    if (!creation_result?.success) {
         return res.status(422).json({
             message: 'New User Creation Error',
             error_part: 'other'
         });
     };
 
-    sql = `SELECT ${db_keys.all_except_pass.join(', ')} FROM users WHERE user_id = LAST_INSERT_ID();`
-
-
-    let [created_user_details] = await query(sql);
-
-    log("1 record inserted", created_user_details);
-
     if (is_secured) {
         const user = {
-            id: created_user_details.user_id
+            id: creation_result.details.user_id
         };
         const ActivationToken = jwt.sign(user, process.env.ACTIVATION_TOKEN_SECRET_KEY); //any reason to use this over bcrypt? 
 
@@ -138,10 +135,10 @@ userRouter.post('/create_new_user', async (req, res) => {
         });
     }
 
-    usersCache.set(`user-${created_user_details.user_id}`, created_user_details);
+    usersCache.set(`user-${creation_result.details.user_id}`, creation_result.details);
 
-    res.status(201).json({
-        ...created_user_details,
+    return res.status(201).json({
+        ...creation_result.details,
         message: 'Successfully created',
         is_secured
     });
@@ -420,37 +417,52 @@ userRouter.delete('/:user_id', authenticateToken, async (req, res) => {
         return res.status(403).send('Forbidden: You do not have access to this.');
     }
 
-    let sql = `UPDATE users SET deleted = TRUE WHERE user_id = ?`;
+    const deletion_result = await helper.soft_delete(req.params.user_id);
 
-    let result = await query(sql, req.params.user_id);
+    if (!deletion_result?.success) {
+        return res.status(422).json({
+            message: 'User Deletion Error',
+            error_part: 'other'
+        });
+    };
 
-    return res.status(200).json(result);
+    return res.status(200).json(deletion_result.details);
 });
 
 userRouter.get('/:user_id', authenticateToken, async (req, res) => {
-    if (req.user.id === Number(req.params.user_id) || req.user.permissions === 'total') {
-        let sql = `SELECT user_id, username, last_name, first_name, email, permissions, active, created_on, updated_on, to_do_categories, use_beta_features FROM users WHERE user_id = ? LIMIT 1`;
-        await query(sql, req.params.user_id).then(response => {
-            if (!response) {
-                return res.status(422).json({
-                    message: `Something went wrong`
-                });
-            };
-            if (!response.length) {
-                return res.status(422).json({
-                    message: `Resource Does Not Exist`
-                });
-            };
-            return res.status(422).json(response);
-        });
-    } else {
-        return res.status(403).send('Forbidden: You do not have access to this.');
+
+    const cacheCheck = usersCache.get(`user-${req.params.user_id}`);
+
+    const user_details = cacheCheck || await helper.fetch_by_id(req.params.user_id);
+
+    if (!cacheCheck) {
+        usersCache.set(`user-${req.params.user_id}`, user_details);
     }
+
+    if (req.user.is_dev || req.user.id === parseInt(req.params.user_id) || req.query.discovery_token === user_details.discovery_token) {
+        //we're good
+    } else {
+        //check if friends already
+        if (!req.user.friendships) {
+            req.user.friendships = await fetchUserFriends(req.user.id);
+            usersCache.set(`user-${req.user.id}`, req.user);
+        }
+
+        const friendship = req.user.friendships.find(frnd => [frnd.user_1_id, frnd.user_2_id].includes(parseInt(req.params.user_id)));
+
+        if (!friendship) return res.status(403).json({
+            message: `A Discovery Token is required to connect with #${req.params.user_id}`
+        });
+    }
+
+    return res.status(200).json(req.params.user_id);
 });
 
 userRouter.put('/:user_id', authenticateToken, async (req, res) => {
 
-    const selected_user_details = await helper.fetch_by_id([req.params.user_id]);
+    const cacheCheck = usersCache.get(`user-${req.params.user_id}`);
+
+    const selected_user_details = cacheCheck || await helper.fetch_by_id(req.params.user_id);
 
     if (!selected_user_details) {
         return res.status(404).json({
@@ -553,13 +565,13 @@ userRouter.get('/:user_id/positions', authenticateToken, async (req, res) => {
 });
 
 userRouter.post('/:user_id/regenerate_recovery_codes', authenticateToken, async (req, res) => {
-    return res.status(200).json({
+    return res.status(418).json({
         message: 'this endpoint is not ready yet.'
     });
 });
 
 userRouter.post('/:user_id/regenerate_last_resort_passcode', authenticateToken, async (req, res) => {
-    return res.status(200).json({
+    return res.status(418).json({
         message: 'this endpoint is not ready yet.'
     });
 });

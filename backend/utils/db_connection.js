@@ -22,11 +22,18 @@ const connection = mysql.createConnection({
 });
 
 function connectWithRetry() {
+    connection.end((err) => {
+        if (!err) {
+            console.log(`Connection successfully terminated.`);
+        } else {
+            console.error(`Failed to end database connection: `, err)
+        }
+    })
     connection.connect(function (err) {
         if (err) {
-            console.error('Failed to connect to the database:', err);
+            console.error('Failed to connect to the database: ', err);
             // Retry connection after a delay
-            setTimeout(connectWithRetry, 4000);
+            setTimeout(connectWithRetry, 60000);
         } else {
             console.log('Database Connected!');
         }
