@@ -9,6 +9,7 @@ import extractIP from './jobs/extractIP.js';
 import {
     checkDatabaseConnection
 } from './utils/db_connection.js';
+import GRACEFUL_SHUTDOWN_FLAG from './stores/GRACEFUL_SHUTDOWN_FLAG.js';
 
 //all routers
 import userRouter from './routes/users.js';
@@ -27,10 +28,10 @@ import feedbackLogItemMessagesRouter from './routes/feedback_log_item_messages.j
 import debtAccountRouter from './routes/debt_accounts.js'
 import debtAccountTransactionRouter from './routes/debt_account_transactions.js'
 import votingSessionRouter from './routes/voting_sessions.js'
+import friendshipsRouter from './routes/friendships.js';
 
 
 import REGULAR_SCHEDULED_JOBS from './scheduled_jobs/regular_internal_jobs.js';
-
 
 const log = console.log;
 const rateLimiter = rateLimit({
@@ -50,6 +51,14 @@ APP.use(cors());
 APP.use(express.json());
 APP.use(extractIP);
 APP.use(rateLimiter);
+APP.use(function (req, res, next) {
+    if (GRACEFUL_SHUTDOWN_FLAG) return res.status(500).json({
+        message: `Server is in the process of shutting down and cannot accept requests. Please try again later.`,
+        error_part: `graceful_shutdown`,
+    });
+    next();
+});
+
 APP.use(checkDatabaseConnection);
 
 APP.use(function errorHandler(err, req, res, next) {
@@ -61,6 +70,7 @@ APP.use(function errorHandler(err, req, res, next) {
 });
 
 APP.use('/users', userRouter);
+APP.use('/friendships', friendshipsRouter);
 APP.use('/positions', positionRouter);
 APP.use('/workspaces', workspacesRouter);
 APP.use('/workspace_messages', workspaceMessagesRouter);
@@ -99,6 +109,4 @@ APP.get('/', (req, res) => {
     return res.status(200).json('Hello World!');
 });
 
-APP.listen(PORT);
-
-log(`Server Running on PORT ${PORT}`);
+APP.listen(PORT, () => log(`Server Running on PORT ${PORT}`));

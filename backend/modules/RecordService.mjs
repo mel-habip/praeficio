@@ -2,7 +2,7 @@ import query from '../utils/db_connection.js';
 
 import WorkspaceMessagesRelationshipOrganizer from '../jobs/WorkspaceMessagesRelationshipOrganizer.js';
 
-import fetchUserFriends from '../jobs/fetchUserFriendships.js';
+import fetchUserFriendships from '../jobs/fetchUserFriendships.js';
 
 export const recordTypeMap = {
     table_names: { //phase these out once ready.
@@ -107,7 +107,7 @@ export default class RecordService {
                 }
 
                 if (inclusions.friendships || inclusions.friends) {
-                    await fetchUserFriends(record_id_1).then(response => user.friendships = response);
+                    await fetchUserFriendships(record_id_1).then(response => user.friendships = response);
                 }
 
                 return user;

@@ -2,6 +2,7 @@ import RecordService, {
     constraint_stringifier,
 } from './RecordService.mjs';
 import query from '../utils/db_connection.js';
+import fetchUserDebtAccounts from '../jobs/fetchUserDebtAccounts.js';
 
 export default class DebtAccountService extends RecordService {
     constructor(data) {
@@ -71,10 +72,7 @@ export default class DebtAccountService extends RecordService {
 
 
     fetch_by_user_id = async (user_id, archived = false) => {
-        const sql = `SELECT A.*, Bor.username AS borrower_username, Len.username AS lender_username, SUM(T.amount) AS balance FROM debt_accounts A LEFT JOIN debt_account_transactions T ON A.debt_account_id = T.debt_account_id LEFT JOIN users Bor ON Bor.user_id = A.borrower_id LEFT JOIN users Len ON Len.user_id = A.lender_id WHERE ((Len.user_id = ? OR Bor.user_id = ?) AND ) GROUP BY A.account_id;`;
-        const debtAccounts = await query(sql, user_id, user_id);
-
-        return debtAccounts;
+        return await fetchUserDebtAccounts(user_id, archived);
     }
 
     /**

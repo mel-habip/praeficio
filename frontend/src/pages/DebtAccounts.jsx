@@ -55,9 +55,10 @@ export default function DebtAccounts() {
         <>
             <NavMenu />
             <DebtAccountCreationModalWithButton accountsList={accountsList} setAccountsList={setAccountsList} />
-            {accountsList.map((acct, index) => {
+            {/* <pre>{JSON.stringify(accountsList, null, 2)}</pre> */}
+            {accountsList.map((acct, index) =>
                 <DebtAccountCard key={`${index}-debt-account-card`} details={acct} />
-            })}
+            )}
         </>
     );
 }
@@ -65,17 +66,17 @@ export default function DebtAccounts() {
 
 function DebtAccountCard({ details }) {
     return (
-        <Card css={{ $$cardColor: '$colors$primary', width: '300px', height: '150px' }} key={details.debt_account_id + '-card-inner'} isHoverable isPressable>
+        <Card css={{ $$cardColor: '$colors$primary', width: '300px', height: '170px' }} key={details.debt_account_id + '-card-inner'} isHoverable isPressable>
 
             <Link to={`/debt_accounts/${details.debt_account_id}`}>
                 <Card.Body >
                     <div style={{ width: '100%', height: '100$', display: 'flex', 'justifyContent': 'flex-start', }}>
-                        <Text size={21} color="darkgray" css={{ ml: 0 }}>
-                            #{details.header}
+                        <Text size={21} color="darkgray" css={{ ml: 0, flexBasis: '60%' }}>
+                            #{details.name}
                         </Text>
                         <Spacer x={0.5} />
-                        <Text h3 color="white" css={{ mt: 0 }}>
-                            {details.borrower_username} owes {details.lender_username} the amount of {details.amount}
+                        <Text h4 color="white" css={{ mt: 0 }}>
+                            {details.borrower_username} owes {details.lender_username} the amount of {(details.amount || 0).toLocaleString('en-CA', { style: 'currency', currency: 'CAD' })}
                         </Text>
                     </div>
                     <div className="debt-account-card-metadata" style={{ textAlign: 'left', width: '100%', paddingLeft: '45px' }} >
@@ -100,7 +101,9 @@ function DebtAccountCreationModalWithButton({ setAccountsList = () => { }, accou
     const [friends, setFriends] = useState(null);
 
     useEffect(() => {
-        if (modalOpen) {
+        if (user.friendships) {
+            setFriends(user.friendships);
+        } else if (modalOpen && !user.friendships) {
             axios.get(`${process.env.REACT_APP_API_LINK}/friendships/`).then(response => {
                 if (response.status === 200) {
                     setFriends(response.data?.data ?? []);
@@ -109,7 +112,7 @@ function DebtAccountCreationModalWithButton({ setAccountsList = () => { }, accou
                 }
             }).catch(handleError);
         }
-    }, []);
+    }, [modalOpen, user.friendships]);
 
     const debtorCreditorLists = useMemo(() => {
         const borrowers = [], lenders = [];
@@ -119,14 +122,29 @@ function DebtAccountCreationModalWithButton({ setAccountsList = () => { }, accou
             name: `${user.username} (myself)`
         };
 
-        friends?.concat(selfOpt)?.forEach(opt => {
-            if (opt.debtor_id === opt.key) {
-                borrowers.push(selfOpt);
-            } else if (debtAccountDetails.creditor_id === opt.key) {
-                lenders.push(selfOpt);
+        if (debtAccountDetails.lender_id === user.id) {
+            lenders.push(selfOpt);
+        } else if (debtAccountDetails.borrower_id === user.id) {
+            borrowers.push(selfOpt);
+        } else {
+            lenders.push(selfOpt);
+            borrowers.push(selfOpt);
+        }
+
+        friends?.forEach(frnd => {
+
+            let key = frnd.user_1_id === user.id ? frnd.user_2_id : frnd.user_1_id;
+            let name = frnd.user_1_id === user.id ? frnd.user_2_username : frnd.user_1_username;
+
+            //in an ideal world, push all friends to both options
+
+            if (debtAccountDetails.lender_id === key) {
+                lenders.push({ key, name });
+            } else if (debtAccountDetails.borrower_id === key) {
+                borrowers.push({ key, name });
             } else {
-                borrowers.push(selfOpt);
-                lenders.push(selfOpt);
+                lenders.push({ key, name });
+                borrowers.push({ key, name });
             }
         });
 
@@ -162,10 +180,13 @@ function DebtAccountCreationModalWithButton({ setAccountsList = () => { }, accou
                 <pre>{JSON.stringify(debtAccountDetails, null, 2)}</pre>
                 <Input labelPlaceholder="Account Name" color="primary" rounded bordered clearable onChange={e => setDebtAccountDetails(prev => ({ ...prev, name: e.target.value }))} />
                 {(!!friends && !!debtorCreditorLists) ? <>
-                    <CustomizedDropdown optionsList={debtorCreditorLists.borrowers} mountDirectly outerUpdater={v => setDebtAccountDetails(prev => ({ ...prev, borrower_id: v }))} />
-                    <CustomizedDropdown optionsList={debtorCreditorLists.lenders} mountDirectly outerUpdater={v => setDebtAccountDetails(prev => ({ ...prev, lender_id: v }))} />
+                    <label>Please select the borrower:</label>
+                    <CustomizedDropdown optionsList={debtorCreditorLists.borrowers} mountDirectly outerUpdater={v => setDebtAccountDetails(prev => ({ ...prev, borrower_id: parseInt(v) }))} />
+                    <label>Please select the lender:</label>
+                    <CustomizedDropdown optionsList={debtorCreditorLists.lenders} mountDirectly outerUpdater={v => setDebtAccountDetails(prev => ({ ...prev, lender_id: parseInt(v) }))} />
                 </> : <Loading />}
 
+                <label>Who can add transactions to this account?</label>
                 <CustomizedDropdown optionsList={whoCanAddTransactionsOptions} title='Who can add transactions to this account?' default_value="both" mountDirectly outerUpdater={v => setDebtAccountDetails(prev => ({ ...prev, who_can_add_transactions: v }))} />
 
                 <Button
@@ -174,8 +195,11 @@ function DebtAccountCreationModalWithButton({ setAccountsList = () => { }, accou
                     auto
                     onPress={async () => {
                         console.log('creating voting session', debtAccountDetails?.name);
-                        await axios.post(`${process.env.REACT_APP_API_LINK}/voting_sessions/`, {
+                        await axios.post(`${process.env.REACT_APP_API_LINK}/debt_accounts/`, {
                             name: debtAccountDetails?.name,
+                            lender_id: debtAccountDetails?.lender_id,
+                            borrower_id: debtAccountDetails?.borrower_id,
+                            who_can_add_transactions: debtAccountDetails?.who_can_add_transactions
                         }).then(response => {
                             console.log('response:', response.data);
                             if ([201, 200].includes(response.status)) {

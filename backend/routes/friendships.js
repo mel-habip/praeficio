@@ -46,7 +46,7 @@ friendshipsRouter.post('/', validateAndSanitizeBodyParts({
     const findMatch = req.user.friendships.find(friendship => [friendship.user_1_id, friendship.user_2_id].includes(parseInt(req.body.user_id)));
 
     if (findMatch) return res.status(400).json({
-        message: `You are already friends with user #${req.body.user_id}.`
+        message: `You are already friends with user #${req.body.user_id}.`,
     });
 
     const cacheCheck = usersCache.get(`user-${req.body.user_id}`);

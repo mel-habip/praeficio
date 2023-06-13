@@ -11,42 +11,69 @@ if (env_dir) {
     });
 }
 
-const connection = mysql.createConnection({
+const connection_details = {
     host: process.env.DB_HOST,
     port: 3306,
     user: "admin",
     password: process.env.DB_PASSWORD,
     database: 'praeficio-database-1',
     charset: 'utf8mb4',
-    // debug: true
+    // debug: true,
+    typeCast: function (field, next) {
+        if (['TINY', 'TINYINT'].includes(field.type) && field.length === 1) {
+            return (field.string() === '1'); // 1 = true, 0 = false
+        } else if (field.type === 'JSON' && field) {
+            let t;
+            try {
+                t = JSON.parse(field.string());
+            } catch {
+                console.log(`failed to parse JSON`);
+            }
+            return t ?? null;
+        } else {
+            return next();
+        }
+    },
+    autoReconnect: true,
+    reconnectDelay: 3000, // 3 seconds delay between reconnection attempts
+};
+
+const connection = mysql.createConnection(connection_details);
+
+connection.connect((error) => {
+    if (!error) console.log(`Connected to DB successfully`);
 });
 
-function connectWithRetry() {
-    connection.end((err) => {
-        if (!err) {
-            console.log(`Connection successfully terminated.`);
-        } else {
-            console.error(`Failed to end database connection: `, err)
-        }
-    })
-    connection.connect(function (err) {
-        if (err) {
-            console.error('Failed to connect to the database: ', err);
-            // Retry connection after a delay
-            setTimeout(connectWithRetry, 60000);
-        } else {
-            console.log('Database Connected!');
-        }
-    });
-}
-
-connectWithRetry();
-
 // Listen for connection error event
-connection.on('error', function (err) {
-    console.error('Database connection error:', err);
-    // Retry connection after a delay
-    setTimeout(connectWithRetry, 4000);
+connection.on('error', function (error) {
+    console.error('Database connection error:', error);
+    if (error.code === 'PROTOCOL_CONNECTION_LOST') {
+        console.log('Reconnecting to MySQL database...');
+        connection.connect((connectError) => {
+            if (connectError) {
+                console.error('Error reconnecting to MySQL database:', connectError);
+            } else {
+                console.log('Reconnected to MySQL database!');
+            }
+        });
+    }
+
+    // Handle fatal errors
+    if (error.fatal) {
+        console.error('Fatal error occurred! Server will need to restart');
+
+        if (error.code === 'PROTOCOL_CONNECTION_LOST') {
+            // Connection lost, cannot be recovered automatically
+            console.error('Connection lost! Exiting...');
+        } else if (error.code === 'PROTOCOL_ENQUEUE_AFTER_FATAL_ERROR') {
+            // Cannot enqueue queries after a fatal error
+            console.error('Cannot enqueue queries after a fatal error! Exiting...');
+        } else {
+            // Other fatal errors
+            console.error('Unknown fatal error! Exiting...');
+        }
+        throw error;
+    }
 });
 
 /**
@@ -83,42 +110,5 @@ export default async function query(sql, ...values) {
         console.error('Error in Promise: ', err);
         console.warn('Received: ', sql);
     }
-    return cleaner(result);
-}
-
-
-function cleaner(array = []) {
-    if (!Array.isArray(array)) {
-        return array;
-    }
-
-    return array.map(hash => {
-        //boolean cleanup
-        ['active', 'deleted', 'invitation_accepted', 'completed', 'archived', 'use_beta_features', 'starred', 'handled_externally', 'pinned'].forEach(property => {
-            if (hash.hasOwnProperty(property)) hash[property] = Boolean(hash[property]);
-        });
-        //array JSON cleanup
-        ['to_do_categories', 'notes', 'internal_notes', 'topics'].forEach(property => {
-            if (hash.hasOwnProperty(property)) {
-                try {
-                    hash[property] = JSON.parse(hash[property] ?? []) ?? [];
-                } catch (e) {
-                    console.log(`\nFailed to parse into JSON\n\tProperty: ${property}\n\tValue: ${hash[property]}`);
-                    hash[property] = [];
-                }
-            }
-        });
-        //hash JSON cleanup
-        ['method', 'details'].forEach(property => {
-            if (hash.hasOwnProperty(property)) {
-                try {
-                    hash[property] = JSON.parse(hash[property] ?? {}) ?? {};
-                } catch (e) {
-                    console.log(`\nFailed to parse into JSON\n\tProperty: ${property}\n\tValue: ${hash[property]}`);
-                    hash[property] = {};
-                }
-            }
-        });
-        return hash;
-    });
+    return result;
 }

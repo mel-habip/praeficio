@@ -134,7 +134,7 @@ function App() {
                   <Route path='/quicknotes' element={<QuickNotes />} exact />
                   <Route path='/quick_notes' element={<QuickNotes />} exact />
                   <Route path='/quick-notes' element={<QuickNotes />} exact />
-                  <Route path='/newsletters/admin' element={isLoggedIn ? ((user?.permissions?.startsWith('dev_') || user?.is_total) ? <NewslettersAdmin /> : <Navigate to="/403" replace />) : <LoginPage />} exact />
+                  <Route path='/newsletters/admin' element={(isLoggedIn && user?.permissions) ? (user?.is_dev ? <NewslettersAdmin /> : <Navigate to="/403" replace />) : <LoginPage />} exact />
                   <Route path='/internal_admin' element={isLoggedIn ? ((['total', 'dev_lead'].includes(user?.permissions)) ? <InternalAdmin /> : <Navigate to="/403" replace />) : <LoginPage />} exact />
                   <Route path='/newsletters/:newsletter_id' element={<SpecificNewsletterPage />} exact />
                   <Route path='/login' element={isLoggedIn ? <Navigate to="/home" replace /> : <LoginPage />} exact />
@@ -169,7 +169,7 @@ function App() {
                   <Route path='/feedback_logs/archive' element={isLoggedIn ? <FeedbackLogsPage archive /> : <LoginPage />} exact />
                   <Route path='/feedback_logs/:feedback_log_id' element={isLoggedIn ? <SpecificFeedbackLogPage /> : <LoginPage />} exact />
 
-                  <Route path='/users/:user_id' element={<SpecificUserProfilePage />} exact />
+                  <Route path='/users/:user_id' element={isLoggedIn ? <SpecificUserProfilePage /> : <LoginPage />} exact />
 
                   <Route path='/debt-accounts' element={<Navigate to="/debt_accounts" replace />} />
                   <Route path='/debt_accounts' element={isLoggedIn ? <DebtAccounts /> : <LoginPage />} exact />
@@ -184,7 +184,7 @@ function App() {
 
                   <Route path='/testzone' element={<TestZone />} exact />
                   <Route path='/ip' element={<Navigate to="https://api.praeficio.com/api/my_ip" replace />} />
-                  <Route path='/my_ip' element={<Navigate to="https://api.praeficio.com/api/my_ip" replace />} exact />
+                  <Route path='/my_ip' element={<TestZone />} exact />
                   <Route path='/403' element={<ForbiddenPage />} exact />
                   <Route path='/500' element={<ErrorPage />} exact />
                   <Route path='/*' element={<NotFoundPage />} />

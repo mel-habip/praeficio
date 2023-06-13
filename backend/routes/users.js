@@ -23,7 +23,7 @@ import validatePassword from '../../frontend/src/utils/validatePassword.mjs';
 import UserService from '../modules/UserService.mjs';
 import validateAndSanitizeBodyParts from '../jobs/validateAndSanitizeBodyParts.js';
 import generateTemporaryPassword from '../utils/generateTemporaryPassword.js';
-import fetchUserFriends from '../jobs/fetchUserFriendships.js';
+import fetchUserFriendships from '../jobs/fetchUserFriendships.js';
 
 import usersCache from '../stores/usersCache.js';
 
@@ -435,6 +435,10 @@ userRouter.get('/:user_id', authenticateToken, async (req, res) => {
 
     const user_details = cacheCheck || await helper.fetch_by_id(req.params.user_id);
 
+    if (!user_details) return res.status(404).json({
+        message: `User #${req.params.user_id} not found.`
+    });
+
     if (!cacheCheck) {
         usersCache.set(`user-${req.params.user_id}`, user_details);
     }
@@ -444,7 +448,7 @@ userRouter.get('/:user_id', authenticateToken, async (req, res) => {
     } else {
         //check if friends already
         if (!req.user.friendships) {
-            req.user.friendships = await fetchUserFriends(req.user.id);
+            req.user.friendships = await fetchUserFriendships(req.user.id);
             usersCache.set(`user-${req.user.id}`, req.user);
         }
 
@@ -455,7 +459,7 @@ userRouter.get('/:user_id', authenticateToken, async (req, res) => {
         });
     }
 
-    return res.status(200).json(req.params.user_id);
+    return res.status(200).json(user_details);
 });
 
 userRouter.put('/:user_id', authenticateToken, async (req, res) => {

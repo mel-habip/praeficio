@@ -21,7 +21,7 @@ export default function DeletionModal({ endPoint, setSelfOpen = () => { }, selfO
     const { setIsLoggedIn } = useContext(IsLoggedInContext);
 
     return (
-        <Modal css={{'background-color': '#0d0d0d' }} closeButton blur aria-labelledby="modal-title" open={selfOpen} onClose={() => setSelfOpen(false)} >
+        <Modal css={{ 'background-color': '#0d0d0d' }} closeButton blur aria-labelledby="modal-title" open={selfOpen} onClose={() => setSelfOpen(false)} >
             <Modal.Header css={{ 'z-index': 86, position: 'relative' }}>
                 <Text size={18} > Are you sure you want to delete {titleText}?</Text>
             </Modal.Header>

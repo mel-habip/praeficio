@@ -30,7 +30,7 @@ export default function ConfirmationModal({ setSelfOpen = () => { }, selfOpen, t
                         auto
                         shadow
                         color="error"
-                        onPress={() => outerUpdater()}
+                        onPress={() => outerUpdater() || setSelfOpen(false)}
                     > Do It! &nbsp;{symbol}
                     </Button>
                 </Row>

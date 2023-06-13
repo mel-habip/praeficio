@@ -60,7 +60,7 @@ export default function CustomizedDropdown({ optionsList = [], outerUpdater = ()
                 selectionMode={selectionMode}
                 selectedKeys={innerSelected}
                 disallowEmptySelection={disallowEmptySelection}
-                onSelectionChange={(e) => { if (isMounted) setInnerSelected(e); }}
+                onSelectionChange={(e) => {if (isMounted) setInnerSelected(e); }}
                 disabledKeys={optionsList.filter(a => a.disabled).map(a => a.key)}
                 items={optionsList}
             >
