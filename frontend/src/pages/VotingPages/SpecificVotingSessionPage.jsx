@@ -9,10 +9,13 @@ import NavMenu from '../../components/NavMenu';
 import LoadingPage from '../LoadingPage';
 
 import { CustomButton } from '../../fields/CustomButton';
-import { Spacer, Text, Input, Tooltip, Row, Table, useAsyncList, useCollator, Loading, Badge } from '@nextui-org/react';
+import { Spacer, Text, Input, Tooltip, Row, Table, useAsyncList, useCollator, Loading, Badge, Checkbox, Modal, Button } from '@nextui-org/react';
 import timestampFormatter from '../../utils/timestampFormatter';
 
 import { PieChart, Pie, ResponsiveContainer, Tooltip as ReChartsTooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+
+import WordListField from '../../fields/WordList.jsx';
+import NumberField from '../../fields/NumberField.jsx';
 
 const ConfirmationModal = lazy(() => import('../../components/ConfirmationModal.jsx'));
 const DeletionModal = lazy(() => import('../../components/DeletionModal.jsx'));
@@ -146,10 +149,7 @@ export default function SpecificVotingSessionPage() {
                         }}
                     />
                 </Suspense>
-                <CustomButton
-                    disabled={votingSessionDetails.completed}
-                    onClick={() => true}
-                >Edit Session Details <i className="fa-regular fa-pen-to-square" /></CustomButton>
+                <EditModalWithButton votingSessionDetails={votingSessionDetails} setVotingSessionDetails={setVotingSessionDetails} />
                 <CustomButton
                     disabled={votingSessionDetails.completed}
                     onClick={() => setCompletionModalOpen(true)}
@@ -393,4 +393,67 @@ function ResultGraphs({ distributionData = {} }) {
             </BarChart>
         </ResponsiveContainer>
     </div>);
+}
+
+
+
+function EditModalWithButton({ votingSessionDetails = {}, setVotingSessionDetails }) {
+    const [formData, setFormData] = useState(votingSessionDetails);
+
+    const { setIsLoggedIn } = useContext(IsLoggedInContext);
+
+    const [modalOpen, setModalOpen] = useState(false);
+
+    useEffect(() => {
+        setFormData({
+            name: votingSessionDetails.name,
+            voter_limit: votingSessionDetails.details.voter_limit,
+            options: votingSessionDetails.details.options,
+            limit_voters: !!votingSessionDetails.details.voter_limit,
+        });
+    }, []);
+
+    return (<>
+
+        <CustomButton
+            disabled={votingSessionDetails.completed}
+            onClick={() => setModalOpen(true)}
+        >Edit Session Details <i className="fa-regular fa-pen-to-square" /></CustomButton>
+
+        <Modal closeButton blur aria-labelledby="modal-title" open={modalOpen} onClose={() => setModalOpen(false)} >
+            <pre>{JSON.stringify(formData, null, 2)}</pre>
+            <Modal.Header css={{ 'z-index': 86, position: 'relative' }}>
+                <Text size={14} > Please enter the information below </Text> </Modal.Header>
+            <Modal.Body>
+                <Spacer y={0.4} />
+                <Input initialValue={formData.name} labelPlaceholder="Session Name" color="primary" rounded bordered clearable onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))} />
+                <Checkbox defaultSelected={!!formData.voter_limit} onChange={b => setFormData(prev => ({ ...prev, limit_voters: b }))} ><p>Limit number of voters?</p></Checkbox>
+                {formData.limit_voters && <NumberField min={2} max={200} default_value={formData.voter_limit || 2} outer_updater={v => setFormData(prev => ({ ...prev, voter_limit: v }))} />}
+
+                <p>Options to vote amongst:</p>
+                <WordListField style={{ border: 'none' }} placeholder="Add another option and hit 'Enter' to record" onListChange={ar => setFormData(prev => ({ ...prev, options: ar }))} defaultValue={formData.options} />
+
+                <Button
+                    shadow
+                    auto
+                    onPress={async () => {
+                        await axios.put(`${process.env.REACT_APP_API_LINK}/voting_sessions/${votingSessionDetails.voting_session_id}`, {
+                            ...formData,
+                            remove_voter_limit: !formData.voter_limit //send `true` if we want to remove the limit intentionally.
+                        }).then(response => {
+                            console.log('response:', response.data);
+                            if ([201, 200].includes(response.status)) {
+                                console.log('successful');
+                                setVotingSessionDetails(prev => ({ ...prev, name: formData.name, details: formData }));
+                                setModalOpen(false);
+                            } else if (response.status === 401) {
+                                setIsLoggedIn(false);
+                            } else {
+                                console.log(response);
+                            }
+                        });
+                    }}> Edit Voting Session&nbsp;&nbsp;<i className="fa-regular fa-square-plus"></i> </Button>
+            </Modal.Body>
+        </Modal>
+    </>);
 }

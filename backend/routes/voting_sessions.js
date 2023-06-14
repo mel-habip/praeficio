@@ -321,7 +321,8 @@ votingSessionRouter.delete(`/:voting_session_id`, authenticateToken, async (req,
 votingSessionRouter.put(`/:voting_session_id`, authenticateToken, validateAndSanitizeBodyParts({
     name: 'string',
     voter_limit: 'number',
-    remove_voter_limit: 'boolean'
+    remove_voter_limit: 'boolean',
+    options: 'array'
 }), async (req, res) => {
     const checkCache = votingSessionsCache.get(`voting-session-${req.params.voting_session_id}`);
 
@@ -351,16 +352,26 @@ votingSessionRouter.put(`/:voting_session_id`, authenticateToken, validateAndSan
         updatedDetails.voter_limit = req.body.voter_limit;
     }
 
+    if (req.body.options) {
+        updatedDetails.options = Array.from(new Set(req.body.options));
+    }
+
     const sessionNewName = req.body.name || voting_session.name;
 
     const update_details = await sessionHelper.update_single({
-        updatedDetails,
+        details: JSON.stringify(updatedDetails),
         name: sessionNewName
-    });
+    }, req.params.voting_session_id);
 
     if (!update_details?.success) return res.status(422).json({
         message: update_details?.message || `Something went wrong.`,
         details: update_details?.details,
+    });
+
+    votingSessionsCache.set(`voting-session-${req.params.voting_session_id}`, {
+        ...voting_session,
+        name: sessionNewName,
+        details: updatedDetails,
     });
 
     return res.status(200).json({
@@ -557,7 +568,10 @@ votingSessionRouter.put(`/:voting_session_id/vote/:vote_id`, validateAndSanitize
 
     votingSessionsCache.set(`voting-session-${req.params.voting_session_id}`, {
         ...voting_session,
-        votes: voting_session.votes.map(vote => vote.vote_id === parseInt(req.params.vote_id) ? {...vote, selections: req.body.selections} : vote)
+        votes: voting_session.votes.map(vote => vote.vote_id === parseInt(req.params.vote_id) ? {
+            ...vote,
+            selections: req.body.selections
+        } : vote)
     });
 
     return res.status(200).json({
