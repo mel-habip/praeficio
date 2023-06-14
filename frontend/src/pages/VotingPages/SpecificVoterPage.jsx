@@ -14,6 +14,8 @@ import { Button, Input, Loading, Checkbox } from '@nextui-org/react';
 
 import CustomizedDropdown from '../../fields/CustomizedDropdown';
 import NumberField from '../../fields/NumberField';
+import CustomButton from '../../fields/CustomButton';
+import AnimatedText from '../../components/AnimatedText.jsx';
 
 export default function SpecificVoterPage() {
 
@@ -25,9 +27,12 @@ export default function SpecificVoterPage() {
 
     const [errorMessage, setErrorMessage] = useState('');
 
+    const [voteDeleted, setVoteDeleted] = useState(false);
+
     useEffect(() => {
         axios.get(`${process.env.REACT_APP_API_LINK}/voting_sessions/${voting_session_id}/vote/${voter_key}`).then(response => {
             if (response.status === 200) {
+                if (response.data.already_voted) setVotedAlready(true);
                 setVotingSessionDetails(response.data ?? {});
             } else {
                 console.log('fetch', response);
@@ -35,8 +40,6 @@ export default function SpecificVoterPage() {
         }).catch(err => {
             if (err?.response?.data?.error_part === 'is_completed') {
                 window.location = '/voting_completed';
-            } else if (err?.response?.data?.error_part === 'already_voted') {
-                setVotedAlready(true);
             } else if (err?.response?.data?.message) {
                 setErrorMessage(err?.response?.data?.message);
             } else {
@@ -55,7 +58,20 @@ export default function SpecificVoterPage() {
             </div>
         </>);
     }
-    
+
+    if (voteDeleted) {
+        return (<>
+            <NavMenu />
+            <div>
+                {/* <h2>Your vote has been successfully removed.</h2> */}
+                <AnimatedText text="Your vote has been removed." />
+                <br />
+                <h3>Thank you & have a great day!</h3>
+                <CustomButton to={`/vote`} > Vote in another session </CustomButton>
+            </div>
+        </>);
+    };
+
     if (votedAlready) {
         return (<>
             <NavMenu />
@@ -64,15 +80,38 @@ export default function SpecificVoterPage() {
                 <AnimatedCheckmark />
                 <br />
                 <h3>Thank you for taking part in this voting session & have a great day!</h3>
+                <CustomButton onClick={() => {
+                    setVotedAlready(false);
+                }} > Edit My Vote <i className="fa-regular fa-pen-to-square" /> </CustomButton>
+                <CustomButton onClick={() => {
+                    axios.delete(`${process.env.REACT_APP_API_LINK}/voting_sessions/${voting_session_id}/vote/${votingSessionDetails.vote_id}`).then(response => {
+                        if (response.status === 200) {
+                            setVoteDeleted(true);
+                        } else {
+                            console.log('vote', response);
+                        }
+                    }).catch(err => {
+                        if (err?.response?.data?.error_part === 'is_completed') {
+                            window.location = '/voting_completed';
+                        } else if (err?.response?.data?.message) {
+                            setErrorMessage(err?.response?.data?.message);
+                        } else {
+                            console.error(err);
+                        }
+                    });
+                }} > Delete My Vote <i className="fa-solid fa-trash-can" /> </CustomButton>
             </div>
         </>);
     }
-    
+
     if (!votingSessionDetails) return <Loading size='xl' />
-    
+
+    const MyIpLine = () => !!votingSessionDetails.voter_ip_address ? <h5 style={{ position: 'absolute', top: '5%', right: '5%' }} >Your IP: {votingSessionDetails.voter_ip_address}</h5> : <></>
+
     if (votingSessionDetails.method === 'simple') {
         return (<>
             <NavMenu />
+            <MyIpLine />
             <SingleVoteFields options={votingSessionDetails.options} submit_func={selections => submit(selections)} />
         </>);
     }
@@ -80,6 +119,7 @@ export default function SpecificVoterPage() {
     if (votingSessionDetails.method === 'multiple_votes') {
         return (<>
             <NavMenu />
+            <MyIpLine />
             <MultipleVotesFields options={votingSessionDetails.options} number_of_votes={votingSessionDetails.number_of_votes} submit_func={selections => submit(selections)} />
         </>);
     }
@@ -87,6 +127,7 @@ export default function SpecificVoterPage() {
     if (votingSessionDetails.method === 'approval') {
         return (<>
             <NavMenu />
+            <MyIpLine />
             <ApprovalStyleFields options={votingSessionDetails.options} submit_func={selections => submit(selections)} />
         </>);
     }
@@ -99,16 +140,31 @@ export default function SpecificVoterPage() {
     </>);
 
     function submit(selections = []) {
-        axios.post(`${process.env.REACT_APP_API_LINK}/voting_sessions/${voting_session_id}/vote/`, {
-            voter_key,
-            selections,
-        }).then(response => {
-            if (response.status === 201) {
-                setVotedAlready(true);
-            } else {
-                console.log('vote', response);
-            }
-        })
+
+        if (votingSessionDetails.vote_id) {
+            axios.put(`${process.env.REACT_APP_API_LINK}/voting_sessions/${voting_session_id}/vote/${votingSessionDetails.vote_id}`, {
+                voter_key,
+                selections,
+            }).then(response => {
+                if (response.status === 200) {
+                    setVotedAlready(true);
+                } else {
+                    console.log('vote', response);
+                }
+            })
+        } else {
+            axios.post(`${process.env.REACT_APP_API_LINK}/voting_sessions/${voting_session_id}/vote/`, {
+                voter_key,
+                selections,
+            }).then(response => {
+                if (response.status === 201) {
+                    setVotedAlready(true);
+                    setVotingSessionDetails(prev => ({ ...prev, already_voted: true, vote_id: response.data.vote_id }))
+                } else {
+                    console.log('vote', response);
+                }
+            })
+        }
     }
 }
 

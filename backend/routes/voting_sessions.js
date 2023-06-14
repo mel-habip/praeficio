@@ -317,6 +317,58 @@ votingSessionRouter.delete(`/:voting_session_id`, authenticateToken, async (req,
     });
 });
 
+//edit the session details
+votingSessionRouter.put(`/:voting_session_id`, authenticateToken, validateAndSanitizeBodyParts({
+    name: 'string',
+    voter_limit: 'number',
+    remove_voter_limit: 'boolean'
+}), async (req, res) => {
+    const checkCache = votingSessionsCache.get(`voting-session-${req.params.voting_session_id}`);
+
+    const voting_session = checkCache || await sessionHelper.fetch_by_id(req.params.voting_session_id, {
+        deleted: false
+    });
+
+    if (!voting_session) return res.status(404).json({
+        message: `Voting Session #${req.params.voting_session_id} is not found.`
+    });
+
+    if (voting_session.created_by !== req.user.id && !req.user.is_dev) res.status(403).json({
+        message: `Forbidden: You cannot edit this Voting Session`
+    });
+
+    if (voting_session.completed) return res.status(400).json({
+        message: `Voting Session #${req.params.voting_session_id} is already completed.`
+    });
+
+    const updatedDetails = {
+        ...voting_session.details
+    };
+
+    if (req.body.remove_voter_limit) {
+        delete updatedDetails.voter_limit;
+    } else if (req.body.voter_limit) {
+        updatedDetails.voter_limit = req.body.voter_limit;
+    }
+
+    const sessionNewName = req.body.name || voting_session.name;
+
+    const update_details = await sessionHelper.update_single({
+        updatedDetails,
+        name: sessionNewName
+    });
+
+    if (!update_details?.success) return res.status(422).json({
+        message: update_details?.message || `Something went wrong.`,
+        details: update_details?.details,
+    });
+
+    return res.status(200).json({
+        updatedDetails,
+        name: sessionNewName
+    });
+});
+
 //submit a new vote
 votingSessionRouter.post(`/:voting_session_id/vote`, validateAndSanitizeBodyParts({
     voter_key: 'string',
@@ -415,6 +467,211 @@ votingSessionRouter.post(`/:voting_session_id/vote`, validateAndSanitizeBodyPart
     });
 });
 
+//update an existing vote
+votingSessionRouter.put(`/:voting_session_id/vote/:vote_id`, validateAndSanitizeBodyParts({
+    voter_key: 'string',
+    selections: 'array'
+}, ['voter_key', 'selections']), async (req, res) => {
+    const checkCache = votingSessionsCache.get(`voting-session-${req.params.voting_session_id}`);
+
+    const voting_session = checkCache?.votes ? checkCache : await sessionHelper.fetch_by_id(req.params.voting_session_id, {
+        deleted: false
+    }, {
+        votes: true
+    });
+
+    if (!voting_session) return res.status(404).json({
+        message: `Voting Session #${req.params.voting_session_id} is not found.`
+    });
+
+    if (req.body.voter_key !== voting_session.voter_key) return res.status(401).json({
+        message: `Invalid Voter Key.`
+    });
+
+    if (voting_session.completed) return res.status(400).json({
+        message: `Voting Session #${req.params.voting_session_id} is already completed.`,
+        error_part: 'is_completed'
+    });
+
+    const vote_to_edit = voting_session.votes.find(vote => vote.vote_id === parseInt(req.params.vote_id));
+
+    if (!vote_to_edit) return res.status(404).json({
+        message: `Vote #${req.params.vote_id} is not found in voting session #${req.params.voting_session_id}.`
+    });
+
+    if (![req.ip, req.custom_ip].includes(vote_to_edit.voter_ip_address)) return res.status(403).json({
+        message: `Forbidden: You cannot perform this action.`
+    });
+
+    const session_method = voting_session.details.method;
+    const session_options = voting_session.details.options;
+
+    if (!req.body.selections?.length) return res.status(400).json({
+        message: `Selections are required`
+    });
+
+    //validate that each selection is a valid option
+    {
+        const candidatesMap = session_options.reduce((acc, cur) => ({
+            ...acc,
+            [cur]: true
+        }), {});
+
+        let invalid_selections = [];
+
+        req.body.selections.forEach(select => {
+            if (!candidatesMap[select]) invalid_selections.push(select);
+        });
+
+        if (invalid_selections.length) return res.status(400).json({
+            message: `invalid selections: ${invalid_selections.join(',')}`
+        });
+    }
+
+    if (session_method === 'single' && req.body.selections.length !== 1) {
+        return res.status(400).json({
+            message: `Invalid selections`
+        });
+    }
+
+    //check duplicate candidate selections
+    if (session_method === 'approval' && req.body.selections.length > Array.from(new Set(req.body.selections)).length) return res.status(400).json({
+        message: `Invalid selections`
+    });
+
+    //too many selections
+    if (session_method === 'multiple_votes' && req.body.selections.length > voting_session.details.number_of_votes) return res.status(400).json({
+        message: `Invalid selections`
+    });
+
+    const update_result = await voteHelper.update_single({
+        details: JSON.stringify({
+            selections: req.body.selections
+        }),
+    }, req.params.vote_id);
+
+    if (!update_result?.success) return res.status(422).json({
+        message: update_result?.message || `Something went wrong`,
+        details: update_result?.details
+    });
+
+    votingSessionsCache.set(`voting-session-${req.params.voting_session_id}`, {
+        ...voting_session,
+        votes: voting_session.votes.map(vote => vote.vote_id === parseInt(req.params.vote_id) ? {...vote, selections: req.body.selections} : vote)
+    });
+
+    return res.status(200).json({
+        success: true,
+        selections: req.body.selections
+    });
+});
+
+//remove a vote from the voting session - external version
+votingSessionRouter.delete(`/:voting_session_id/vote/:vote_id`, async (req, res, next) => {
+
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.split(' ')[1];
+    if (token) {
+        return next();
+        //if the request is made sans account, we take care of it as below
+        // but if there is an account (token) then we want to send to the next function and take care of it in the authenticated way
+        //unauthenticated is meant for external voters to delete their vote
+        //authenticated is for session owners & devs but also supports logged-in voters
+    }
+
+    const checkCache = votingSessionsCache.get(`voting-session-${req.params.voting_session_id}`);
+
+    const voting_session = checkCache?.votes ? checkCache : await sessionHelper.fetch_by_id(req.params.voting_session_id, {
+        deleted: false
+    }, {
+        votes: true
+    });
+
+    if (!voting_session) return res.status(404).json({
+        message: `Voting Session #${req.params.voting_session_id} is not found.`
+    });
+
+    if (voting_session.completed) return res.status(400).json({
+        message: `Voting Session #${req.params.voting_session_id} is already completed.`,
+        error_part: 'is_completed'
+    });
+
+    const vote_to_delete = voting_session.votes.find(vote => vote.vote_id === parseInt(req.params.vote_id));
+
+    if (!vote_to_delete) return res.status(404).json({
+        message: `Vote #${req.params.vote_id} is not found in voting session #${req.params.voting_session_id}.`
+    });
+
+    // voters themselves can delete their vote (so long as the session is still in-progress)
+    if (![req.ip, req.custom_ip].includes(vote_to_delete.voter_ip_address)) return res.status(403).json({
+        message: `Forbidden: You cannot perform this action.`
+    });
+
+    const deletion_result = await voteHelper.soft_delete(req.params.vote_id);
+
+    if (!deletion_result?.success) return res.status(422).json({
+        message: `Something went wrong`
+    });
+
+    votingSessionsCache.set(`voting-session-${req.params.voting_session_id}`, {
+        ...voting_session,
+        votes: voting_session.votes.filter(vote => vote.vote_id !== parseInt(req.params.vote_id))
+    });
+
+    return res.status(200).json({
+        success: deletion_result?.success,
+        message: `deleted`
+    });
+}, authenticateToken, async (req, res) => {
+    const checkCache = votingSessionsCache.get(`voting-session-${req.params.voting_session_id}`);
+
+    const voting_session = checkCache?.votes ? checkCache : await sessionHelper.fetch_by_id(req.params.voting_session_id, {
+        deleted: false
+    }, {
+        votes: true
+    });
+
+    if (!voting_session) return res.status(404).json({
+        message: `Voting Session #${req.params.voting_session_id} is not found.`
+    });
+
+    if (voting_session.completed) return res.status(400).json({
+        message: `Voting Session #${req.params.voting_session_id} is already completed.`,
+        error_part: 'is_completed'
+    });
+
+    const vote_to_delete = voting_session.votes.find(vote => vote.vote_id === parseInt(req.params.vote_id));
+
+    if (!vote_to_delete) return res.status(404).json({
+        message: `Vote #${req.params.vote_id} is not found in voting session #${req.params.voting_session_id}.`
+    });
+
+    // voting session owner, devs and the voter themselves can delete their vote (so long as the session is still in-progress)
+    if (voting_session.created_by === req.user.id || req.user.is_dev || [req.ip, req.custom_ip].includes(vote_to_delete.voter_ip_address)) {
+        //we're good
+    } else {
+        return res.status(403).json({
+            message: `Forbidden: You cannot perform this action.`
+        });
+    }
+
+    const deletion_result = await voteHelper.soft_delete(req.params.vote_id);
+
+    if (!deletion_result?.success) return res.status(422).json({
+        message: `Something went wrong`
+    });
+
+    votingSessionsCache.set(`voting-session-${req.params.voting_session_id}`, {
+        ...voting_session,
+        votes: voting_session.votes.filter(vote => vote.vote_id !== parseInt(req.params.vote_id))
+    });
+
+    return res.status(200).json({
+        success: deletion_result?.success,
+        message: `deleted`
+    });
+});
+
 //fetches the details for a potential voter
 votingSessionRouter.get('/:voting_session_id/vote/:voter_key', async (req, res) => {
 
@@ -434,21 +691,21 @@ votingSessionRouter.get('/:voting_session_id/vote/:voter_key', async (req, res) 
         message: `Invalid Voter Key.`
     });
 
-    if (voting_session.votes.some(vote => [req.ip, req.custom_ip].includes(vote.voter_ip_address))) return res.status(400).json({
-        message: `You have already voted in this session.`,
-        error_part: 'already_voted'
-    });
-
     if (voting_session.completed || (voting_session.details.voter_limit && voting_session.details.voter_limit <= voting_session.votes.length)) return res.status(400).json({
         message: `Voting Session #${req.params.voting_session_id} is already completed.`,
         error_part: 'is_completed'
     });
+
+    let vote_id = voting_session.votes.find(vote => [req.ip, req.custom_ip].includes(vote.voter_ip_address))?.vote_id;
 
     if (!checkCache) {
         votingSessionsCache.set(`voting-session-${req.params.voting_session_id}`, voting_session);
     }
 
     return res.status(200).json({
+        already_voted: !!vote_id,
+        vote_id,
+        voter_ip_address: req.ip || req.custom_ip,
         name: voting_session.name,
         voting_session_id: voting_session.voting_session_id,
         method: voting_session.details.method,
@@ -546,51 +803,6 @@ votingSessionRouter.get(`/:voting_session_id`, authenticateToken, async (req, re
         result,
         distribution: candidatesMap,
         errors,
-    });
-});
-
-//remove a vote from the voting session - in case its wrong, this allows the voter to vote again.
-votingSessionRouter.delete(`/:voting_session_id/vote/:vote_id`, authenticateToken, async (req, res) => {
-    const checkCache = votingSessionsCache.get(`voting-session-${req.params.voting_session_id}`);
-
-    const voting_session = checkCache?.votes ? checkCache : await sessionHelper.fetch_by_id(req.params.voting_session_id, {
-        deleted: false
-    }, {
-        votes: true
-    });
-
-    if (!voting_session) return res.status(404).json({
-        message: `Voting Session #${req.params.voting_session_id} is not found.`
-    });
-
-    if (voting_session.created_by !== req.user.id && !req.user.is_dev) res.status(403).json({
-        message: `Forbidden: You cannot perform this action.`
-    });
-
-    if (voting_session.completed) return res.status(400).json({
-        message: `Voting Session #${req.params.voting_session_id} is already completed.`
-    });
-
-    const vote_to_delete = voting_session.votes.find(vote => vote.vote_id === parseInt(req.params.vote_id));
-
-    if (!vote_to_delete) return res.status(404).json({
-        message: `Vote #${req.params.vote_id} is not found in voting session #${req.params.voting_session_id}.`
-    });
-
-    const deletion_result = await voteHelper.soft_delete(req.params.vote_id);
-
-    if (!deletion_result?.success) res.status(422).json({
-        message: `Something went wrong`
-    });
-
-    votingSessionsCache.set(`voting-session-${req.params.voting_session_id}`, {
-        ...voting_session,
-        votes: voting_session.votes.filter(vote => vote.vote_id !== parseInt(req.params.vote_id))
-    });
-
-    res.status(200).json({
-        success: deletion_result?.success,
-        message: `deleted`
     });
 });
 

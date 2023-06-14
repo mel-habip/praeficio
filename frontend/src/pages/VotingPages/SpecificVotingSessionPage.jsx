@@ -97,7 +97,6 @@ export default function SpecificVotingSessionPage() {
                     </Tooltip>
                 </div>
 
-
                 <h4>Options:</h4>
                 <div style={{
                     width: 'fit-content',
@@ -109,6 +108,17 @@ export default function SpecificVotingSessionPage() {
                             <Text><i className="fa-regular fa-hand-point-right" />  &nbsp;&nbsp;&nbsp; {opt}</Text>
                             <Spacer x={0.2} />
                         </Row>)}
+                </div>
+
+                <div style={{
+                    width: 'fit-content', marginLeft: 'auto',
+                    marginRight: 'auto',
+                }} >
+                    <Tooltip trigger="click" content="Copied!" >
+                        <Link>
+                            <span onClick={() => navigator.clipboard.writeText("https://api.praeficio.com/api/my_ip")} > My IP Address </span>
+                        </Link>
+                    </Tooltip>
                 </div>
             </div>
 
@@ -138,8 +148,13 @@ export default function SpecificVotingSessionPage() {
                 </Suspense>
                 <CustomButton
                     disabled={votingSessionDetails.completed}
+                    onClick={() => true}
+                >Edit Session Details <i className="fa-regular fa-pen-to-square" /></CustomButton>
+                <CustomButton
+                    disabled={votingSessionDetails.completed}
                     onClick={() => setCompletionModalOpen(true)}
                 >Complete the voting session <i className="fa-solid fa-flag-checkered" /></CustomButton>
+
                 <Suspense fallback={<Loading />} >
                     <ConfirmationModal
                         selfOpen={completionModalOpen}
@@ -174,11 +189,8 @@ export default function SpecificVotingSessionPage() {
 
         </div >
 
-
         {!!votingSessionDetails.votes.length ? <VotersTable votersList={votingSessionDetails.votes} /> : <h3>No votes received yet. A table will be shown once votes are received.</h3>
         }
-
-
     </>);
 };
 
@@ -191,7 +203,7 @@ function VotersTable({ votersList = [] }) {
 
     useEffect(() => {
         setInnerList(votersList)
-    }, [votersList]);
+    }, []);
 
     let load = async ({ filterText }) => ({ items: filterText ? innerList.filter(voterRow => [voterRow.voter_ip_address].join('').toLowerCase().includes(filterText.toLowerCase().trim())) : innerList }); //this can normally be an async function that fetches the data, but already we hold the whole page off while it is loading
 

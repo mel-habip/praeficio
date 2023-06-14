@@ -547,6 +547,44 @@ userRouter.put('/:user_id', authenticateToken, async (req, res) => {
     });
 });
 
+userRouter.post('/:user_id/renew_discovery_token', authenticateToken, async (req, res) => {
+    const cacheCheck = usersCache.get(`user-${req.params.user_id}`);
+
+    const selected_user_details = cacheCheck || await helper.fetch_by_id(req.params.user_id);
+
+    if (!selected_user_details) {
+        return res.status(404).json({
+            message: `User ${req.params.user_id} not found`
+        });
+    };
+
+    if (req.user.id !== parseInt(req.params.user_id) && !req.user.is_dev) return res.status(403).json({
+        message: `You do not have access to this.`
+    });
+
+    const newDiscoveryToken = generateTemporaryPassword(8, true);
+
+    const update_results = await helper.update_single({
+        discovery_token: newDiscoveryToken
+    }, req.params.user_id);
+
+    if (!update_results || !update_results?.success) return res.status(422).json({
+        message: update_results?.message || 'Something went wrong',
+        success: false,
+        details: update_results?.details,
+    });
+
+    usersCache.set(`user-${req.params.user_id}`, {
+        ...selected_user_details,
+        discovery_token: newDiscoveryToken
+    });
+
+    return res.status(200).json({
+        message: `Updated`,
+        discovery_token: newDiscoveryToken
+    });
+});
+
 userRouter.get('/:user_id/positions', authenticateToken, async (req, res) => {
     let sql = `SELECT * FROM positions WHERE user_id = ? OR secondary_user_id = ? OR tertiary_user_id = ?`; //TODO: handle joint_confirmed prop
     //GET positions belonging to said user, based on perms

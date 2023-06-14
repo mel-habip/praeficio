@@ -55,7 +55,6 @@ export default function DebtAccounts() {
         <>
             <NavMenu />
             <DebtAccountCreationModalWithButton accountsList={accountsList} setAccountsList={setAccountsList} />
-            {/* <pre>{JSON.stringify(accountsList, null, 2)}</pre> */}
             {accountsList.map((acct, index) =>
                 <DebtAccountCard key={`${index}-debt-account-card`} details={acct} />
             )}
@@ -177,7 +176,6 @@ function DebtAccountCreationModalWithButton({ setAccountsList = () => { }, accou
                 <Text size={14} > Please enter the information below </Text> </Modal.Header>
             <Modal.Body>
                 <Spacer y={0.4} />
-                <pre>{JSON.stringify(debtAccountDetails, null, 2)}</pre>
                 <Input labelPlaceholder="Account Name" color="primary" rounded bordered clearable onChange={e => setDebtAccountDetails(prev => ({ ...prev, name: e.target.value }))} />
                 {(!!friends && !!debtorCreditorLists) ? <>
                     <label>Please select the borrower:</label>
