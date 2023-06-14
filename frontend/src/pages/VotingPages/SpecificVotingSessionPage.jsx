@@ -344,7 +344,6 @@ function VotersTable({ votersList = [], refreshCounter }) {
                     </Table.Row>
                 )}
             </Table.Body>
-
             <Table.Pagination shadow align="center" rowsPerPage={10} onPageChange={(page) => console.log({ page })} />
         </Table >
     </>);
