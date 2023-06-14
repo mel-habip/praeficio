@@ -15,14 +15,6 @@ import votingSessionsCache from '../stores/votingSessionsCache.js';
 const sessionHelper = new VotingSessionService();
 const voteHelper = new VoteService();
 
-
-const log = console.log;
-
-votingSessionRouter.get('/test', async (_, res) => {
-    res.status(200).send('<h1>Hello World from the API! (with HTML) <h1/>');
-});
-
-
 //get all sessions user has access to
 votingSessionRouter.get('/', authenticateToken, async (req, res) => {
     let results;
@@ -249,7 +241,7 @@ votingSessionRouter.post(`/:voting_session_id/complete`, authenticateToken, asyn
     });
 });
 
-//renew voter key (in case you want to keep the election but submit )
+//renew voter key (in case you want to keep the session but make sure only the correct people can access it)
 votingSessionRouter.post(`/:voting_session_id/renew_voter_key`, authenticateToken, async (req, res) => {
 
     const checkCache = votingSessionsCache.get(`voting-session-${req.params.voting_session_id}`);
@@ -767,7 +759,10 @@ votingSessionRouter.get(`/:voting_session_id`, authenticateToken, async (req, re
     //result determination process
     const result = {
         winner: 'indeterminate',
-        total_votes: allVotes.length,
+        number_of_voters: allVotes.length,
+        total_votes: 0,
+        valid_votes: 0,
+        tie_parts: new Set(),
     };
 
     allVotes?.forEach((vote, ix) => {
@@ -778,11 +773,24 @@ votingSessionRouter.get(`/:voting_session_id`, authenticateToken, async (req, re
             return;
         }
 
+        if (candidates.length > 1 && voting_session.details.method === 'simple') {
+            errors.push(`A vote has submitted more selections than allowed (1).`);
+            voting_session.votes[ix].has_error = true;
+        } else if (candidates.length > voting_session.details.number_of_votes) {
+            errors.push(`A vote has submitted more selections than allowed (${voting_session.details.number_of_votes}).`);
+            voting_session.votes[ix].has_error = true;
+        } else if (voting_session.details.method === 'approval' && candidates.length !== Array.from(new Set(candidates)).length) {
+            errors.push(`A vote has submitted invalid selections.`);
+            voting_session.votes[ix].has_error = true;
+        }
+
         candidates.forEach(candidate => {
+            result.total_votes++;
             if (!candidatesMap.hasOwnProperty(candidate)) {
                 errors.push(`Candidate "${candidate}" has received a vote but is not part of the voting session`);
                 voting_session.votes[ix].has_error = true;
             } else {
+                result.valid_votes++;
                 candidatesMap[candidate]++;
             }
         });
@@ -799,18 +807,26 @@ votingSessionRouter.get(`/:voting_session_id`, authenticateToken, async (req, re
 
     let current_best = ['indeterminate', 0];
 
-    result.valid_votes = votesEntries.filter(x => x[1]).length;
-
     votesEntries.forEach(([candidate, votes]) => {
         if (votes > current_best[1]) {
             current_best[0] = candidate;
             current_best[1] = votes;
+            result.tie_parts.clear();
+        } else if (votes === current_best[1]) {
+            //tie identified
+            result.tie_parts.add(candidate);
+            result.tie_parts.add(current_best[0]);
         }
     });
 
-    result.winner = current_best[0];
+    result.tie_parts = Array.from(result.tie_parts);
+
+    result.is_tie = !!result.tie_parts.length;
+
+    result.winner = result.is_tie ? `Tie between ${result.tie_parts.join(' & ')}` : current_best[0];
     result.winner_votes = current_best[1];
     result.winner_percentage = ((current_best[1] / result.valid_votes) * 100).toFixed(2) + '%';
+    result.valid_votes_percentage = (result.valid_votes === result.total_votes) ? '100%' : ((result.valid_votes / result.total_votes) * 100).toFixed(2) + '%';
 
     return res.status(200).json({
         ...voting_session,

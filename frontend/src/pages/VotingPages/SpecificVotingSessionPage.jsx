@@ -66,7 +66,7 @@ export default function SpecificVotingSessionPage() {
                 <hr />
                 <ResultGraphs distributionData={votingSessionDetails.distribution} />
                 <h4>Total Votes: {votingSessionDetails.result.total_votes}</h4>
-                <h4>Valid Votes: {votingSessionDetails.result.valid_votes}</h4>
+                <h4>Valid Votes: {votingSessionDetails.result.valid_votes} ({votingSessionDetails.result.valid_votes_percentage} of total)</h4>
                 <h4>Winning option, with {votingSessionDetails.result.winner_votes} votes: {votingSessionDetails.result.winner}</h4>
                 {votingSessionDetails.errors?.map((err, ind) => <p key={ind} style={{ color: 'red' }} >{err}</p>)}
             </div>
@@ -88,7 +88,7 @@ export default function SpecificVotingSessionPage() {
                 {!!votingSessionDetails.completed && <h4>Completed On: {timestampFormatter(votingSessionDetails.completed_on)}</h4>}
                 <h4>Method: {votingSessionDetails.details.method}</h4>
                 {votingSessionDetails.details.method === 'multiple_votes' && <h4>Number of selections per vote: {votingSessionDetails.details.number_of_votes}</h4>}
-                <h4>Voter Limit: {votingSessionDetails.details.voter_limit || 'unlimited'}</h4>
+                <h4>Voter Limit: {votingSessionDetails.result.number_of_voters} / {votingSessionDetails.details.voter_limit || 'unlimited'}</h4>
                 <div style={{
                     width: 'fit-content', marginLeft: 'auto',
                     marginRight: 'auto',
@@ -149,7 +149,7 @@ export default function SpecificVotingSessionPage() {
                         }}
                     />
                 </Suspense>
-                <EditModalWithButton votingSessionDetails={votingSessionDetails} setVotingSessionDetails={setVotingSessionDetails} />
+                <EditModalWithButton votingSessionDetails={votingSessionDetails} setVotingSessionDetails={setVotingSessionDetails} setRefreshCounter={setRefreshCounter} />
                 <CustomButton
                     disabled={votingSessionDetails.completed}
                     onClick={() => setCompletionModalOpen(true)}
@@ -189,13 +189,13 @@ export default function SpecificVotingSessionPage() {
 
         </div >
 
-        {!!votingSessionDetails.votes.length ? <VotersTable votersList={votingSessionDetails.votes} /> : <h3>No votes received yet. A table will be shown once votes are received.</h3>
+        {!!votingSessionDetails.votes.length ? <VotersTable votersList={votingSessionDetails.votes} refreshCounter={refreshCounter} /> : <h3>No votes received yet. A table will be shown once votes are received.</h3>
         }
     </>);
 };
 
 
-function VotersTable({ votersList = [] }) {
+function VotersTable({ votersList = [], refreshCounter }) {
     const [selected, setSelected] = useState(null);
     const { setIsLoggedIn } = useContext(IsLoggedInContext);
 
@@ -203,7 +203,7 @@ function VotersTable({ votersList = [] }) {
 
     useEffect(() => {
         setInnerList(votersList)
-    }, []);
+    }, [refreshCounter]);
 
     let load = async ({ filterText }) => ({ items: filterText ? innerList.filter(voterRow => [voterRow.voter_ip_address].join('').toLowerCase().includes(filterText.toLowerCase().trim())) : innerList }); //this can normally be an async function that fetches the data, but already we hold the whole page off while it is loading
 
@@ -253,11 +253,6 @@ function VotersTable({ votersList = [] }) {
         {
             key: "voter_ip_address",
             label: "IP address",
-            sortable: true
-        },
-        {
-            key: "deleted",
-            label: "Deleted",
             sortable: true
         },
         {
@@ -333,8 +328,15 @@ function VotersTable({ votersList = [] }) {
                                 </Table.Cell>
                             } else if (['updated_on', 'created_on'].includes(columnKey)) {
                                 return <Table.Cell> {item[columnKey] ? timestampFormatter(item[columnKey]) : ' - '} </Table.Cell>
-                            } else if (columnKey === 'to_do_categories') {
-                                return <Table.Cell> <pre style={{ padding: '0px', margin: '0px' }} > {JSON.stringify(item[columnKey], null, 2)} </pre>  </Table.Cell>
+                            } else if (columnKey === 'voter_ip_address') {
+                                return (
+                                    <Table.Cell>
+                                        {item[columnKey]?.toString()}
+                                        <span>
+                                            &nbsp;&nbsp;{item.has_error && <Tooltip color="error" content="There is something wrong with this vote!" >⚠️</Tooltip>}
+                                        </span>
+                                    </Table.Cell>
+                                );
                             } else {
                                 return <Table.Cell> {item[columnKey]?.toString()} </Table.Cell>
                             }
@@ -397,7 +399,7 @@ function ResultGraphs({ distributionData = {} }) {
 
 
 
-function EditModalWithButton({ votingSessionDetails = {}, setVotingSessionDetails }) {
+function EditModalWithButton({ votingSessionDetails = {}, setVotingSessionDetails, setRefreshCounter }) {
     const [formData, setFormData] = useState(votingSessionDetails);
 
     const { setIsLoggedIn } = useContext(IsLoggedInContext);
@@ -444,7 +446,8 @@ function EditModalWithButton({ votingSessionDetails = {}, setVotingSessionDetail
                             console.log('response:', response.data);
                             if ([201, 200].includes(response.status)) {
                                 console.log('successful');
-                                setVotingSessionDetails(prev => ({ ...prev, name: formData.name, details: formData }));
+                                // setVotingSessionDetails(prev => ({ ...prev, name: formData.name, details: formData }));
+                                setRefreshCounter(prev => prev + 1);
                                 setModalOpen(false);
                             } else if (response.status === 401) {
                                 setIsLoggedIn(false);
