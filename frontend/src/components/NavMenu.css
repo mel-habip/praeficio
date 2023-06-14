@@ -6,7 +6,8 @@
   min-height: 100vh;
   top: 0;
   width: auto;
-  max-width: 15%;
+  /* mobile first */
+  max-width: 100%;
   overflow-y: scroll;
   -ms-overflow-style: none;
   overflow: -moz-scrollbars-none;
@@ -22,6 +23,20 @@
   animation: close-navmenu 0.75s;
   display: flex;
   flex-direction: column;
+}
+
+/* for tablets */
+@media only screen and (min-width: 600px) {
+  .nav-menu {
+    max-width: 35%;
+  }
+}
+
+/* for laptops */
+@media only screen and (min-width: 1024px) {
+  .nav-menu {
+    max-width: 20%;
+  }
 }
 
 /* just hiding the inner scrollbar in the navbar */

@@ -14,7 +14,7 @@ import CustomizedDropdown from '../fields/CustomizedDropdown';
 import useHandleError from '../utils/handleError';
 
 export default function SpecificUserProfilePage() {
-    const { setIsLoggedIn, user } = useContext(IsLoggedInContext);
+    const { setIsLoggedIn, user, setUser } = useContext(IsLoggedInContext);
 
     const { user_id } = useParams();
 
@@ -26,7 +26,7 @@ export default function SpecificUserProfilePage() {
         return (
             <>
                 <NavMenu />
-                <UserSelfPage details={user} />
+                <UserSelfPage details={user} setDetails={setUser} />
             </>
         );
     }
@@ -40,7 +40,7 @@ export default function SpecificUserProfilePage() {
 }
 
 //if looking at themselves
-function UserSelfPage({ details }) {
+function UserSelfPage({ details, setDetails }) {
 
     return (<>
         <h1>{details?.username || <em>Not provided.</em>}</h1>
@@ -49,12 +49,20 @@ function UserSelfPage({ details }) {
         <p>Email: {details?.email || <em>Not provided.</em>}</p>
         <p>Member Since: {details?.created_on?.slice(0, 10) || <em>Not provided.</em>}</p>
 
-        <CustomButton>Settings</CustomButton>
+        <CustomButton to="/settings">Settings  <i className="fa-solid fa-angles-right" /></CustomButton>
 
         <div className="profile-sections-wrapper" >
             <div className="profile-section">
                 <h4>Control Panel</h4>
-                <CustomButton>Renew Discovery Token</CustomButton>
+                <CustomButton onClick={() => {
+                    axios.post(`${process.env.REACT_APP_API_LINK}/users/${details.id}/renew_discovery_token`).then(response => {
+                        if (response.status === 200) {
+                            setDetails(prev => ({ ...prev, discovery_token: response.data.discovery_token }));
+                        } else {
+                            console.warn('fetch', response);
+                        }
+                    })
+                }} >Renew Discovery Token</CustomButton>
 
                 <p>Discovery Token: {details?.discovery_token || <em>Not provided.</em>}</p>
                 <p><Link>Your link</Link></p>

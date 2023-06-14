@@ -288,7 +288,7 @@ export default function PublicPage() {
                                 <li> <CustomButton to="/newsLetters">NewsLetters <i className="fa-regular fa-newspaper" /></CustomButton> </li>
                                 <li> <CustomButton to="/tic-tac-toe">Tic-Tac-Toe <i className="fa-solid fa-table-cells-large" /></CustomButton> </li>
                                 <li> <CustomButton to="/randomizer">Randomizer <i className="fa-solid fa-dice" /></CustomButton> </li>
-                                <li> <CustomButton to="/randomizer">Quick notes <i className="fa-solid fa-pencil" /></CustomButton> </li>
+                                <li> <CustomButton to="/notes">Quick notes <i className="fa-solid fa-pencil" /></CustomButton> </li>
                                 <li> <CustomButton to="/404">An awesome 404 page 😬</CustomButton> </li>
                                 <li> <CustomButton to="/403">An awesome 403 page ✋</CustomButton> </li>
                                 <li> <CustomButton to="/500">An awesome error page 💀</CustomButton> </li>

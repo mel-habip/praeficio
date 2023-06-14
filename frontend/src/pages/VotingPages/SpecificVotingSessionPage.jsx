@@ -9,10 +9,13 @@ import NavMenu from '../../components/NavMenu';
 import LoadingPage from '../LoadingPage';
 
 import { CustomButton } from '../../fields/CustomButton';
-import { Spacer, Text, Input, Tooltip, Row, Table, useAsyncList, useCollator, Loading, Badge } from '@nextui-org/react';
+import { Spacer, Text, Input, Tooltip, Row, Table, useAsyncList, useCollator, Loading, Badge, Checkbox, Modal, Button } from '@nextui-org/react';
 import timestampFormatter from '../../utils/timestampFormatter';
 
 import { PieChart, Pie, ResponsiveContainer, Tooltip as ReChartsTooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+
+import WordListField from '../../fields/WordList.jsx';
+import NumberField from '../../fields/NumberField.jsx';
 
 const ConfirmationModal = lazy(() => import('../../components/ConfirmationModal.jsx'));
 const DeletionModal = lazy(() => import('../../components/DeletionModal.jsx'));
@@ -63,7 +66,7 @@ export default function SpecificVotingSessionPage() {
                 <hr />
                 <ResultGraphs distributionData={votingSessionDetails.distribution} />
                 <h4>Total Votes: {votingSessionDetails.result.total_votes}</h4>
-                <h4>Valid Votes: {votingSessionDetails.result.valid_votes}</h4>
+                <h4>Valid Votes: {votingSessionDetails.result.valid_votes} ({votingSessionDetails.result.valid_votes_percentage} of total)</h4>
                 <h4>Winning option, with {votingSessionDetails.result.winner_votes} votes: {votingSessionDetails.result.winner}</h4>
                 {votingSessionDetails.errors?.map((err, ind) => <p key={ind} style={{ color: 'red' }} >{err}</p>)}
             </div>
@@ -85,7 +88,7 @@ export default function SpecificVotingSessionPage() {
                 {!!votingSessionDetails.completed && <h4>Completed On: {timestampFormatter(votingSessionDetails.completed_on)}</h4>}
                 <h4>Method: {votingSessionDetails.details.method}</h4>
                 {votingSessionDetails.details.method === 'multiple_votes' && <h4>Number of selections per vote: {votingSessionDetails.details.number_of_votes}</h4>}
-                <h4>Voter Limit: {votingSessionDetails.details.voter_limit || 'unlimited'}</h4>
+                <h4>Voter Limit: {votingSessionDetails.result.number_of_voters} / {votingSessionDetails.details.voter_limit || 'unlimited'}</h4>
                 <div style={{
                     width: 'fit-content', marginLeft: 'auto',
                     marginRight: 'auto',
@@ -96,7 +99,6 @@ export default function SpecificVotingSessionPage() {
                         </Link>
                     </Tooltip>
                 </div>
-
 
                 <h4>Options:</h4>
                 <div style={{
@@ -109,6 +111,17 @@ export default function SpecificVotingSessionPage() {
                             <Text><i className="fa-regular fa-hand-point-right" />  &nbsp;&nbsp;&nbsp; {opt}</Text>
                             <Spacer x={0.2} />
                         </Row>)}
+                </div>
+
+                <div style={{
+                    width: 'fit-content', marginLeft: 'auto',
+                    marginRight: 'auto',
+                }} >
+                    <Tooltip trigger="click" content="Copied!" >
+                        <Link>
+                            <span onClick={() => navigator.clipboard.writeText("https://api.praeficio.com/api/my_ip")} > My IP Address </span>
+                        </Link>
+                    </Tooltip>
                 </div>
             </div>
 
@@ -136,10 +149,12 @@ export default function SpecificVotingSessionPage() {
                         }}
                     />
                 </Suspense>
+                <EditModalWithButton votingSessionDetails={votingSessionDetails} setVotingSessionDetails={setVotingSessionDetails} setRefreshCounter={setRefreshCounter} />
                 <CustomButton
                     disabled={votingSessionDetails.completed}
                     onClick={() => setCompletionModalOpen(true)}
                 >Complete the voting session <i className="fa-solid fa-flag-checkered" /></CustomButton>
+
                 <Suspense fallback={<Loading />} >
                     <ConfirmationModal
                         selfOpen={completionModalOpen}
@@ -174,16 +189,13 @@ export default function SpecificVotingSessionPage() {
 
         </div >
 
-
-        {!!votingSessionDetails.votes.length ? <VotersTable votersList={votingSessionDetails.votes} /> : <h3>No votes received yet. A table will be shown once votes are received.</h3>
+        {!!votingSessionDetails.votes.length ? <VotersTable votersList={votingSessionDetails.votes} refreshCounter={refreshCounter} /> : <h3>No votes received yet. A table will be shown once votes are received.</h3>
         }
-
-
     </>);
 };
 
 
-function VotersTable({ votersList = [] }) {
+function VotersTable({ votersList = [], refreshCounter }) {
     const [selected, setSelected] = useState(null);
     const { setIsLoggedIn } = useContext(IsLoggedInContext);
 
@@ -191,7 +203,7 @@ function VotersTable({ votersList = [] }) {
 
     useEffect(() => {
         setInnerList(votersList)
-    }, [votersList]);
+    }, [refreshCounter]);
 
     let load = async ({ filterText }) => ({ items: filterText ? innerList.filter(voterRow => [voterRow.voter_ip_address].join('').toLowerCase().includes(filterText.toLowerCase().trim())) : innerList }); //this can normally be an async function that fetches the data, but already we hold the whole page off while it is loading
 
@@ -241,11 +253,6 @@ function VotersTable({ votersList = [] }) {
         {
             key: "voter_ip_address",
             label: "IP address",
-            sortable: true
-        },
-        {
-            key: "deleted",
-            label: "Deleted",
             sortable: true
         },
         {
@@ -321,8 +328,15 @@ function VotersTable({ votersList = [] }) {
                                 </Table.Cell>
                             } else if (['updated_on', 'created_on'].includes(columnKey)) {
                                 return <Table.Cell> {item[columnKey] ? timestampFormatter(item[columnKey]) : ' - '} </Table.Cell>
-                            } else if (columnKey === 'to_do_categories') {
-                                return <Table.Cell> <pre style={{ padding: '0px', margin: '0px' }} > {JSON.stringify(item[columnKey], null, 2)} </pre>  </Table.Cell>
+                            } else if (columnKey === 'voter_ip_address') {
+                                return (
+                                    <Table.Cell>
+                                        {item[columnKey]?.toString()}
+                                        <span>
+                                            &nbsp;&nbsp;{item.has_error && <Tooltip color="error" content="There is something wrong with this vote!" >⚠️</Tooltip>}
+                                        </span>
+                                    </Table.Cell>
+                                );
                             } else {
                                 return <Table.Cell> {item[columnKey]?.toString()} </Table.Cell>
                             }
@@ -330,7 +344,6 @@ function VotersTable({ votersList = [] }) {
                     </Table.Row>
                 )}
             </Table.Body>
-
             <Table.Pagination shadow align="center" rowsPerPage={10} onPageChange={(page) => console.log({ page })} />
         </Table >
     </>);
@@ -381,4 +394,68 @@ function ResultGraphs({ distributionData = {} }) {
             </BarChart>
         </ResponsiveContainer>
     </div>);
+}
+
+
+
+function EditModalWithButton({ votingSessionDetails = {}, setVotingSessionDetails, setRefreshCounter }) {
+    const [formData, setFormData] = useState(votingSessionDetails);
+
+    const { setIsLoggedIn } = useContext(IsLoggedInContext);
+
+    const [modalOpen, setModalOpen] = useState(false);
+
+    useEffect(() => {
+        setFormData({
+            name: votingSessionDetails.name,
+            voter_limit: votingSessionDetails.details.voter_limit,
+            options: votingSessionDetails.details.options,
+            limit_voters: !!votingSessionDetails.details.voter_limit,
+        });
+    }, []);
+
+    return (<>
+
+        <CustomButton
+            disabled={votingSessionDetails.completed}
+            onClick={() => setModalOpen(true)}
+        >Edit Session Details <i className="fa-regular fa-pen-to-square" /></CustomButton>
+
+        <Modal closeButton blur aria-labelledby="modal-title" open={modalOpen} onClose={() => setModalOpen(false)} >
+            <pre>{JSON.stringify(formData, null, 2)}</pre>
+            <Modal.Header css={{ 'z-index': 86, position: 'relative' }}>
+                <Text size={14} > Please enter the information below </Text> </Modal.Header>
+            <Modal.Body>
+                <Spacer y={0.4} />
+                <Input initialValue={formData.name} labelPlaceholder="Session Name" color="primary" rounded bordered clearable onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))} />
+                <Checkbox defaultSelected={!!formData.voter_limit} onChange={b => setFormData(prev => ({ ...prev, limit_voters: b }))} ><p>Limit number of voters?</p></Checkbox>
+                {formData.limit_voters && <NumberField min={2} max={200} default_value={formData.voter_limit || 2} outer_updater={v => setFormData(prev => ({ ...prev, voter_limit: v }))} />}
+
+                <p>Options to vote amongst:</p>
+                <WordListField style={{ border: 'none' }} placeholder="Add another option and hit 'Enter' to record" onListChange={ar => setFormData(prev => ({ ...prev, options: ar }))} defaultValue={formData.options} />
+
+                <Button
+                    shadow
+                    auto
+                    onPress={async () => {
+                        await axios.put(`${process.env.REACT_APP_API_LINK}/voting_sessions/${votingSessionDetails.voting_session_id}`, {
+                            ...formData,
+                            remove_voter_limit: !formData.voter_limit //send `true` if we want to remove the limit intentionally.
+                        }).then(response => {
+                            console.log('response:', response.data);
+                            if ([201, 200].includes(response.status)) {
+                                console.log('successful');
+                                // setVotingSessionDetails(prev => ({ ...prev, name: formData.name, details: formData }));
+                                setRefreshCounter(prev => prev + 1);
+                                setModalOpen(false);
+                            } else if (response.status === 401) {
+                                setIsLoggedIn(false);
+                            } else {
+                                console.log(response);
+                            }
+                        });
+                    }}> Edit Voting Session&nbsp;&nbsp;<i className="fa-regular fa-square-plus"></i> </Button>
+            </Modal.Body>
+        </Modal>
+    </>);
 }

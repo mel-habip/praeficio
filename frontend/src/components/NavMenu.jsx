@@ -93,6 +93,15 @@ function NavMenu() {
                     </li>
                     <li className='nav-item'>
                         <Link
+                            to='/users'
+                            className='nav-links'
+                            onClick={closeNavMenu}
+                        >
+                            Users&nbsp; <i className="fa-solid fa-users" />
+                        </Link>
+                    </li>
+                    <li className='nav-item'>
+                        <Link
                             to='/workspaces/my_workspaces'
                             className='nav-links'
                             onClick={closeNavMenu}
@@ -179,6 +188,24 @@ function NavMenu() {
                             onClick={closeNavMenu}
                         >
                             Voting&nbsp; <i className="fa-solid fa-square-poll-vertical" />
+                        </Link>
+                    </li>
+                    <li className='nav-item'>
+                        <Link
+                            to='/randomizer'
+                            className='nav-links'
+                            onClick={closeNavMenu}
+                        >
+                            Randomizer&nbsp; <i className="fa-solid fa-dice" />
+                        </Link>
+                    </li>
+                    <li className='nav-item'>
+                        <Link
+                            to='/notes'
+                            className='nav-links'
+                            onClick={closeNavMenu}
+                        >
+                            Quick Notes&nbsp; <i className="fa-solid fa-pencil" />
                         </Link>
                     </li>
                 </ul>

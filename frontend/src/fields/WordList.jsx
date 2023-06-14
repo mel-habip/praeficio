@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import './WordList.css';
 
 /**
  * @param {function} onListChange 
  */
-export default function WordListField({ style = {}, onListChange = (e) => console.log('got: ', e), placeholder = 'Add a word', uniqueOnly = true }) {
+export default function WordListField({ style = {}, onListChange = (e) => console.log('got: ', e), placeholder = 'Add a word', uniqueOnly = true, defaultValue = [] }) {
     const [inputValue, setInputValue] = useState('');
-    const [wordList, setWordList] = useState([]);
+    const [wordList, setWordList] = useState(defaultValue);
 
+    // useEffect(() => setWordList(defaultValue), []);
 
     function handleKeyDown(event) {
         const newItem = inputValue.trim();

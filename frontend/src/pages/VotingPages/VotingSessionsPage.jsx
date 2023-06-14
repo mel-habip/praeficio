@@ -50,7 +50,7 @@ export default function VotingSessionsPage() {
         <Grid.Container gap={1} justify="center">
             {votingSessions.map((session, index) =>
                 <Grid key={session.voting_session_id + '-grid'}>
-                    <VotingSessionCard key={session.voting_session_id + "-card-top"} id={session.voting_session_id} name={session.name} created_on={session.created_on} completed_on={session.completed_on} />
+                    <VotingSessionCard key={session.voting_session_id + "-card-top"} id={session.voting_session_id} name={session.name} created_on={session.created_on} completed_on={session.completed_on} completed={session.completed} />
                 </Grid>
             )}
         </Grid.Container>
@@ -70,11 +70,12 @@ function VotingSessionCard({ id, name, created_on, completed, completed_on, deta
                         {name}
                     </Text>
                 </div>
+                {completed && <i style={{position: 'absolute', top: '5%', right: '5%'}} className="fa-solid fa-lock" />}
                 <Text h5 color="white" css={{ mt: 15, mb: 0 }}>
                     Created On: {timestampFormatter(created_on)}
                 </Text>
                 <Text h5 color="white" css={{ mt: 15, mb: 0 }}>
-                    Completed On: {completed ? <em>incomplete</em> : timestampFormatter(completed_on)}
+                    Completed On: {completed ? timestampFormatter(completed_on) : <em>incomplete</em>}
                 </Text>
             </Card.Body>
         </Link>
@@ -125,7 +126,6 @@ function VotingSessionCreationModalWithButton({ setVotingSessions = () => { }, v
                 <Text size={14} > Please enter the information below </Text> </Modal.Header>
             <Modal.Body>
                 <Spacer y={0.4} />
-                <pre>{JSON.stringify(votingSessionDetails, null, 2)}</pre>
                 <Input labelPlaceholder="Session Name" color="primary" rounded bordered clearable onChange={e => setVotingSessionDetails(prev => ({ ...prev, name: e.target.value }))} ></Input>
                 <CustomizedDropdown optionsList={methodOptions} mountDirectly outerUpdater={v => setVotingSessionDetails(prev => ({ ...prev, method: v }))} />
                 <Checkbox onChange={b => setVotingSessionDetails(prev => ({ ...prev, limit_voters: b }))} ><p>Limit number of voters?</p></Checkbox>
