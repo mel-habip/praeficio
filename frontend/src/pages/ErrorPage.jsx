@@ -38,7 +38,7 @@ export default function ErrorPage() {
         src={imageSrc}
         alt="chaos gif on global error page"
         width="500"
-        style={{ borderRadius: '15px', filter: `drop-shadow(0 -10px 4.5rem ${isDark ? 'red' : 'orange'})` }} />
+        style={{ borderRadius: '15px', filter: `drop-shadow(0 -10px 4.5rem red)` }} />
 
       <div style={{ display: 'flex', flexDirection: 'row', width: '50%', justifyContent: 'space-around' }} >
         {/* <Link className='nav-links' onClick={() => window.history.back()} > Back</Link> */}

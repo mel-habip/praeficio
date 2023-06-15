@@ -67,7 +67,7 @@ export default function SpecificVoterPage() {
                 <AnimatedText text="Your vote has been removed." />
                 <br />
                 <h3>Thank you & have a great day!</h3>
-                <CustomButton to={`/vote`} > Vote in another session </CustomButton>
+                <CustomButton to={`/vote`} > Vote in another session <i className="fa-solid fa-check-to-slot" /></CustomButton>
             </div>
         </>);
     };

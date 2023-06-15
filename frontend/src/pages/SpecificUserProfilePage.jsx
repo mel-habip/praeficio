@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import './stylesheets/SpecificUserProfilePage.css';
 
 import NavMenu from '../components/NavMenu';
-import { Button, Modal, Text, Row, Input } from '@nextui-org/react';
+import { Button, Modal, Text, Input, Tooltip } from '@nextui-org/react';
 
 import IsLoggedInContext from '../contexts/IsLoggedInContext';
 
@@ -65,17 +65,21 @@ function UserSelfPage({ details, setDetails }) {
                 }} >Renew Discovery Token</CustomButton>
 
                 <p>Discovery Token: {details?.discovery_token || <em>Not provided.</em>}</p>
-                <p><Link>Your link</Link></p>
+                <Tooltip trigger="click" content="Copied!" >
+                    <Link>
+                        <span onClick={() => navigator.clipboard.writeText(`https://www.praeficio.com/users/${details.id}?discovery-token=${details.discovery_token}`)} > Your Link </span>
+                    </Link>
+                </Tooltip>
 
             </div>
             <div className="profile-section">
                 <h4>Your Workspaces</h4>
-                {!details.workspaces?.length ? <em>None yet, Join one now!</em> : details.workspaces.map(ws => <p key={ws.workspace_id}>{ws.name || 'asd'}</p>)}
+                {!details.workspaces?.length ? <em>None yet, Join one now!</em> : details.workspaces.map(ws => <p key={ws.workspace_id}>{ws.name}</p>)}
             </div>
 
             <div className="profile-section">
                 <h4>Your Feedback Logs</h4>
-                {!details.feedback_logs?.length ? <em>None yet, create one now!</em> : details.feedback_logs.map(ws => <p key={ws.feedback_log_id}>{ws.name || 'asd'}</p>)}
+                {!details.feedback_logs?.length ? <em>None yet, create one now!</em> : details.feedback_logs.map(fl => <p key={fl.feedback_log_id}>{fl.name}</p>)}
             </div>
 
             <div className="profile-section">
@@ -85,7 +89,7 @@ function UserSelfPage({ details, setDetails }) {
 
             <div className="profile-section">
                 <h4>Your Debt Accounts</h4>
-                {!details.debt_accounts?.length ? <em>None yet</em> : details.debt_accounts.map((frnd, x) => <p key={x}>{frnd.user_1_username === details.username ? frnd.user_2_username : frnd.user_1_username}</p>)}
+                {!details.debt_accounts?.length ? <em>None yet</em> : details.debt_accounts.map((da, x) => <p key={x}>{da.name}</p>)}
             </div>
 
             <div className="profile-section">
@@ -107,7 +111,6 @@ function OtherUserPage({ already_added = false, user_id }) {
 
     const [viewedUserDetails, setViewedUserDetails] = useState(null);
 
-
     useEffect(() => {
         if (!token && !already_added) return;
         axios.get(`${process.env.REACT_APP_API_LINK}/users/${user_id}?discovery_token=${token}`).then(response => {
@@ -118,8 +121,6 @@ function OtherUserPage({ already_added = false, user_id }) {
             }
         }).catch(handleError);
     }, [user_id, token]);
-
-
 
     return (<>
         {!token && !already_added && <DiscoveryTokenEntryModal setToken={setToken} />}

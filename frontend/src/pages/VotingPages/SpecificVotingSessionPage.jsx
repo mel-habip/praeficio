@@ -186,11 +186,9 @@ export default function SpecificVotingSessionPage() {
                     />
                 </Suspense>
             </div>
-
         </div >
 
-        {!!votingSessionDetails.votes.length ? <VotersTable votersList={votingSessionDetails.votes} refreshCounter={refreshCounter} /> : <h3>No votes received yet. A table will be shown once votes are received.</h3>
-        }
+        {!!votingSessionDetails.votes.length ? <VotersTable votersList={votingSessionDetails.votes} refreshCounter={refreshCounter} /> : <h3>No votes received yet. A table will be shown once votes are received.</h3> }
     </>);
 };
 
@@ -454,7 +452,7 @@ function EditModalWithButton({ votingSessionDetails = {}, setVotingSessionDetail
                                 console.log(response);
                             }
                         });
-                    }}> Edit Voting Session&nbsp;&nbsp;<i className="fa-regular fa-square-plus"></i> </Button>
+                    }}> Edit Voting Session&nbsp;&nbsp;<i className="fa-regular fa-pen-to-square"></i> </Button>
             </Modal.Body>
         </Modal>
     </>);
