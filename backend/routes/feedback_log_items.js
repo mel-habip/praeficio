@@ -24,7 +24,7 @@ feedbackLogItemRouter.get('/:feedback_log_item_id', async (req, res) => {
         return res.status(404).send(`Feedback Log Item ${req.params.feedback_log_item_id} Not Found.`);
     }
 
-    if (!req.user.is_total && !req.user.feedback_logs.includes(feedback_log_item.feedback_log_id)) {
+    if (!req.user.is_total && !req.user.feedback_logs.find(log => log.feedback_log_id === feedback_log_item.feedback_log_id)) {
         return res.status(403).send(`Forbidden: You do not have access to this Feedback Log Item.`);
     }
 
@@ -33,14 +33,14 @@ feedbackLogItemRouter.get('/:feedback_log_item_id', async (req, res) => {
 
 //edit a feedback log item INCOMPLETE
 feedbackLogItemRouter.put('/:feedback_log_item_id', async (req, res) => {
-    
+
     let feedback_log_item = await itemsHelper.fetch_by_id([req.params.feedback_log_item_id]);
 
     if (!feedback_log_item) {
         return res.status(404).send(`Feedback Log Item ${req.params.feedback_log_item_id} Not Found.`);
     }
 
-    if (!req.user.is_total && !req.user.feedback_logs.includes(feedback_log_item.feedback_log_id)) {
+    if (!req.user.is_total && !req.user.feedback_logs.find(log => log.feedback_log_id === feedback_log_item.feedback_log_id)) {
         return res.status(403).send(`Forbidden: You do not have access to this Feedback Log Item.`);
     }
 
@@ -52,7 +52,7 @@ feedbackLogItemRouter.put('/:feedback_log_item_id', async (req, res) => {
         return res.status(403).send(`Forbidden: Feedback Log Item ${req.params.feedback_log_item_id} has been completed.`);
     }
 
-    if (! req.body.content && ! req.body.header && ! req.body.status && !req.body.notes && !req.body.internal_notes) {
+    if (!req.body.content && !req.body.header && !req.body.status && !req.body.notes && !req.body.internal_notes) {
         return res.status(400).send(`Content, Header or Status must be provided`);
     }
 

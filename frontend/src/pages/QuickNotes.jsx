@@ -1,31 +1,34 @@
-import { useContext, useState } from 'react';
-
-import IsLoggedInContext from '../contexts/IsLoggedInContext';
-import ThemeContext from '../contexts/ThemeContext';
+import { useState } from 'react';
 
 import { Button, Textarea } from '@nextui-org/react';
 
 import NavMenu from '../components/NavMenu';
 
-function Alerts() {
-    const { isLoggedIn } = useContext(IsLoggedInContext);
-    const { isDark, toggleTheme } = useContext(ThemeContext);
+export default function QuickNotes() {
 
-    const [noteValue, setNoteValue] = useState('');
+    const [numOfSections, setNumOfSections] = useState(() => 1);
 
     return (
         <>
-            {isLoggedIn && <NavMenu></NavMenu>}
-            {!isLoggedIn && <Button
-                css={{ width: '4rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white', position: 'fixed', left: '0%', top: '0%', margin: '1rem' }}
-                onPress={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"}></i></Button>}
+            <NavMenu />
+
+            {Array.from({ length: numOfSections }).map((x, i) => <OneQuestionOneAnswer key={i} numOfSections={numOfSections} setNumOfSections={setNumOfSections} iteration={i} />)}
+        </>
+    )
+};
+
+function OneQuestionOneAnswer({ numOfSections, setNumOfSections, iteration }) {
+    const [noteValue, setNoteValue] = useState('');
+    return (
+        <div style={{ width: '85%', display: 'flex', flexDirection: 'column', flexWrap: 'wrap', alignContent: 'center' }} >
+            {!!iteration && <Button onPress={() => setNumOfSections(x => x - 1)} auto shadow bordered color="error" css={{ margin: '15px', alignSelf: 'end' }} > &nbsp; <i className="fa-solid fa-trash-can" /> &nbsp;</Button>}
             <Textarea
-                labelPlaceholder='Your question'
+                labelPlaceholder={`Your question #${iteration}`}
                 bordered
                 width="90%"
                 color='primary'
-                value={localStorage.getItem(`praeficio-note-q1`)}
-                onChange={e => setNoteValue(e.target.value) || localStorage.setItem(`praeficio-note-q1`, e.target.value)}
+                initialValue={localStorage.getItem(`praeficio-note-q${iteration}`)}
+                onChange={e => setNoteValue(e.target.value) || localStorage.setItem(`praeficio-note-q${iteration}`, e.target.value)}
                 minRows={1} maxRows={1} />
             <br />
             <br />
@@ -36,11 +39,10 @@ function Alerts() {
                 helperText='values you enter are only saved on your local device'
                 color='primary'
                 helperColor='primary'
-                value={localStorage.getItem(`praeficio-note-a1`)}
-                onChange={e => setNoteValue(e.target.value) || localStorage.setItem(`praeficio-note-a1`, e.target.value)}
+                initialValue={localStorage.getItem(`praeficio-note-a${iteration}`)}
+                onChange={e => setNoteValue(e.target.value) || localStorage.setItem(`praeficio-note-a${iteration}`, e.target.value)}
                 minRows={15} />
-        </>
+            <Button onPress={() => setNumOfSections(x => x + 1)} auto shadow bordered css={{ margin: '15px', alignSelf: 'end' }} > &nbsp; <i className="fa-regular fa-square-plus" /> &nbsp; </Button>
+        </div>
     )
 }
-
-export default Alerts;
