@@ -70,7 +70,7 @@ function VotingSessionCard({ id, name, created_on, completed, completed_on, deta
                         {name}
                     </Text>
                 </div>
-                {completed && <i style={{position: 'absolute', top: '5%', right: '5%'}} className="fa-solid fa-lock" />}
+                {completed && <i style={{ position: 'absolute', top: '5%', right: '5%' }} className="fa-solid fa-lock" />}
                 <Text h5 color="white" css={{ mt: 15, mb: 0 }}>
                     Created On: {timestampFormatter(created_on)}
                 </Text>
@@ -127,10 +127,21 @@ function VotingSessionCreationModalWithButton({ setVotingSessions = () => { }, v
             <Modal.Body>
                 <Spacer y={0.4} />
                 <Input labelPlaceholder="Session Name" color="primary" rounded bordered clearable onChange={e => setVotingSessionDetails(prev => ({ ...prev, name: e.target.value }))} ></Input>
-                <CustomizedDropdown optionsList={methodOptions} mountDirectly outerUpdater={v => setVotingSessionDetails(prev => ({ ...prev, method: v }))} />
+                <CustomizedDropdown
+                    title="Voting Method"
+                    optionsList={methodOptions}
+                    mountDirectly
+                    outerUpdater={v => setVotingSessionDetails(prev => ({ ...prev, method: v }))} />
                 <Checkbox onChange={b => setVotingSessionDetails(prev => ({ ...prev, limit_voters: b }))} ><p>Limit number of voters?</p></Checkbox>
+
+                {votingSessionDetails.method === 'approval' &&
+                    <Checkbox
+                        onChange={b => setVotingSessionDetails(prev => ({ ...prev, limit_number_of_votes: b }))}
+                    ><p>Limit the number of votes per voter?</p></Checkbox>}
+
+
                 {votingSessionDetails.limit_voters && <NumberField min={2} max={200} default_value={votingSessionDetails.voter_limit || 2} outer_updater={v => setVotingSessionDetails(prev => ({ ...prev, voter_limit: v }))} />}
-                {votingSessionDetails.method === 'multiple_votes' && <>
+                {(votingSessionDetails.method === 'multiple_votes' || votingSessionDetails.limit_number_of_votes) && <>
                     <p>Number of votes per voter</p>
                     <NumberField min={2} max={50} default_value={votingSessionDetails.number_of_votes || 2} outer_updater={v => setVotingSessionDetails(prev => ({ ...prev, number_of_votes: v }))} />
                 </>}

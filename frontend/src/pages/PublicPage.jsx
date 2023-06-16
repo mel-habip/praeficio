@@ -1,6 +1,7 @@
 import React, { useState, useContext, lazy, Suspense, useRef, useEffect } from 'react';
 import { animateScroll, scroller, Element } from 'react-scroll';
 import ThemeContext from '../contexts/ThemeContext';
+import LanguageContext from '../contexts/LanguageContext';
 import IsLoggedInContext from '../contexts/IsLoggedInContext';
 
 import axios from 'axios';
@@ -114,8 +115,6 @@ const sentences = {
 
 export default function PublicPage() {
     document.title = "Praeficio.com";
-    const [lang, setLang] = useState('en');
-    const toggleLang = () => setLang(lang === 'fr' ? 'en' : 'fr');
 
     const pageMainSection = useRef(null);
     const pageAboutUs = useRef(null);
@@ -136,6 +135,7 @@ export default function PublicPage() {
     const showIncompletePage = process.env.REACT_APP_BUILD_ENV === 'beta';
 
     const { isLoggedIn } = useContext(IsLoggedInContext);
+    const { language, toggleLanguage } = useContext(LanguageContext);
     const { isDark, toggleTheme } = useContext(ThemeContext);
     const queryParams = new URLSearchParams(window.location.search);
     const referral_code = queryParams.get("referral_code");
@@ -202,37 +202,37 @@ export default function PublicPage() {
                     <div className="section-contents" style={{ position: 'absolute', top: '0%', left: '0%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%' }} >
                         <h1>Praeficio.com</h1>
                         <div style={{ position: 'absolute', top: '3%', right: '2%', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', height: '95%' }}>
-                            <Tooltip content={lang !== 'fr' ? "Veuillez noter que notre capacité en français est limitée." : ""} placement="leftEnd" color="invert" >
-                                <CustomButton onClick={toggleLang} style={{ textTransform: 'uppercase' }} >  {lang}  <i className="fa-solid fa-arrows-spin" /></CustomButton>
+                            <Tooltip content={language !== 'fr' ? "Veuillez noter que notre capacité en français est limitée." : ""} placement="leftEnd" color="invert" >
+                                <CustomButton onClick={toggleLanguage} style={{ textTransform: 'uppercase' }} >  {language}  <i className="fa-solid fa-arrows-spin" /></CustomButton>
                             </Tooltip>
-                            <CustomButton buttonStyle="btn--transparent" to='/newsletters?show_latest=true'> {sentences.newsletter[lang]} <i className="fa-solid fa-angles-right" /></CustomButton>
+                            <CustomButton buttonStyle="btn--transparent" to='/newsletters?show_latest=true'> {sentences.newsletter[language]} <i className="fa-solid fa-angles-right" /></CustomButton>
 
-                            <CustomButton buttonStyle="btn--transparent" to='/#about_us' onClick={scrollToAboutUs}> {sentences.about_us[lang]} <i className="fa-solid fa-angles-right" /></CustomButton>
+                            <CustomButton buttonStyle="btn--transparent" to='/#about_us' onClick={scrollToAboutUs}> {sentences.about_us[language]} <i className="fa-solid fa-angles-right" /></CustomButton>
 
-                            <CustomButton buttonStyle="btn--transparent" to='/#contact_us' onClick={scrollToContactUs} > {sentences.contact_us[lang]} <i className="fa-solid fa-angles-right" /></CustomButton>
+                            <CustomButton buttonStyle="btn--transparent" to='/#contact_us' onClick={scrollToContactUs} > {sentences.contact_us[language]} <i className="fa-solid fa-angles-right" /></CustomButton>
 
-                            <CustomButton buttonStyle="btn--transparent" to='/login'> {sentences.login[lang]} <i className="fa-solid fa-angles-right" /></CustomButton>
+                            <CustomButton buttonStyle="btn--transparent" to='/login'> {sentences.login[language]} <i className="fa-solid fa-angles-right" /></CustomButton>
 
                         </div>
 
-                        {!!referrer && <Text em size={13} css={{ color: 'lightgreen' }} >{sentences.referral_part_1[lang]} {`"${referrer}"`}, {sentences.referral_part_2[lang]}</Text>}
+                        {!!referrer && <Text em size={13} css={{ color: 'lightgreen' }} >{sentences.referral_part_1[language]} {`"${referrer}"`}, {sentences.referral_part_2[language]}</Text>}
 
-                        {!showIncompletePage ? <h3><i className="fa-solid fa-person-digging"></i>&nbsp;{sentences.being_built[lang]}&nbsp;<i className="fa-solid fa-screwdriver-wrench"></i></h3> : <>
+                        {!showIncompletePage ? <h3><i className="fa-solid fa-person-digging"></i>&nbsp;{sentences.being_built[language]}&nbsp;<i className="fa-solid fa-screwdriver-wrench"></i></h3> : <>
 
-                            <h2>{sentences.slogan3[lang]}</h2>
+                            <h2>{sentences.slogan3[language]}</h2>
                             <div>
                                 <Badge color="warning" >faster</Badge>
                                 <Badge color="success">safer</Badge>
                                 <Badge color="secondary">better</Badge>
                             </div>
                             <br />
-                            <h4>{sentences.slogan1[lang]}</h4>
+                            <h4>{sentences.slogan1[language]}</h4>
 
-                            <h3>{sentences.slogan2[lang]}</h3>
-                            <CustomButton buttonStyle="btn--secondary" onClick={() => setSubscriptionModalOpen(true)} >{sentences.subscribe_button[lang]}</CustomButton>
+                            <h3>{sentences.slogan2[language]}</h3>
+                            <CustomButton buttonStyle="btn--secondary" onClick={() => setSubscriptionModalOpen(true)} >{sentences.subscribe_button[language]}</CustomButton>
                         </>}
 
-                        <SubscriptionModal isOpen={subscriptionModalOpen} setIsOpen={setSubscriptionModalOpen} lang={lang} />
+                        <SubscriptionModal isOpen={subscriptionModalOpen} setIsOpen={setSubscriptionModalOpen} language={language} />
 
                     </div>
                 </section>
@@ -241,8 +241,8 @@ export default function PublicPage() {
             <Element id="about_us" name="chapter2">
                 <section style={{ backgroundColor: 'grey' }} ref={pageAboutUs} className="chapter">
                     <div className="nav-button-wrapper">
-                        <CustomButton buttonStyle="btn--secondary" to='/#main_section' onClick={scrollToMainSection} > {sentences.back_up[lang]} <i className="fa-solid fa-angles-up" /></CustomButton>
-                        <CustomButton buttonStyle="btn--secondary" to='/#contact_us' onClick={scrollToContactUs} > {sentences.contact_us[lang]} <i className="fa-solid fa-angles-down" /></CustomButton>
+                        <CustomButton buttonStyle="btn--secondary" to='/#main_section' onClick={scrollToMainSection} > {sentences.back_up[language]} <i className="fa-solid fa-angles-up" /></CustomButton>
+                        <CustomButton buttonStyle="btn--secondary" to='/#contact_us' onClick={scrollToContactUs} > {sentences.contact_us[language]} <i className="fa-solid fa-angles-down" /></CustomButton>
                     </div>
                     <div className="section-contents" >
                         <h1>
@@ -261,8 +261,8 @@ export default function PublicPage() {
             <Element id="contact_us" name="chapter3">
                 <section style={{ backgroundColor: 'lightgrey', display: 'flex', flexDirection: 'column', alignItems: 'center' }} ref={pageContactUs} className="chapter">
                     <div className="nav-button-wrapper">
-                        <CustomButton buttonStyle="btn--secondary" to='/#about_us' onClick={scrollToAboutUs} > {sentences.about_us[lang]} <i className="fa-solid fa-angle-up" /></CustomButton>
-                        <CustomButton buttonStyle="btn--secondary" to='/#main_section' onClick={scrollToMainSection} > {sentences.back_up[lang]} <i className="fa-solid fa-angles-up" /></CustomButton>
+                        <CustomButton buttonStyle="btn--secondary" to='/#about_us' onClick={scrollToAboutUs} > {sentences.about_us[language]} <i className="fa-solid fa-angle-up" /></CustomButton>
+                        <CustomButton buttonStyle="btn--secondary" to='/#main_section' onClick={scrollToMainSection} > {sentences.back_up[language]} <i className="fa-solid fa-angles-up" /></CustomButton>
                     </div>
                     <div className="section-contents" >
                         <h1> Oh what great lengths to reach us 👉👈</h1>
@@ -302,7 +302,7 @@ export default function PublicPage() {
 };
 
 
-function SubscriptionModal({ isOpen, setIsOpen, lang }) {
+function SubscriptionModal({ isOpen, setIsOpen, language }) {
 
     const [subscriptionInfo, setSubscriptionInfo] = useState({});
     const [errorTexts, setErrorTexts] = useState({});
@@ -318,7 +318,7 @@ function SubscriptionModal({ isOpen, setIsOpen, lang }) {
         width='700px'
     >
         <Modal.Header>
-            <Text size={14} css={{ 'text-align': 'center' }}>{sentences.join_header[lang]}</Text>
+            <Text size={14} css={{ 'text-align': 'center' }}>{sentences.join_header[language]}</Text>
         </Modal.Header>
         <Modal.Body>
             <Suspense fallback="1 sec" >
@@ -349,9 +349,9 @@ function SubscriptionModal({ isOpen, setIsOpen, lang }) {
                 }} >
                 {/* <pre>{JSON.stringify(subscriptionInfo, null, 2)}</pre> */}
                 <Input
-                    labelLeft={sentences.your_name[lang]}
+                    labelLeft={sentences.your_name[language]}
                     aria-label='name for subscription'
-                    placeholder={sentences.name_example[lang]}
+                    placeholder={sentences.name_example[language]}
                     color="primary"
                     helperColor='error'
                     helperText={errorTexts.name || ''}
@@ -365,8 +365,8 @@ function SubscriptionModal({ isOpen, setIsOpen, lang }) {
                     color="primary"
                     underlined
                     aria-label='email for subscription'
-                    labelLeft={sentences.your_email[lang]}
-                    placeholder={sentences.email_example[lang]}
+                    labelLeft={sentences.your_email[language]}
+                    placeholder={sentences.email_example[language]}
                     css={{ mt: '15px', mb: '10px' }}
                     helperColor='error'
                     required
@@ -375,8 +375,8 @@ function SubscriptionModal({ isOpen, setIsOpen, lang }) {
                     onChange={v => setSubscriptionInfo({ ...subscriptionInfo, email: v.target.value }) || setErrorTexts({ ...errorTexts, email: '' })}
                 />
                 <Spacer y={0.5} />
-                {lang !== 'en' && <Text size={12} em css={{ 'text-align': 'center', mb: '10px' }}>Veuillez noter que notre capacité en français est limitée.</Text>}
-                <Text size={12} em css={{ 'text-align': 'center' }}>{sentences.unsubscribe_note[lang]}</Text>
+                {language !== 'en' && <Text size={12} em css={{ 'text-align': 'center', mb: '10px' }}>Veuillez noter que notre capacité en français est limitée.</Text>}
+                <Text size={12} em css={{ 'text-align': 'center' }}>{sentences.unsubscribe_note[language]}</Text>
                 <Button
                     type="submit"
                     css={{ width: '50%', alignSelf: 'center' }}
@@ -399,7 +399,7 @@ function SubscriptionModal({ isOpen, setIsOpen, lang }) {
                             errs.name = 'Too long';
                         }
                         setErrorTexts(errs);
-                    }}>{sentences.sign_up[lang]}</Button>
+                    }}>{sentences.sign_up[language]}</Button>
             </form>
         </Modal.Body>
     </Modal >);

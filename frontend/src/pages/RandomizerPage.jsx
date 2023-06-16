@@ -51,8 +51,8 @@ function OptionsDisplay({ options }) {
     const startAnimation = () => {
         setInProgress(true);
         let iteration = 0;
-        const maxIterations = (Math.floor(Math.random() * options.length) + options.length) * 4; // Randomly determine the maximum number of iterations
-        const animationDelay = 1000; // Delay between each option change (in milliseconds)
+        const maxIterations = Math.max((Math.floor(Math.random() * options.length) + options.length) * 4, 25); // Randomly determine the maximum number of iterations, with a max of 25
+        const animationDelay = 750; // Delay between each option change (in milliseconds)
         const stopDelay = 10; // Delay before stopping the animation (in milliseconds)
 
         const animateOptions = () => {
