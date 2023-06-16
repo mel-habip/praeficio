@@ -20,7 +20,7 @@ import NumberField from '../../fields/NumberField';
 import WordListField from '../../fields/WordList';
 
 export default function VotingSessionsPage() {
-    const { setIsLoggedIn, accessToken, user } = useContext(IsLoggedInContext);
+    const { setIsLoggedIn, user } = useContext(IsLoggedInContext);
 
     const [votingSessions, setVotingSessions] = useState(null);
 
@@ -161,7 +161,7 @@ function VotingSessionCreationModalWithButton({ setVotingSessions = () => { }, v
                             details: {
                                 method: votingSessionDetails.method,
                                 voter_limit: votingSessionDetails.limit_voters ? votingSessionDetails.voter_limit : undefined,
-                                number_of_votes: votingSessionDetails.method === 'multiple_votes' ? votingSessionDetails.number_of_votes : undefined,
+                                number_of_votes: (votingSessionDetails.method === 'multiple_votes' || votingSessionDetails.limit_number_of_votes) ? votingSessionDetails.number_of_votes : undefined,
                                 options: votingSessionDetails.options,
                             }
                         }).then(response => {

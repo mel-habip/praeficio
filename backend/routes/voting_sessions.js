@@ -58,7 +58,10 @@ votingSessionRouter.post('/', authenticateToken, validateAndSanitizeBodyParts({
 }, ['name', 'details']), async (req, res) => {
 
     try {
-        votingSessionsCache.del((votingSessionsCache.keys() || []).filter(str => str.startsWith('user-')));
+
+        console.log('votingSessionsCache.keys()', votingSessionsCache.keys())
+        throw false;
+        // votingSessionsCache.del((votingSessionsCache.keys() || []).filter(str => str.startsWith('user-')));
     } catch (e) {
         console.error(e?.stack || e?.message || e);
         votingSessionsCache.flushAll();
@@ -103,11 +106,7 @@ votingSessionRouter.post('/', authenticateToken, validateAndSanitizeBodyParts({
 
         if (['simple'].includes(method)) {
             //nothing
-        } else if (['approval'].includes(method)) {
-            if (details.number_of_votes && !isNaN(details.number_of_votes)) {
-                filteredDetails.number_of_votes = details.number_of_votes;
-            }
-        } else if (method === 'multiple_votes') {
+        } else if (['approval', 'multiple_votes'].includes(method)) {
             if (!details.number_of_votes || isNaN(details.number_of_votes)) {
                 return res.status(400).json({
                     message: `Number of Votes ("${details.number_of_votes}") is invalid`
@@ -318,7 +317,9 @@ votingSessionRouter.put(`/:voting_session_id`, authenticateToken, validateAndSan
     name: 'string',
     voter_limit: 'number',
     remove_voter_limit: 'boolean',
-    options: 'array'
+    options: 'array',
+    number_of_votes: 'number',
+    remove_number_of_votes: 'boolean'
 }), async (req, res) => {
     const checkCache = votingSessionsCache.get(`voting-session-${req.params.voting_session_id}`);
 
@@ -350,6 +351,12 @@ votingSessionRouter.put(`/:voting_session_id`, authenticateToken, validateAndSan
 
     if (req.body.options) {
         updatedDetails.options = Array.from(new Set(req.body.options));
+    }
+
+    if (req.body.number_of_votes && !isNaN(req.body.number_of_votes)) {
+        updatedDetails.number_of_votes = req.body.number_of_votes;
+    } else if (req.body.remove_number_of_votes) {
+        delete updatedDetails.number_of_votes;
     }
 
     const sessionNewName = req.body.name || voting_session.name;
@@ -447,7 +454,7 @@ votingSessionRouter.post(`/:voting_session_id/vote`, validateAndSanitizeBodyPart
     });
 
     //too many selections
-    if (session_method === 'multiple_votes' && req.body.selections.length > voting_session.details.number_of_votes) return res.status(400).json({
+    if (req.body.selections.length > voting_session.details.number_of_votes) return res.status(400).json({
         message: `Invalid selections`
     });
 
@@ -547,7 +554,7 @@ votingSessionRouter.put(`/:voting_session_id/vote/:vote_id`, validateAndSanitize
     });
 
     //too many selections
-    if (session_method === 'multiple_votes' && req.body.selections.length > voting_session.details.number_of_votes) return res.status(400).json({
+    if (req.body.selections.length > voting_session.details.number_of_votes) return res.status(400).json({
         message: `Invalid selections`
     });
 
@@ -720,7 +727,7 @@ votingSessionRouter.get('/:voting_session_id/vote/:voter_key', async (req, res) 
         voting_session_id: voting_session.voting_session_id,
         method: voting_session.details.method,
         options: voting_session.details.options,
-        number_of_votes: voting_session.details.method === 'multiple_votes' ? voting_session.details.number_of_votes : undefined,
+        number_of_votes: voting_session.details.number_of_votes,
     });
 });
 

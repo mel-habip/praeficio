@@ -87,7 +87,7 @@ export default function SpecificVotingSessionPage() {
                 <h4>Status: <span style={{ color: votingSessionDetails.completed ? 'green' : 'cyan' }} > {votingSessionDetails.completed ? 'Completed' : 'In Progress'} </span> </h4>
                 {!!votingSessionDetails.completed && <h4>Completed On: {timestampFormatter(votingSessionDetails.completed_on)}</h4>}
                 <h4>Method: {votingSessionDetails.details.method}</h4>
-                {votingSessionDetails.details.method === 'multiple_votes' && <h4>Number of selections per vote: {votingSessionDetails.details.number_of_votes}</h4>}
+                {!!votingSessionDetails.details?.number_of_votes && <h4>Number of selections per vote: {votingSessionDetails.details.number_of_votes}</h4>}
                 <h4>Voter Limit: {votingSessionDetails.result.number_of_voters} / {votingSessionDetails.details.voter_limit || 'unlimited'}</h4>
                 <div style={{
                     width: 'fit-content', marginLeft: 'auto',
@@ -95,7 +95,13 @@ export default function SpecificVotingSessionPage() {
                 }} >
                     <Tooltip trigger="click" content="Copied!" >
                         <Link>
-                            <span onClick={() => navigator.clipboard.writeText(url_to_vote)} > Link to vote </span>
+                            <span onClick={() => navigator.clipboard.writeText(url_to_vote)} > Link to vote (EN) </span>
+                        </Link>
+                    </Tooltip>
+
+                    <Tooltip trigger="click" content="Copied!" >
+                        <Link>
+                            <span onClick={() => navigator.clipboard.writeText(url_to_vote + '?lang=fr')} > Link to vote (FR) </span>
                         </Link>
                     </Tooltip>
                 </div>
@@ -188,7 +194,7 @@ export default function SpecificVotingSessionPage() {
             </div>
         </div >
 
-        {!!votingSessionDetails.votes.length ? <VotersTable votersList={votingSessionDetails.votes} refreshCounter={refreshCounter} /> : <h3>No votes received yet. A table will be shown once votes are received.</h3> }
+        {!!votingSessionDetails.votes.length ? <VotersTable votersList={votingSessionDetails.votes} refreshCounter={refreshCounter} /> : <h3>No votes received yet. A table will be shown once votes are received.</h3>}
     </>);
 };
 
@@ -405,10 +411,13 @@ function EditModalWithButton({ votingSessionDetails = {}, setVotingSessionDetail
 
     useEffect(() => {
         setFormData({
+            method: votingSessionDetails.details.method,
             name: votingSessionDetails.name,
             voter_limit: votingSessionDetails.details.voter_limit,
             options: votingSessionDetails.details.options,
             limit_voters: !!votingSessionDetails.details.voter_limit,
+            limit_number_of_votes: !!votingSessionDetails.details.number_of_votes,
+            number_of_votes: votingSessionDetails.details.number_of_votes,
         });
     }, []);
 
@@ -429,6 +438,17 @@ function EditModalWithButton({ votingSessionDetails = {}, setVotingSessionDetail
                 <Checkbox defaultSelected={!!formData.voter_limit} onChange={b => setFormData(prev => ({ ...prev, limit_voters: b }))} ><p>Limit number of voters?</p></Checkbox>
                 {formData.limit_voters && <NumberField min={2} max={200} default_value={formData.voter_limit || 2} outer_updater={v => setFormData(prev => ({ ...prev, voter_limit: v }))} />}
 
+                {formData.method === 'approval' &&
+                    <Checkbox
+                        defaultSelected={!!formData.number_of_votes}
+                        onChange={b => setFormData(prev => ({ ...prev, limit_number_of_votes: b, number_of_votes: b ? prev.number_of_votes : undefined }))}
+                    ><p>Limit the number of votes per voter?</p></Checkbox>}
+
+                {(formData.method === 'multiple_votes' || formData.limit_number_of_votes) && <>
+                    <p>Number of votes per voter</p>
+                    <NumberField min={2} max={50} default_value={formData.number_of_votes || 2} outer_updater={v => setFormData(prev => ({ ...prev, number_of_votes: v }))} />
+                </>}
+
                 <p>Options to vote amongst:</p>
                 <WordListField style={{ border: 'none' }} placeholder="Add another option and hit 'Enter' to record" onListChange={ar => setFormData(prev => ({ ...prev, options: ar }))} defaultValue={formData.options} />
 
@@ -438,7 +458,9 @@ function EditModalWithButton({ votingSessionDetails = {}, setVotingSessionDetail
                     onPress={async () => {
                         await axios.put(`${process.env.REACT_APP_API_LINK}/voting_sessions/${votingSessionDetails.voting_session_id}`, {
                             ...formData,
-                            remove_voter_limit: !formData.voter_limit //send `true` if we want to remove the limit intentionally.
+                            remove_voter_limit: !formData.voter_limit, //send `true` if we want to remove the limit intentionally.
+                            number_of_votes: (formData.method === 'multiple_votes' || formData.limit_number_of_votes) ? formData.number_of_votes : undefined,
+                            remove_number_of_votes: formData.method === 'multiple_votes' ? undefined : !formData.number_of_votes
                         }).then(response => {
                             console.log('response:', response.data);
                             if ([201, 200].includes(response.status)) {

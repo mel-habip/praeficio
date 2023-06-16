@@ -24,9 +24,13 @@ const dictionary = {
         en: 'Contact your representative for further details.',
         fr: 'Contactez votre représentant pour plus de détails.'
     },
-    thank_you: {
+    thank_you_1: {
         en: 'Thank you & have a great day!',
         fr: 'Merci & bonne journée!'
+    },
+    thank_you_2: {
+        en: 'Thank you for taking part in this voting session & have a great day!',
+        fr: `Merci d'avoir participé à cette séance de vote et bonne journée !`
     },
     removed: {
         en: 'Your vote has been removed.',
@@ -39,6 +43,14 @@ const dictionary = {
     single_select: {
         en: 'Please select the option you wish to support',
         fr: `Veuillez sélectionner l'option que vous souhaitez prendre en charge`
+    },
+    single_select_1: {
+        en: 'Your selection',
+        fr: 'Votre sélection'
+    },
+    your_ip: {
+        en: 'Your IP',
+        fr: 'Votre adresse IP'
     },
     approval_select: {
         en: 'Please select all of the options you wish to support',
@@ -68,6 +80,18 @@ const dictionary = {
         en: 'Vote in another session',
         fr: 'Voter dans une autre session'
     },
+    vote_success: {
+        en: 'Your vote has been successfully saved.',
+        fr: 'Votre vote a été enregistré avec succès.'
+    },
+    delete: {
+        en: 'Delete my vote',
+        fr: 'Annuler mon vote'
+    },
+    edit: {
+        en: 'Edit my vote',
+        fr: 'Modifier mon vote'
+    }
 };
 
 export default function SpecificVoterPage() {
@@ -103,10 +127,14 @@ export default function SpecificVoterPage() {
         });
     }, []);
 
+    const RightUpperCorner = () => <div style={{ position: 'absolute', top: '10%', right: '5%' }}>
+        {!!votingSessionDetails.voter_ip_address ? <h5 >{dictionary.your_ip[language]}: {votingSessionDetails.voter_ip_address}</h5> : <></>}
+    </div>
+
     if (errorMessage) {
         return (<>
-            <NavMenu />
-            <LangButton />
+            <NavMenu show_language_button_externally />
+            <RightUpperCorner />
             <div>
                 <h3 style={{ color: 'red' }} >{errorMessage}</h3>
                 <br />
@@ -117,30 +145,29 @@ export default function SpecificVoterPage() {
 
     if (voteDeleted) {
         return (<>
-            <NavMenu />
-            <LangButton />
+            <NavMenu show_language_button_externally />
+            <RightUpperCorner />
             <div>
-                {/* <h2>Your vote has been successfully removed.</h2> */}
                 <AnimatedText text={dictionary.removed[language]} />
                 <br />
-                <h3>{dictionary.thank_you[language]}</h3>
-                <CustomButton to={`/vote`} > Vote in another session <i className="fa-solid fa-check-to-slot" /></CustomButton>
+                <h3>{dictionary.thank_you_1[language]}</h3>
+                <CustomButton to={`/vote`} > {dictionary.vote_elsewhere[language]} <i className="fa-solid fa-check-to-slot" /></CustomButton>
             </div>
         </>);
     };
 
     if (votedAlready) {
         return (<>
-            <NavMenu />
-            <LangButton />
+            <NavMenu show_language_button_externally />
+            <RightUpperCorner />
             <div>
-                <h2>Your vote has been successfully saved.</h2>
+                <h2>{dictionary.vote_success[language]}</h2>
                 <AnimatedCheckmark />
                 <br />
-                <h3>Thank you for taking part in this voting session & have a great day!</h3>
+                <h3>{dictionary.thank_you_2[language]}</h3>
                 <CustomButton onClick={() => {
                     setVotedAlready(false);
-                }} > Edit My Vote <i className="fa-regular fa-pen-to-square" /> </CustomButton>
+                }} > {dictionary.edit[language]} <i className="fa-regular fa-pen-to-square" /> </CustomButton>
                 <CustomButton onClick={() => {
                     axios.delete(`${process.env.REACT_APP_API_LINK}/voting_sessions/${voting_session_id}/vote/${votingSessionDetails.vote_id}`).then(response => {
                         if (response.status === 200) {
@@ -157,51 +184,40 @@ export default function SpecificVoterPage() {
                             console.error(err);
                         }
                     });
-                }} > Delete My Vote <i className="fa-solid fa-trash-can" /> </CustomButton>
+                }} > {dictionary.delete[language]} <i className="fa-solid fa-trash-can" /> </CustomButton>
             </div>
         </>);
     }
 
     if (!votingSessionDetails) return <Loading size='xl' />
 
-    const MyIpLine = () => !!votingSessionDetails.voter_ip_address ? <h5 style={{ position: 'absolute', top: '5%', right: '5%' }} >Your IP: {votingSessionDetails.voter_ip_address}</h5> : <></>
-
-    const LangButton = () => <CustomButton
-        onClick={toggleLanguage}
-        style={{ textTransform: 'uppercase', position: 'absolute', top: '5%', right: '5%' }}
-    >  {language} <i className="fa-solid fa-arrows-spin" /></CustomButton>
-
     if (votingSessionDetails.method === 'simple') {
         return (<>
-            <NavMenu />
-            <LangButton />
-            <MyIpLine />
+            <NavMenu show_language_button_externally />
+            <RightUpperCorner />
             <SingleVoteFields options={votingSessionDetails.options} submit_func={selections => submit(selections)} />
         </>);
     }
 
     if (votingSessionDetails.method === 'multiple_votes') {
         return (<>
-            <NavMenu />
-            <LangButton />
-            <MyIpLine />
+            <NavMenu show_language_button_externally />
+            <RightUpperCorner show_language_button_externally />
             <MultipleVotesFields options={votingSessionDetails.options} number_of_votes={votingSessionDetails.number_of_votes} submit_func={selections => submit(selections)} />
         </>);
     }
 
     if (votingSessionDetails.method === 'approval') {
         return (<>
-            <NavMenu />
-            <LangButton />
-            <MyIpLine />
-            <ApprovalStyleFields options={votingSessionDetails.options} submit_func={selections => submit(selections)} />
+            <NavMenu show_language_button_externally />
+            <RightUpperCorner />
+            <ApprovalStyleFields options={votingSessionDetails.options} submit_func={selections => submit(selections)} number_of_votes={votingSessionDetails.number_of_votes} />
         </>);
     }
 
     return (<>
-        <NavMenu />
-        <LangButton />
-        <MyIpLine />
+        <NavMenu show_language_button_externally />
+        <RightUpperCorner />
         <CustomButton
             onClick={toggleLanguage}
             style={{ textTransform: 'uppercase', position: 'absolute', top: '5%', right: '5%' }}
@@ -255,11 +271,11 @@ function SingleVoteFields({ options, submit_func }) {
     return (<>
         <h3>{dictionary.single_select[language]}</h3>
 
-        <CustomizedDropdown optionsList={formattedOptions} mountDirectly outerUpdater={setSelection} />
+        <CustomizedDropdown title={dictionary.single_select_1[language]} optionsList={formattedOptions} mountDirectly outerUpdater={setSelection} />
 
         <br />
 
-        <Button shadow color="success" disabled={!selection} onClick={() => submit_func([selection])}>{dictionary.submit[language]}</Button>
+        <Button shadow color="success" disabled={!selection} onPress={() => submit_func([selection])}>{dictionary.submit[language]}</Button>
     </>);
 
 }
@@ -291,14 +307,14 @@ function MultipleVotesFields({ options, number_of_votes, submit_func }) {
         {options.map((opt, ind) =>
             <>
                 <p key={ind + '-display'}>{opt}</p>
-                <NumberField min={0} max={number_of_votes} key={ind + '-field'} outer_updater={v => setRawSelections(prev => ({ ...prev, [opt]: v }))} >{opt}</NumberField>
+                <NumberField default_value={0} min={0} max={number_of_votes} key={ind + '-field'} outer_updater={v => setRawSelections(prev => ({ ...prev, [opt]: v }))} >{opt}</NumberField>
             </>
         )}
 
         <h4>{dictionary.remaining_votes[language]} {remainingVotes}</h4>
 
         <br />
-        <Button shadow color="success" disabled={formattedSelections.length > number_of_votes} onClick={() => submit_func(formattedSelections)}>{dictionary.submit[language]}</Button>
+        <Button shadow color="success" disabled={formattedSelections.length > number_of_votes} onPress={() => submit_func(formattedSelections)}>{dictionary.submit[language]}</Button>
     </>);
 }
 
@@ -316,11 +332,11 @@ function ApprovalStyleFields({ options, number_of_votes = Infinity, submit_func 
         {options.map((opt, ind) => <Checkbox key={ind} onChange={v => setRawSelections(prev => ({ ...prev, [opt]: v }))} >{opt}</Checkbox>)}
 
         <br />
-        {number_of_votes !== Infinity && <p>{dictionary.number_of_selections} {formattedSelections.length}/{number_of_votes}</p>}
+        {number_of_votes !== Infinity && <p>{dictionary.number_of_selections[language]} {formattedSelections.length}/{number_of_votes}</p>}
         <Button
             disabled={formattedSelections.length > number_of_votes}
             shadow color="success"
-            onClick={() => submit_func(formattedSelections)}>{dictionary.submit[language]}</Button>
+            onPress={() => submit_func(formattedSelections)}>{dictionary.submit[language]}</Button>
     </>);
 }
 
