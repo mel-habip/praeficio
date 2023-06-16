@@ -46,7 +46,7 @@ export default function validateAndSanitizeBodyParts(all_props = {}, required = 
                     } //if it is valid, we're good
                 } else if (expectedType === 'date') {
                     //a lot of non-date strings can be coerced into dates, so we need to handle that specially
-                    const dateObject = new Date(val);
+                    const dateObject = new Date(req.body[prop]);
                     if (dateObject.toString() === 'Invalid Date') {
                         return res.status(400).json({
                             message: `Invalid date provided for prop "${prop}"`

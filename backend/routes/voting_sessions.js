@@ -101,8 +101,12 @@ votingSessionRouter.post('/', authenticateToken, validateAndSanitizeBodyParts({
         filteredDetails.method = method;
         filteredDetails.options = details.options;
 
-        if (['simple', 'approval'].includes(method)) {
+        if (['simple'].includes(method)) {
             //nothing
+        } else if (['approval'].includes(method)) {
+            if (details.number_of_votes && !isNaN(details.number_of_votes)) {
+                filteredDetails.number_of_votes = details.number_of_votes;
+            }
         } else if (method === 'multiple_votes') {
             if (!details.number_of_votes || isNaN(details.number_of_votes)) {
                 return res.status(400).json({
