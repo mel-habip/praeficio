@@ -168,7 +168,7 @@ export default function SpecificVoterPage() {
 
     const LangButton = () => <CustomButton
         onClick={toggleLanguage}
-        style={{ textTransform: 'uppercase', position: 'absolute', top: '5%', right: '5%' }}
+        style={{ textTransform: 'uppercase', position: 'absolute', top: '10%', right: '5%' }}
     >  {language} <i className="fa-solid fa-arrows-spin" /></CustomButton>
 
     if (votingSessionDetails.method === 'simple') {
