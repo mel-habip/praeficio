@@ -211,7 +211,7 @@ export default function SpecificVoterPage() {
         return (<>
             <NavMenu show_language_button_externally />
             <RightUpperCorner />
-            <ApprovalStyleFields options={votingSessionDetails.options} submit_func={selections => submit(selections)} />
+            <ApprovalStyleFields options={votingSessionDetails.options} submit_func={selections => submit(selections)} number_of_votes={votingSessionDetails.number_of_votes} />
         </>);
     }
 
@@ -307,7 +307,7 @@ function MultipleVotesFields({ options, number_of_votes, submit_func }) {
         {options.map((opt, ind) =>
             <>
                 <p key={ind + '-display'}>{opt}</p>
-                <NumberField min={0} max={number_of_votes} key={ind + '-field'} outer_updater={v => setRawSelections(prev => ({ ...prev, [opt]: v }))} >{opt}</NumberField>
+                <NumberField default_value={0} min={0} max={number_of_votes} key={ind + '-field'} outer_updater={v => setRawSelections(prev => ({ ...prev, [opt]: v }))} >{opt}</NumberField>
             </>
         )}
 
@@ -332,7 +332,7 @@ function ApprovalStyleFields({ options, number_of_votes = Infinity, submit_func 
         {options.map((opt, ind) => <Checkbox key={ind} onChange={v => setRawSelections(prev => ({ ...prev, [opt]: v }))} >{opt}</Checkbox>)}
 
         <br />
-        {number_of_votes !== Infinity && <p>{dictionary.number_of_selections} {formattedSelections.length}/{number_of_votes}</p>}
+        {number_of_votes !== Infinity && <p>{dictionary.number_of_selections[language]} {formattedSelections.length}/{number_of_votes}</p>}
         <Button
             disabled={formattedSelections.length > number_of_votes}
             shadow color="success"

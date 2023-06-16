@@ -66,7 +66,18 @@ function App() {
 
   const localLang = localStorage.getItem('language');
 
-  const [language, setLanguage] = useState(() => ['en', 'fr'].includes(localLang) ? localLang : 'en');
+  const queryParams = new URLSearchParams(window.location.search);
+  const languageQueryParam = queryParams.get("lang");
+
+  let initialLang = 'en';
+
+  if (['fr', 'french', 'francais'].includes(languageQueryParam)) {
+    initialLang = 'fr';
+  } else if (['fr', 'french', 'francais'].includes(localLang)) {
+    initialLang = 'fr';
+  }
+
+  const [language, setLanguage] = useState(() => initialLang);
   const toggleLanguage = () => {
     let n;
     setLanguage(prev => {
