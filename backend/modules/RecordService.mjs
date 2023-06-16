@@ -232,7 +232,7 @@ export default class RecordService {
      * @method fetch_by_criteria
      * @param {Object} criteria
      */
-    fetch_by_criteria = async (criteria = {}) => {
+    fetch_by_criteria = async (criteria = {}, use_and = true) => {
 
         const {
             limit,
@@ -253,15 +253,15 @@ export default class RecordService {
         let sql_2;
 
         if (this.fetch_sql) {
-            sql_2 = `${this.fetch_sql} ${keys.length ? 'WHERE ': ''}` + keys.map(a => a + ' = ?').join(',') + limitText + offsetText
+            sql_2 = `${this.fetch_sql} ${keys.length ? 'WHERE ': ''}` + keys.map(a => a + ' = ?').join(use_and ? ' AND ' : ' OR ') + limitText + offsetText
         }
 
-        const sql = sql_2 || (keys.length ? `SELECT * FROM ${table_name} WHERE ` + keys.map(a => a + ' = ?').join(',') + limitText + offsetText : `SELECT * FROM ${table_name} ` + limitText + offsetText);
+        const sql = sql_2 || (keys.length ? `SELECT * FROM ${table_name} WHERE ` + keys.map(a => a + ' = ?').join(use_and ? ' AND ' : ' OR ') + limitText + offsetText : `SELECT * FROM ${table_name} ` + limitText + offsetText);
         const result = await query(sql, vals);
 
         return {
             success: !!result,
-            message: `Fetched ${result.length} rows`,
+            message: `Fetched ${result?.length||0} rows`,
             details: result
         };
     }

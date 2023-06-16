@@ -53,6 +53,57 @@ userRouter.get('/', authenticateToken, async (req, res) => {
     });
 });
 
+userRouter.post('/search', authenticateToken, validateAndSanitizeBodyParts({
+    user_id: 'number',
+    username: 'string',
+    discovery_token: ''
+}), async (req, res) => {
+    if (!req.body.user_id && !req.body.username && !req.body.discovery_token) return res.status(401).json({
+        message: 'At least one parameter should be provided'
+    });
+
+    let result;
+
+    if (req.body.user_id) {
+        const cacheCheck = usersCache.get(`user-${req.body.user_id}`);
+        result = cacheCheck ? {
+            details: [cacheCheck],
+            success: true,
+        } : await helper.fetch_by_criteria({
+            user_id: req.body.user_id,
+            deleted: false,
+            active: true,
+        });
+        if (!cacheCheck && !!result?.details?. [0]) usersCache.set(`user-${req.body.user_id}`, result.details[0]);
+    } else if (req.body.username) {
+        result = await helper.fetch_by_criteria({
+            username: req.body.username,
+            deleted: false,
+            active: true,
+        });
+    } else if (req.body.discovery_token) {
+        result = await helper.fetch_by_criteria({
+            discovery_token: req.body.discovery_token,
+            deleted: false,
+            active: true,
+        });
+    }
+
+    if (!result?.success) return res.status(422).json({
+        message: result?.message || `Something went wrong`,
+    });
+
+    return res.status(200).json({
+        message: `Found ${result.details.length} results`,
+        data: result.details.map(user => ({
+            username: user.username,
+            user_id: user.user_id,
+            discovery_token: (user.discovery_token === req.body.discovery_token || req.user.is_dev || !!req.user.friendships.find(frnd => [frnd.user_1_id, frnd.user_2_id].includes(user.id)) ) ? user.discovery_token : undefined,
+            created_on: user.created_on,
+        }))
+    });
+});
+
 userRouter.get('/session', authenticateToken, (req, res) => {
     return res.status(200).json({
         ...req.user

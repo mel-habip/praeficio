@@ -296,7 +296,7 @@ function Comment({ message, level = 0, sectionLength = 1, role, user, handleErro
         <div className="comment-outer">
             <div className="comment-inner" style={innerDetails.starred ? { filter: `drop-shadow(0 0 0.5rem yellow)` } : {}}>
                 <div className="comment-header">
-                    <span className="sent_by">Sent by: {innerDetails.sent_by_username || innerDetails.sent_by}</span>
+                    <Link className="sent_by" to={`/users/${innerDetails.sent_by}`}>Sent by: {innerDetails.sent_by_username || innerDetails.sent_by}</Link>
                     {innerDetails.starred && <p>🌟🌟</p>}
                     <span className="date">{format(new Date(innerDetails.created_on))}</span>
                 </div>

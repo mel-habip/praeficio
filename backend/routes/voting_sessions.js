@@ -19,6 +19,15 @@ const voteHelper = new VoteService();
 votingSessionRouter.get('/', authenticateToken, async (req, res) => {
     let results;
 
+    try {
+
+        console.log('votingSessionsCache.keys()', votingSessionsCache.keys())
+        throw false;
+        // votingSessionsCache.del((votingSessionsCache.keys() || []).filter(str => str.startsWith('user-')));
+    } catch (e) {
+        console.error(e?.stack || e?.message || e);
+    }
+
     const checkCache = votingSessionsCache.get(`user-${req.user.id}-voting-sessions`);
 
     if (checkCache) {

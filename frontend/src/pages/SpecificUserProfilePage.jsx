@@ -115,7 +115,7 @@ function OtherUserPage({ already_added = false, user_id }) {
         if (!token && !already_added) return;
         axios.get(`${process.env.REACT_APP_API_LINK}/users/${user_id}?discovery_token=${token}`).then(response => {
             if (response.status === 200) {
-                setViewedUserDetails(response.data);
+                setViewedUserDetails({ ...response.data, already_added });
             } else {
                 console.warn('fetch', response);
             }
@@ -123,15 +123,15 @@ function OtherUserPage({ already_added = false, user_id }) {
     }, [user_id, token]);
 
     return (<>
-        {!token && !already_added && <DiscoveryTokenEntryModal setToken={setToken} />}
+        {!token && !viewedUserDetails.already_added && <DiscoveryTokenEntryModal setToken={setToken} />}
 
-        {already_added ? <CustomButton disabled >Added ✔️</CustomButton> : <CustomButton onClick={() => {
+        {viewedUserDetails.already_added ? <CustomButton disabled >Added ✔️</CustomButton> : <CustomButton onClick={() => {
             axios.post(`${process.env.REACT_APP_API_LINK}/friendships`, {
                 user_id,
                 discovery_token: token
             }).then(response => {
                 if (response.status === 201) {
-                    already_added = true
+                    setViewedUserDetails(p => ({ ...p, already_added: true }));
                 } else {
                     console.warn('fetch', response);
                 }
