@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { CustomButton } from '../fields/CustomButton';
 import { Link } from 'react-router-dom';
 import ThemeContext from '../contexts/ThemeContext';
+import LanguageContext from '../contexts/LanguageContext';
 import IsLoggedInContext from '../contexts/IsLoggedInContext';
 import { Badge, Row, Text, Button } from '@nextui-org/react';
 
@@ -19,9 +20,10 @@ const permissionsMap = {
     dev_lead: 'Lead Dev',
 };
 
-function NavMenu() {
+function NavMenu({show_language_button_externally=false}) {
 
     const { isDark, toggleTheme } = useContext(ThemeContext);
+    const { language, toggleLanguage } = useContext(LanguageContext);
     const { isLoggedIn, setIsLoggedIn, user } = useContext(IsLoggedInContext);
 
     const [NavMenuOpen, setNavMenuOpen] = useState(false);
@@ -39,19 +41,72 @@ function NavMenu() {
 
     const Toggle = () => <div className='nav-menu-toggle'><CustomButton onClick={toggleNavMenu}><i className={NavMenuOpen ? 'fas fa-times' : 'fas fa-bars'} /></CustomButton> </div>
 
+    const LangButton = () => <CustomButton
+        onClick={toggleLanguage}
+        style={{ textTransform: 'uppercase', position: 'absolute', top: '5%', right: '5%' }}
+    >  {language} <i className="fa-solid fa-arrows-spin" /></CustomButton>
+
     if (!isLoggedIn) {
         return (
-            <Button
-                css={{ width: '4rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white', position: 'fixed', left: '0%', top: '0%', margin: '1rem' }}
-                onPress={toggleTheme}
-            > <i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"} />
-            </Button>
+            <>
+                <Button
+                    css={{ width: '4rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white', position: 'fixed', left: '0%', top: '0%', margin: '1rem' }}
+                    onPress={toggleTheme}
+                > <i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"} />
+                </Button>
+                <CustomButton
+                    onClick={toggleLanguage}
+                    style={{ textTransform: 'uppercase', position: 'absolute', top: '5%', right: '5%' }}
+                >  {language} <i className="fa-solid fa-arrows-spin" /></CustomButton>
+            </>
         );
+    }
+
+    const dictionary = {
+        for: {
+            en: 'for',
+            fr: 'pour'
+        },
+        You: {
+            en: 'You',
+            fr: 'Toi'
+        },
+        home_page: {
+            en: 'Home',
+            fr: `Page d'Accueil`
+        },
+        voting_page: {
+            en: 'Voting',
+            fr: 'Séances de Vote'
+        },
+        debt_accounts_page: {
+            en: 'Debt Accounts',
+            fr: 'Comptes de Dette'
+        },
+        randomizer_page: {
+            en: 'Randomizer',
+            fr: 'Aléatoirist'
+        },
+        to_dos_page: {
+            en: `To-Do's`,
+            fr: 'Tâches'
+        },
+        settings_page: {
+            en: 'Settings',
+            fr: 'Paramètres'
+        },
+        theme_tooltip: {
+            en: 'light/dark mode',
+            fr: 'mode clair/sombre'
+        }
     }
 
     return (
         <>
             <Toggle />
+
+            {show_language_button_externally && <LangButton />}
+
             <nav className={NavMenuOpen ? 'nav-menu active' : 'nav-menu'}>
 
                 <Row
@@ -60,7 +115,12 @@ function NavMenu() {
                     gap={1}
                 >
                     <div style={{ width: '40px' }}></div>
-                    <CustomButton tooltip="light/dark mode" tooltip_placement='bottom' onClick={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"} /></CustomButton>
+                    <CustomButton tooltip={dictionary.theme_tooltip[language]} tooltip_placement='bottom' onClick={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"} /></CustomButton>
+
+                    <CustomButton
+                        onClick={toggleLanguage}
+                        style={{ textTransform: 'uppercase'}}
+                    >  {language} <i className="fa-solid fa-arrows-spin" /></CustomButton>
 
                     <CustomButton
                         tooltip="log out"
@@ -71,7 +131,7 @@ function NavMenu() {
 
                 </Row>
 
-                <Link to='/company' className='nav-menu-logo' onClick={closeNavMenu}> Præficiō for {user?.first_name || 'You'} &nbsp;
+                <Link to='/company' className='nav-menu-logo' onClick={closeNavMenu}> Præficiō {dictionary.for[language]} {user?.first_name || dictionary.You[language]} &nbsp;
                     <i className="fa-solid fa-user-secret" />
                 </Link>
 
@@ -79,7 +139,7 @@ function NavMenu() {
                 <ul className="nav-list">
                     <li className='nav-item'>
                         <Link to='/' className='nav-links' onClick={closeNavMenu}>
-                            Home
+                            {dictionary.home_page[language]}
                         </Link>
                     </li>
                     <li className='nav-item'>
@@ -124,7 +184,7 @@ function NavMenu() {
                             className='nav-links'
                             onClick={closeNavMenu}
                         >
-                            To-Do's&nbsp; <i className="fa-solid fa-list-check" />
+                            {dictionary.to_dos_page[language]}&nbsp; <i className="fa-solid fa-list-check" />
                         </Link>
                     </li>
                     <li className='nav-item'>
@@ -142,7 +202,7 @@ function NavMenu() {
                             className='nav-links'
                             onClick={closeNavMenu}
                         >
-                            Settings&nbsp; <i className="fa-solid fa-wrench" />
+                            {dictionary.settings_page[language]}&nbsp; <i className="fa-solid fa-wrench" />
                         </Link>
                     </li>
                     <li className='nav-item'>
@@ -178,7 +238,7 @@ function NavMenu() {
                             className='nav-links'
                             onClick={closeNavMenu}
                         >
-                            Debt Accounts&nbsp; <i className="fa-solid fa-file-invoice-dollar" />
+                            {dictionary.debt_accounts_page[language]}&nbsp; <i className="fa-solid fa-file-invoice-dollar" />
                         </Link>
                     </li>
                     <li className='nav-item'>
@@ -187,7 +247,7 @@ function NavMenu() {
                             className='nav-links'
                             onClick={closeNavMenu}
                         >
-                            Voting&nbsp; <i className="fa-solid fa-square-poll-vertical" />
+                            {dictionary.voting_page[language]}&nbsp; <i className="fa-solid fa-square-poll-vertical" />
                         </Link>
                     </li>
                     <li className='nav-item'>
@@ -196,7 +256,7 @@ function NavMenu() {
                             className='nav-links'
                             onClick={closeNavMenu}
                         >
-                            Randomizer&nbsp; <i className="fa-solid fa-dice" />
+                            {dictionary.randomizer_page[language]}&nbsp; <i className="fa-solid fa-dice" />
                         </Link>
                     </li>
                     <li className='nav-item'>
