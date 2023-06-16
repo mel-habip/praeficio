@@ -56,7 +56,7 @@ userRouter.get('/', authenticateToken, async (req, res) => {
 userRouter.post('/search', authenticateToken, validateAndSanitizeBodyParts({
     user_id: 'number',
     username: 'string',
-    discovery_token: ''
+    discovery_token: 'string'
 }), async (req, res) => {
     if (!req.body.user_id && !req.body.username && !req.body.discovery_token) return res.status(401).json({
         message: 'At least one parameter should be provided'

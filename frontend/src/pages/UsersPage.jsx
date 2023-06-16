@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from 'axios';
+import NavMenu from '../components/NavMenu';
 
 import './stylesheets/UsersPage.css';
 
@@ -37,20 +38,19 @@ export default function UsersPage() {
                     setError(err?.response?.data?.message || err?.response?.data);
                     next();
                 });
-            }, 600)
+            }, 1200)
         }
     }, [pageOpen]);
 
     return (<>
+        <NavMenu />
         <div className="wrapper">
-
-            <h4>page: {pageOpen}</h4>
 
             <Progress color="gradient" shadow value={(33 * pageOpen) + 1} />
 
             <div className={`section ${pageOpen === 1 ? 'active' : ''}`} >
                 <h4>Use the search fields below to find a user & add them as a friend!</h4>
-                <Button disabled={!formData.user} auto shadow bordered color="primary" className="next-button" onPress={next}> Next</Button>
+                <Button disabled={!formData.user && !formData.discovery_token} auto shadow bordered color="primary" className="next-button" onPress={next}> Next</Button>
                 <br />
                 <Input width="400px" onChange={e => setFormData(prev => ({ ...prev, user: e.target.value }))} className="search-field" underlined clearable color="primary" labelPlaceholder="Username or User ID" />
                 <br />
@@ -76,9 +76,9 @@ export default function UsersPage() {
 
 function UserCard({ details }) {
     return (<Card css={{ $$cardColor: '$colors$primary', width: '300px' }} isHoverable isPressable>
-        <Link to={`/users/${details.user_id}${details.discovery_token ? `?discovery-token=${details.discovery_token}`: ''}` }>
+        <Link to={`/users/${details.user_id}${details.discovery_token ? `?discovery-token=${details.discovery_token}` : ''}`}>
             <div style={{ width: '100%', height: '100$', display: 'flex', 'justify-content': 'flex-start', }}>
-                <Text size={21} color="darkgray" css={{ ml: 0 }}>
+                <Text size={21} color="darkgray" css={{ ml: '10px' }}>
                     #{details.user_id}
                 </Text>
                 <Spacer x={0.5} />
