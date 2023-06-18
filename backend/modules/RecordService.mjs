@@ -171,11 +171,6 @@ export default class RecordService {
                 return newsletter;
             }
             case 'DebtAccount': {
-                const sql = `SELECT A.*, Bor.username AS borrower_username, Len.username AS lender_username, SUM(T.amount) AS balance FROM debt_accounts A LEFT JOIN debt_account_transactions T ON A.debt_account_id = T.debt_account_id LEFT JOIN users Bor ON Bor.user_id = A.borrower_id LEFT JOIN users Len ON Len.user_id = A.lender_id WHERE A.debt_account_id = ?;`;
-                const [debtAccount] = await query(sql, record_id_1);
-                return debtAccount;
-            }
-            case 'DebtAccount': {
                 let sql;
 
                 if (inclusions.balance) {
@@ -190,7 +185,7 @@ export default class RecordService {
                     await query(`SELECT debt_account_transactions.*, users.username AS entered_by_username FROM debt_account_transactions LEFT JOIN users ON entered_by = users.user_id WHERE debt_account_id = ?;`, record_id_1)
                         .then(response => {
                             debtAccount.transactions = response;
-                        });
+                        }).catch(e => console.error(e))
                 }
 
                 return debtAccount;

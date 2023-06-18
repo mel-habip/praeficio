@@ -28,13 +28,15 @@ debtAccountRouter.get('/', async (req, res) => {
 debtAccountRouter.get('/:debt_account_id', async (req, res) => {
     const details = await helper.fetch_by_id(req.params.debt_account_id, {}, {
         balance: true,
-        transactions: true
+        transactions: true,
     });
+
+    if (!details.balance) details.balance = 0;
 
     if (!details) return res.status(404).json({
         message: `Debt Account not found.`
     });
-    
+
     if ([details.borrower_id, details.lender_id].includes(req.user.id) || req.user.is_total || req.user.permissions.startsWith('dev_')) {
         const statistics = helper.statistics(details.transactions);
         return res.status(200).json({
@@ -43,8 +45,8 @@ debtAccountRouter.get('/:debt_account_id', async (req, res) => {
         });
     }
 
-    return res.status(404).json({
-        message: `Debt Account not found.`
+    return res.status(403).json({
+        message: `Forbidden: You do not have access to this account.`
     });
 });
 
@@ -62,7 +64,7 @@ debtAccountRouter.post('/', validateAndSanitizeBodyParts({
         const checkOne = req.user.id === req.body.borrower_id;
         const checkTwo = req.user.id === req.body.lender_id;
 
-        if (!checkOne && !checkTwo && !req.user.is_total && !req.user.permissions.startsWith('dev_')) {
+        if (!checkOne && !checkTwo && !req.user.is_total && !req.user.is_dev) {
             return res.status(401).json({
                 message: `User should be either Borrower or Lender`,
             });

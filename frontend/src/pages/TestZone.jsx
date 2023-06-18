@@ -1,11 +1,15 @@
 import React, { useState, useContext, useEffect } from 'react';
 
-import AnimatedText from '../components/AnimatedText.jsx'
+import CurrencyInputField from '../fields/CurrencyInputField.jsx'
 
 export default function TestZone() {
 
     return <>
-        <AnimatedText />
+        <CurrencyInputField
+        
+            placeholder="hello"
+
+        />
     </>
 };
 

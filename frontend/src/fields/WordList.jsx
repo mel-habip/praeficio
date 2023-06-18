@@ -11,10 +11,10 @@ export default function WordListField({ style = {}, onListChange = (e) => consol
 
     // useEffect(() => setWordList(defaultValue), []);
 
-    function handleKeyDown(event) {
+    function handleKeyDown(event, button = false) {
         const newItem = inputValue.trim();
         if (!newItem) return;
-        if (event.key === 'Enter') {
+        if (event.key === 'Enter' || button) {
             event.preventDefault();
             if (event.shiftKey || event.ctrlKey || event.metaKey) {
                 // Add item to the beginning of the list
@@ -68,15 +68,18 @@ export default function WordListField({ style = {}, onListChange = (e) => consol
                     </button>
                 </div>
             ))}
-            <input
-                type="text"
-                className="word-list-input"
-                placeholder={placeholder}
-                value={inputValue}
-                onChange={handleInputChange}
-                // onBlur={handleBlur}
-                onKeyDown={handleKeyDown}
-            />
-        </div>
+            <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'no-wrap', width: '100%' }}>
+                <input
+                    type="text"
+                    className="word-list-input"
+                    placeholder={placeholder}
+                    value={inputValue}
+                    onChange={handleInputChange}
+                    // onBlur={handleBlur}
+                    onKeyDown={handleKeyDown}
+                />
+                <button className="word-list-add-button" onClick={e => handleKeyDown(e, true)} >+</button>
+            </div>
+        </div >
     );
 }
