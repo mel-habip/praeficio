@@ -171,11 +171,6 @@ export default class RecordService {
                 return newsletter;
             }
             case 'DebtAccount': {
-                const sql = `SELECT A.*, Bor.username AS borrower_username, Len.username AS lender_username, SUM(T.amount) AS balance FROM debt_accounts A LEFT JOIN debt_account_transactions T ON A.debt_account_id = T.debt_account_id LEFT JOIN users Bor ON Bor.user_id = A.borrower_id LEFT JOIN users Len ON Len.user_id = A.lender_id WHERE A.debt_account_id = ?;`;
-                const [debtAccount] = await query(sql, record_id_1);
-                return debtAccount;
-            }
-            case 'DebtAccount': {
                 let sql;
 
                 if (inclusions.balance) {
@@ -190,7 +185,7 @@ export default class RecordService {
                     await query(`SELECT debt_account_transactions.*, users.username AS entered_by_username FROM debt_account_transactions LEFT JOIN users ON entered_by = users.user_id WHERE debt_account_id = ?;`, record_id_1)
                         .then(response => {
                             debtAccount.transactions = response;
-                        });
+                        }).catch(e => console.error(e))
                 }
 
                 return debtAccount;
@@ -232,7 +227,7 @@ export default class RecordService {
      * @method fetch_by_criteria
      * @param {Object} criteria
      */
-    fetch_by_criteria = async (criteria = {}) => {
+    fetch_by_criteria = async (criteria = {}, use_and = true) => {
 
         const {
             limit,
@@ -253,15 +248,15 @@ export default class RecordService {
         let sql_2;
 
         if (this.fetch_sql) {
-            sql_2 = `${this.fetch_sql} ${keys.length ? 'WHERE ': ''}` + keys.map(a => a + ' = ?').join(',') + limitText + offsetText
+            sql_2 = `${this.fetch_sql} ${keys.length ? 'WHERE ': ''}` + keys.map(a => a + ' = ?').join(use_and ? ' AND ' : ' OR ') + limitText + offsetText
         }
 
-        const sql = sql_2 || (keys.length ? `SELECT * FROM ${table_name} WHERE ` + keys.map(a => a + ' = ?').join(',') + limitText + offsetText : `SELECT * FROM ${table_name} ` + limitText + offsetText);
+        const sql = sql_2 || (keys.length ? `SELECT * FROM ${table_name} WHERE ` + keys.map(a => a + ' = ?').join(use_and ? ' AND ' : ' OR ') + limitText + offsetText : `SELECT * FROM ${table_name} ` + limitText + offsetText);
         const result = await query(sql, vals);
 
         return {
             success: !!result,
-            message: `Fetched ${result.length} rows`,
+            message: `Fetched ${result?.length||0} rows`,
             details: result
         };
     }

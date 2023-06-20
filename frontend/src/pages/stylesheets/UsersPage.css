@@ -1,0 +1,34 @@
+.wrapper {
+    width: 550px;
+    min-height: 500px;
+}
+
+#progress-bar
+
+.search-field {
+    margin: 15px;
+}
+
+
+.section {
+    margin-top: 15px;
+    display: none;
+    border: 1px solid var(--border-color);
+    border-radius: 0.7rem;
+    padding: 15px;
+}
+
+.section.active {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.section.active .next-button {
+    align-self: end
+}
+
+.section.active .previous-button {
+    align-self: start
+}

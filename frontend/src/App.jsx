@@ -31,9 +31,12 @@ const ForbiddenPage = lazy(() => import('./pages/ForbiddenPage.jsx'));
 const LoadingPage = lazy(() => import('./pages/LoadingPage'));
 const ErrorPage = lazy(() => import('./pages/ErrorPage'));
 
+
 const ServiceDesk = lazy(() => import('./pages/ServiceDesk'));
 const SpecificDebtAccountPage = lazy(() => import('./pages/SpecificDebtAccountPage'));
 const DebtAccounts = lazy(() => import('./pages/DebtAccounts'));
+
+const UsersPage = lazy(() => import('./pages/UsersPage'));
 const SpecificUserProfilePage = lazy(() => import('./pages/SpecificUserProfilePage'));
 
 const SpecificVoterPage = lazy(() => import('./pages/VotingPages/SpecificVoterPage'));
@@ -198,6 +201,7 @@ function App() {
                     <Route path='/feedback_logs/archive' element={isLoggedIn ? <FeedbackLogsPage archive /> : <LoginPage />} exact />
                     <Route path='/feedback_logs/:feedback_log_id' element={isLoggedIn ? <SpecificFeedbackLogPage /> : <LoginPage />} exact />
 
+                    <Route path='/users' element={isLoggedIn ? <UsersPage /> : <LoginPage />} exact />
                     <Route path='/users/:user_id' element={isLoggedIn ? <SpecificUserProfilePage /> : <LoginPage />} exact />
 
                     <Route path='/debt-accounts' element={<Navigate to="/debt_accounts" replace />} />

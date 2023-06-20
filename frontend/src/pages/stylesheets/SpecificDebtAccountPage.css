@@ -1,0 +1,12 @@
+.profile-section {
+    border: 1px solid var(--border-color);
+    margin: 1rem;
+    padding: 1rem;
+    border-radius: 0.7rem;
+}
+
+.profile-sections-wrapper {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}

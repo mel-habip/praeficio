@@ -16,6 +16,7 @@ export default function LoginPage() {
     const { setIsLoggedIn, setAccessToken } = useContext(IsLoggedInContext);
 
     const [clickedType, setClickedType] = useState('');
+    const [forgotPassModalOpen, setForgotPassModalOpen] = useState(false);
 
     const [formValues, setFormValues] = useState({});
     const [errors, setErrors] = useState({});
@@ -103,9 +104,22 @@ export default function LoginPage() {
 
                         <Row justify="space-between">
 
-                            <Checkbox> <Text size={14}>Remember me</Text> </Checkbox>
+                            <Checkbox defaultSelected > <Text size={14}>Remember me</Text> </Checkbox>
 
-                            {clickedType === 'login' ? <Text size={14}>Forgot password?</Text> : ''}
+                            {clickedType === 'login' ? <Text style={{cursor: 'pointer', textDecoration: 'underline'}} aria-haspopup onClick={() => setForgotPassModalOpen(true)} size={14}>Forgot password?</Text> : ''}
+
+                            <Modal
+                                closeButton
+                                blur
+                                aria-labelledby="modal-title"
+                                open={forgotPassModalOpen}
+                                onClose={() => { setForgotPassModalOpen(false) }}
+                            >
+                                <Modal.Body>
+                                    <Text >Please relax, take a deep breath and try to remember your password.</Text>
+                                    <Button color="primary" shadow onClick={() => setForgotPassModalOpen(false)}>Okay Thanks!</Button>
+                                </Modal.Body>
+                            </Modal>
 
                         </Row>
                         {clickedType === 'login' ? <>

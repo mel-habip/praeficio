@@ -16,6 +16,8 @@ import CustomizedDropdown from '../fields/CustomizedDropdown';
 import { Button, Card, Modal, Spacer, Text, Input, Grid, Row, Textarea, Loading, Badge, Dropdown, Tooltip } from '@nextui-org/react';
 
 export default function DebtAccounts() {
+    document.title = `Praeficio | Debt Accounts`;
+
     const { setIsLoggedIn, user } = useContext(IsLoggedInContext);
 
     const handleError = useHandleError();
@@ -71,11 +73,11 @@ function DebtAccountCard({ details }) {
                 <Card.Body >
                     <div style={{ width: '100%', height: '100$', display: 'flex', 'justifyContent': 'flex-start', }}>
                         <Text size={21} color="darkgray" css={{ ml: 0, flexBasis: '60%' }}>
-                            #{details.name}
+                            {details.name}
                         </Text>
                         <Spacer x={0.5} />
                         <Text h4 color="white" css={{ mt: 0 }}>
-                            {details.borrower_username} owes {details.lender_username} the amount of {(details.amount || 0).toLocaleString('en-CA', { style: 'currency', currency: 'CAD' })}
+                            {details.borrower_username} owes {details.lender_username} the amount of {(details.balance || 0).toLocaleString('en-CA', { style: 'currency', currency: 'CAD' })}
                         </Text>
                     </div>
                     <div className="debt-account-card-metadata" style={{ textAlign: 'left', width: '100%', paddingLeft: '45px' }} >

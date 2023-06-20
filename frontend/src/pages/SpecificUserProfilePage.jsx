@@ -10,14 +10,15 @@ import IsLoggedInContext from '../contexts/IsLoggedInContext';
 import axios from 'axios';
 
 import { CustomButton } from '../fields/CustomButton';
-import CustomizedDropdown from '../fields/CustomizedDropdown';
 import useHandleError from '../utils/handleError';
+import LoadingPage from './LoadingPage';
 
 export default function SpecificUserProfilePage() {
     const { setIsLoggedIn, user, setUser } = useContext(IsLoggedInContext);
 
     const { user_id } = useParams();
-
+    document.title = `Praeficio | User #${user_id}`;
+    
     const already_added = useMemo(() => !!user?.friendships?.find(frnd => [frnd.user_1_id, frnd.user_2_id].includes(parseInt(user_id))), [user?.friendships, user_id]);
 
     //validate their discovery token
@@ -115,23 +116,25 @@ function OtherUserPage({ already_added = false, user_id }) {
         if (!token && !already_added) return;
         axios.get(`${process.env.REACT_APP_API_LINK}/users/${user_id}?discovery_token=${token}`).then(response => {
             if (response.status === 200) {
-                setViewedUserDetails(response.data);
+                setViewedUserDetails({ ...response.data, already_added });
             } else {
                 console.warn('fetch', response);
             }
         }).catch(handleError);
     }, [user_id, token]);
 
-    return (<>
-        {!token && !already_added && <DiscoveryTokenEntryModal setToken={setToken} />}
+    if ((token || already_added) && !viewedUserDetails) return <LoadingPage />
 
-        {already_added ? <CustomButton disabled >Added ✔️</CustomButton> : <CustomButton onClick={() => {
+    return (<>
+        {!token && !viewedUserDetails.already_added && <DiscoveryTokenEntryModal setToken={setToken} />}
+
+        {viewedUserDetails.already_added ? <CustomButton disabled >Added ✔️</CustomButton> : <CustomButton onClick={() => {
             axios.post(`${process.env.REACT_APP_API_LINK}/friendships`, {
                 user_id,
                 discovery_token: token
             }).then(response => {
                 if (response.status === 201) {
-                    already_added = true
+                    setViewedUserDetails(p => ({ ...p, already_added: true }));
                 } else {
                     console.warn('fetch', response);
                 }

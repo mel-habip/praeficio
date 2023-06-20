@@ -38,3 +38,15 @@
     background: transparent;
     border: none;
 }
+
+.word-list-add-button:hover {
+  background: grey;
+}
+
+.word-list-add-button {
+  border-radius: 50%;
+  background: none;
+  text-align: center;
+  border:none;
+  aspect-ratio: 1;
+}

@@ -18,7 +18,7 @@ export default function RandomizerPage() {
             {isLoggedIn ? <NavMenu /> : <Button
                 css={{ width: '4rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white', position: 'fixed', left: '0%', top: '0%', margin: '1rem' }}
                 onPress={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"} /></Button>}
-            <WordListField style={{ maxWidth: '400px' }} onListChange={v => setOptions(v)}>Enter your values here and hit "Enter" to detect</WordListField>
+            <WordListField style={{ maxWidth: '400px', border: '1px solid var(--border-color)', padding: '20px' }} onListChange={v => setOptions(v)}>Type your values here and hit "Enter" to save</WordListField>
             <br />
             <br />
             <br />
@@ -96,7 +96,7 @@ function OptionsDisplay({ options }) {
                 ))}
             </div>
             {/* <p>Highlighted Option: {highlightedOption}</p> */}
-            <Button onPress={startAnimation}>Start Animation</Button>
+            <Button shadow bordered onPress={startAnimation}>Start Animation</Button>
             {inProgress && <Loading />}
         </div>
     );
