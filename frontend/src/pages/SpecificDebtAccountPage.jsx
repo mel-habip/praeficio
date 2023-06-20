@@ -5,6 +5,7 @@ import './stylesheets/SpecificDebtAccountPage.css';
 import NavMenu from '../components/NavMenu';
 import useHandleError from '../utils/handleError';
 import IsLoggedInContext from '../contexts/IsLoggedInContext';
+import LanguageContext from '../contexts/LanguageContext';
 import LoadingPage from './LoadingPage';
 import axios from 'axios';
 import { Button, Modal, Input, Tooltip, Table, Textarea, useAsyncList, useCollator, Loading, Text, Checkbox } from '@nextui-org/react';
@@ -18,9 +19,36 @@ import dollarFormatter from '../utils/dollarFormatter.js';
 
 const CurrencyInputField = lazy(() => import('../fields/CurrencyInputField.jsx'));
 
+const dictionary = {
+    borrower: {
+        en: 'Borrower',
+        fr: 'Emprunteur'
+    },
+    lender: {
+        en: 'Lender',
+        fr: 'Prêteur'
+    },
+    created_on: {
+        en: 'Created on',
+        fr: 'Date de création'
+    },
+    current_balance: {
+        en: 'Current balance',
+        fr: 'Solde actuel'
+    },
+    trans_add_by: {
+        en: 'Transactions added by',
+        fr: 'Transactions ajoutées par'
+    },
+    both: {
+        en: 'Both',
+        fr: 'Les deux'
+    }
+}
+
 export default function SpecificDebtAccountPage() {
     const { user } = useContext(IsLoggedInContext);
-
+    const { language } = useContext(LanguageContext);
     const { debt_account_id } = useParams();
 
     //validate that user belongs to this account or is dev_
@@ -59,15 +87,15 @@ export default function SpecificDebtAccountPage() {
             <div>
                 <h2>{accountDetails.name}</h2>
                 <p style={{ border: '1px solid white', padding: '15px', borderRadius: '0.7rem', marginBottom: '15px' }} >
-                    Borrower: {accountDetails.borrower_username}
+                    {dictionary.borrower[language]}: {accountDetails.borrower_username}
                     <br />
-                    Lender: {accountDetails.lender_username}
+                    {dictionary.lender[language]}: {accountDetails.lender_username}
                     <br />
-                    Created On: {accountDetails.created_on?.slice(0, 10)}
+                    {dictionary.created_on[language]}: {accountDetails.created_on?.slice(0, 10)}
                     <br />
-                    Current balance: {dollarFormatter(accountDetails.balance)}
+                    {dictionary.current_balance[language]}: {dollarFormatter(accountDetails.balance)}
                     <br />
-                    Transactions Added By: {accountDetails.who_can_add_transactions}
+                    {dictionary.trans_add_by[language]}: {dictionary[accountDetails.who_can_add_transactions]?.[language] || ' - '}
                     <br />
                     Insight: A total of {accountDetails.statistics?.number_of_transactions} transactions are distributed amongst {accountDetails.statistics?.number_of_unique_headers} sources
                 </p>
@@ -143,7 +171,7 @@ function CreateTransactionModalWithButton({ setAccountDetails }) {
                 <Text size={14} > Please enter the ticket information below </Text>
             </Modal.Header>
             <Modal.Body>
-                <pre>{JSON.stringify(formData, null, 2)}</pre>
+                {/* <pre>{JSON.stringify(formData, null, 2)}</pre> */}
                 <br />
                 <Input underlined clearable color="primary" labelPlaceholder='Transaction Name' onChange={e => setFormData(p => ({ ...p, header: e.target.value }))} />
                 <br />
