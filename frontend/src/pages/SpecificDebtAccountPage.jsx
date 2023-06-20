@@ -50,6 +50,7 @@ export default function SpecificDebtAccountPage() {
     const { user } = useContext(IsLoggedInContext);
     const { language } = useContext(LanguageContext);
     const { debt_account_id } = useParams();
+    document.title = `Praeficio | Debt Account #${debt_account_id}`;
 
     //validate that user belongs to this account or is dev_
 
@@ -93,7 +94,7 @@ export default function SpecificDebtAccountPage() {
                     <br />
                     {dictionary.created_on[language]}: {accountDetails.created_on?.slice(0, 10)}
                     <br />
-                    {dictionary.current_balance[language]}: {dollarFormatter(accountDetails.balance)}
+                    {dictionary.current_balance[language]}: <strong style={{color: accountDetails.balance > 0 ? 'orange': 'green'}} >{dollarFormatter(accountDetails.balance)}</strong> 
                     <br />
                     {dictionary.trans_add_by[language]}: {dictionary[accountDetails.who_can_add_transactions]?.[language] || ' - '}
                     <br />

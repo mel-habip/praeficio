@@ -61,6 +61,7 @@ const dictionary = {
 };
 
 export default function UsersPage() {
+    document.title = `Praeficio | Users`;
     const { language } = useContext(LanguageContext);
     const [pageOpen, setPageOpen] = useState(1);
     const next = () => setPageOpen(p => p >= 3 ? 3 : p + 1) || setError('');

@@ -10,14 +10,15 @@ import IsLoggedInContext from '../contexts/IsLoggedInContext';
 import axios from 'axios';
 
 import { CustomButton } from '../fields/CustomButton';
-import CustomizedDropdown from '../fields/CustomizedDropdown';
 import useHandleError from '../utils/handleError';
+import LoadingPage from './LoadingPage';
 
 export default function SpecificUserProfilePage() {
     const { setIsLoggedIn, user, setUser } = useContext(IsLoggedInContext);
 
     const { user_id } = useParams();
-
+    document.title = `Praeficio | User #${user_id}`;
+    
     const already_added = useMemo(() => !!user?.friendships?.find(frnd => [frnd.user_1_id, frnd.user_2_id].includes(parseInt(user_id))), [user?.friendships, user_id]);
 
     //validate their discovery token
@@ -121,6 +122,8 @@ function OtherUserPage({ already_added = false, user_id }) {
             }
         }).catch(handleError);
     }, [user_id, token]);
+
+    if ((token || already_added) && !viewedUserDetails) return <LoadingPage />
 
     return (<>
         {!token && !viewedUserDetails.already_added && <DiscoveryTokenEntryModal setToken={setToken} />}
