@@ -101,7 +101,34 @@ apiRouter.post('/search', authenticateToken, async (req, res) => { //TODO: Consi
 });
 
 apiRouter.get('/my_ip', async (req, res) => {
-    return res.status(200).send(`<h1>Your IP address --> ${JSON.stringify(req.custom_ip)} <h1/>`);
+    return res.status(200).send(`<body>
+    <style>
+        h1 {
+            color: pink;
+            text-align: center;
+        }
+        
+        .stroked {
+            top: 50%;
+            font-size: larger;
+            position: relative;
+            color: white;
+            background-color: white;
+            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+        }
+
+        body {
+            background: grey;
+            x-overflow: hidden;
+            y-overflow: hidden;
+            scroll: hidden;
+        }
+    </style>
+
+    <div class="stroked">
+        <h1>Your IP address > > ${JSON.stringify(req.custom_ip)} </h1>
+    </div>
+</body>`);
 });
 
 export default apiRouter;

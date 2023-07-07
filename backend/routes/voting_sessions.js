@@ -12,8 +12,55 @@ import validateAndSanitizeBodyParts from '../jobs/validateAndSanitizeBodyParts.j
 import generateTemporaryPassword from '../utils/generateTemporaryPassword.js';
 import votingSessionsCache from '../stores/votingSessionsCache.js';
 
+import getCombinations from '../utils/getCombinations.js';
+
+import sortAlphabetically from '../utils/sortAlphabetically.js';
+
+import ExtendedMap from '../utils/ExtendedMap.js';
+
 const sessionHelper = new VotingSessionService();
 const voteHelper = new VoteService();
+
+function generateInsights(scoreList) {
+    const insights = [];
+
+    const [first, second, third, fourth = ['', 0], ...rest] = scoreList;
+
+    if (!first || !second || !third) return insights;
+
+    const emptyOptions = rest.filter(x => !x[1]);
+
+    if (emptyOptions.length === 1 && rest.length > 2) {
+        insights.push(`The combination ${emptyOptions[0][0]} is noticeably less popular than the rest.`);
+    } else if (emptyOptions.length === 2 && rest.length > 3) {
+        insights.push(`The combinations ${emptyOptions[0][0]} and ${emptyOptions[1][0]} are noticeably less popular than the rest.`);
+    }
+
+    /**
+     * SCENARIOS
+     * S1 --> first > second > third 
+     * S2 --> first > second = third
+     * S3 --> first = second > third
+     * S4 --> first = second = third
+     */
+
+    if (first[1] > second[1]) {
+        insights.push(`The combination ${first[0]} is more popular than the rest.`); //S1 & S2
+        if (second[1] === third[1] && third[1] > fourth[1]) {
+            insights.push(`The combinations ${second[0]} and ${third[0]} are more popular than the rest.`); //S2
+        } else if (second[1] > third[1]) {
+            insights.push(`The combination ${second[0]} is more popular than the remaining combinations.`); //S1 part 2
+        }
+    } else if (first[1] === second[1]) { //S3 & S4
+        if (second[1] === third[1] && third[1] > fourth[1]) {
+            insights.push(`The combinations ${first[0]} , ${second[0]} and ${third[0]} are equally popular and are more popular than the rest.`); //S4
+        } else if (second[1] > third[1]) { //S3
+            insights.push(`The combinations ${first[0]} , ${second[0]} are equally popular and are more popular than the remaining combinations.`); //S
+        }
+    }
+    return insights;
+}
+
 
 //get all sessions user has access to
 votingSessionRouter.get('/', authenticateToken, async (req, res) => {
@@ -111,7 +158,7 @@ votingSessionRouter.post('/', authenticateToken, validateAndSanitizeBodyParts({
         } = details;
 
         filteredDetails.method = method;
-        filteredDetails.options = details.options;
+        filteredDetails.options = sortAlphabetically(details.options);
 
         if (['simple'].includes(method)) {
             //nothing
@@ -174,7 +221,7 @@ votingSessionRouter.post(`/:voting_session_id/complete`, authenticateToken, asyn
     /**
      * @type {{}}
      */
-    const candidatesMap = voting_session.details.options.reduce((acc, cur) => ({
+    const candidatesHash = voting_session.details.options.reduce((acc, cur) => ({
         ...acc,
         [cur]: 0
     }), {});
@@ -200,15 +247,15 @@ votingSessionRouter.post(`/:voting_session_id/complete`, authenticateToken, asyn
         }
 
         candidates.forEach(candidate => {
-            if (!candidatesMap.hasOwnProperty(candidate)) {
+            if (!candidatesHash.hasOwnProperty(candidate)) {
                 errors.push(`Candidate "${candidate}" has received a vote but is not part of the voting session`);
             } else {
-                candidatesMap[candidate]++;
+                candidatesHash[candidate]++;
             }
         });
     });
 
-    const votesEntries = Object.entries(candidatesMap);
+    const votesEntries = Object.entries(candidatesHash);
 
     let current_best = ['indeterminate', 0];
 
@@ -359,7 +406,7 @@ votingSessionRouter.put(`/:voting_session_id`, authenticateToken, validateAndSan
     }
 
     if (req.body.options) {
-        updatedDetails.options = Array.from(new Set(req.body.options));
+        updatedDetails.options = sortAlphabetically(Array.from(new Set(req.body.options)));
     }
 
     if (req.body.number_of_votes && !isNaN(req.body.number_of_votes)) {
@@ -435,7 +482,7 @@ votingSessionRouter.post(`/:voting_session_id/vote`, validateAndSanitizeBodyPart
 
     //validate that each selection is a valid option
     {
-        const candidatesMap = session_options.reduce((acc, cur) => ({
+        const candidatesHash = session_options.reduce((acc, cur) => ({
             ...acc,
             [cur]: true
         }), {});
@@ -443,7 +490,7 @@ votingSessionRouter.post(`/:voting_session_id/vote`, validateAndSanitizeBodyPart
         let invalid_selections = [];
 
         req.body.selections.forEach(select => {
-            if (!candidatesMap[select]) invalid_selections.push(select);
+            if (!candidatesHash[select]) invalid_selections.push(select);
         });
 
         if (invalid_selections.length) return res.status(400).json({
@@ -471,7 +518,7 @@ votingSessionRouter.post(`/:voting_session_id/vote`, validateAndSanitizeBodyPart
         voting_session_id: req.params.voting_session_id,
         voter_ip_address: req.ip || req.custom_ip,
         details: JSON.stringify({
-            selections: req.body.selections
+            selections: sortAlphabetically(req.body.selections)
         }),
     });
 
@@ -535,7 +582,7 @@ votingSessionRouter.put(`/:voting_session_id/vote/:vote_id`, validateAndSanitize
 
     //validate that each selection is a valid option
     {
-        const candidatesMap = session_options.reduce((acc, cur) => ({
+        const candidatesHash = session_options.reduce((acc, cur) => ({
             ...acc,
             [cur]: true
         }), {});
@@ -543,7 +590,7 @@ votingSessionRouter.put(`/:voting_session_id/vote/:vote_id`, validateAndSanitize
         let invalid_selections = [];
 
         req.body.selections.forEach(select => {
-            if (!candidatesMap[select]) invalid_selections.push(select);
+            if (!candidatesHash[select]) invalid_selections.push(select);
         });
 
         if (invalid_selections.length) return res.status(400).json({
@@ -569,7 +616,7 @@ votingSessionRouter.put(`/:voting_session_id/vote/:vote_id`, validateAndSanitize
 
     const update_result = await voteHelper.update_single({
         details: JSON.stringify({
-            selections: req.body.selections
+            selections: sortAlphabetically(req.body.selections)
         }),
     }, req.params.vote_id);
 
@@ -582,13 +629,13 @@ votingSessionRouter.put(`/:voting_session_id/vote/:vote_id`, validateAndSanitize
         ...voting_session,
         votes: voting_session.votes.map(vote => vote.vote_id === parseInt(req.params.vote_id) ? {
             ...vote,
-            selections: req.body.selections
+            selections: sortAlphabetically(req.body.selections)
         } : vote)
     });
 
     return res.status(200).json({
         success: true,
-        selections: req.body.selections
+        selections: sortAlphabetically(req.body.selections)
     });
 });
 
@@ -765,10 +812,13 @@ votingSessionRouter.get(`/:voting_session_id`, authenticateToken, async (req, re
     /**
      * @type {{}}
      */
-    const candidatesMap = voting_session.details.options.reduce((acc, cur) => ({
+    const candidatesHash = voting_session.details.options.reduce((acc, cur) => ({
         ...acc,
         [cur]: 0
     }), {});
+
+    const delimiter = '-';
+    const candidatesCombinationsMap = getCombinations(voting_session.details.options).reduce((acc, cur) => acc.set(cur.join(delimiter), 0), new ExtendedMap()); //this is a map where the keys are the combinations of options, starting at a value of 1
 
     const errors = [];
 
@@ -785,12 +835,19 @@ votingSessionRouter.get(`/:voting_session_id`, authenticateToken, async (req, re
         tie_parts: new Set(),
     };
 
+
     allVotes?.forEach((vote, ix) => {
         const candidates = vote.details?.selections;
 
         if (!candidates || !candidates.length) {
             errors.push(`A vote is missing candidates`);
             return;
+        }
+
+        const t = candidates.join(delimiter);
+
+        if (candidatesCombinationsMap.has(t)) {
+            candidatesCombinationsMap.increment(t);
         }
 
         if (candidates.length > 1 && voting_session.details.method === 'simple') {
@@ -806,12 +863,12 @@ votingSessionRouter.get(`/:voting_session_id`, authenticateToken, async (req, re
 
         candidates.forEach(candidate => {
             result.total_votes++;
-            if (!candidatesMap.hasOwnProperty(candidate)) {
+            if (!candidatesHash.hasOwnProperty(candidate)) {
                 errors.push(`Candidate "${candidate}" has received a vote but is not part of the voting session`);
                 voting_session.votes[ix].has_error = true;
             } else {
                 result.valid_votes++;
-                candidatesMap[candidate]++;
+                candidatesHash[candidate]++;
             }
         });
         delete voting_session.votes[ix].details; //removing so that the admin doesn't see what the IP addresses voted for
@@ -823,7 +880,7 @@ votingSessionRouter.get(`/:voting_session_id`, authenticateToken, async (req, re
         voting_session.votes[ix].voter_ip_address = sectionsOfIp.join('.');
     });
 
-    const votesEntries = Object.entries(candidatesMap);
+    const votesEntries = Object.entries(candidatesHash);
 
     let current_best = ['indeterminate', 0];
 
@@ -848,11 +905,15 @@ votingSessionRouter.get(`/:voting_session_id`, authenticateToken, async (req, re
     result.winner_percentage = ((current_best[1] / result.valid_votes) * 100).toFixed(2) + '%';
     result.valid_votes_percentage = (result.valid_votes === result.total_votes) ? '100%' : ((result.valid_votes / result.total_votes) * 100).toFixed(2) + '%';
 
+    const sortedScores = [...candidatesCombinationsMap.entries()].sort((a, b) => b[1] - a[1])
+    const insights = generateInsights(sortedScores);
+
     return res.status(200).json({
         ...voting_session,
         result,
-        distribution: candidatesMap,
+        distribution: candidatesHash,
         errors,
+        insights,
     });
 });
 

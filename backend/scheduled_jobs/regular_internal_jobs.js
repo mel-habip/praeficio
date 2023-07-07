@@ -54,7 +54,7 @@ const REGULAR_SCHEDULED_JOBS = {
         }
     }),
     annual: cron.schedule("1 4 1 1 *", async function () { //at 4:01am
-        log(`Quarterly triggered`);
+        log(`Annual triggered`);
         let annual_tasks = await query(`Select * FROM alerts WHERE frequency = 'ANNUAL' AND active = TRUE`);
         for await (const task of annual_tasks) {
             job_handler(task);
@@ -62,7 +62,7 @@ const REGULAR_SCHEDULED_JOBS = {
         }
     }),
     semi_annual: cron.schedule("1 5 1 1,7 *", async function () { //at 5:01am
-        log(`Quarterly triggered`);
+        log(`Semi annual triggered`);
         let semi_annual_tasks = await query(`Select * FROM alerts WHERE frequency = 'SEMI_ANNUAL' AND active = TRUE`);
         for await (const task of semi_annual_tasks) {
             job_handler(task);
@@ -70,7 +70,7 @@ const REGULAR_SCHEDULED_JOBS = {
         }
     }),
     minutely: cron.schedule("* * * * *", async function () { //at 5:01am
-        // log(`minutely triggered`);
+        // log(`Minutely triggered`);
 
         // let quarterly_tasks = await query(`Select * FROM alerts WHERE frequency = 'SEMI_ANNUAL' AND active = TRUE`);
         // for await (const task of quarterly_tasks) {

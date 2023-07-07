@@ -29,7 +29,8 @@ const cleaner = (str) => {
 };
 
 const handleKeyPress = (e) => {
-    if (e.keyCode === 13) {
+    console.log(e.keyCode);
+    if (e.keyCode === 13 || e.keyCode === 9) {
         e.target.blur();
         //Write you validation logic here
     }
@@ -48,7 +49,9 @@ const CurrencyInputField = ({ maskOptions, ...inputProps }) => {
         {...inputProps}
         onBlur={e => {
             e.target.value = cleaner(e.target.value);
+            return e;
         }}
+        onChange={(e) => { (inputProps.onChange || function () { })(cleaner(e.target.value)); console.log(e.target.value) }}
         onKeyDown={handleKeyPress}
     />
 }

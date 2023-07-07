@@ -1,5 +1,6 @@
 import React, { useState, useContext, lazy, Suspense, useRef, useEffect } from 'react';
 import { animateScroll, scroller, Element } from 'react-scroll';
+import { Link } from "react-router-dom";
 import ThemeContext from '../contexts/ThemeContext';
 import LanguageContext from '../contexts/LanguageContext';
 import IsLoggedInContext from '../contexts/IsLoggedInContext';
@@ -13,8 +14,9 @@ import './stylesheets/PublicPage.css';
 import is_valid_email from '../utils/is_valid_email';
 
 import { CustomButton } from '../fields/CustomButton';
+import CustomizedDropdown from '../fields/CustomizedDropdown';
 
-import { Button, Modal, Spacer, Text, Badge, Tooltip, Input, Textarea, Loading } from '@nextui-org/react';
+import { Button, Modal, Spacer, Text, Badge, Tooltip, Input, Textarea, Loading, Progress, Card } from '@nextui-org/react';
 
 import videoBg1 from '../media/sparkly_world_video.mp4';
 
@@ -30,7 +32,7 @@ const referralCodes = {
     rise_of_raj: 'Raj Sangha'
 };
 
-const sentences = {
+const dictionary = {
     being_built: {
         en: 'this site is being built',
         fr: 'ce site est en construction'
@@ -110,6 +112,50 @@ const sentences = {
     back_up: {
         en: 'Back Up',
         fr: 'Remonter'
+    },
+    next: {
+        en: 'Next',
+        fr: 'Suivante'
+    },
+    submit: {
+        en: 'Submit',
+        fr: 'Soumettre'
+    },
+    previous: {
+        en: 'Previous',
+        fr: 'Précédente'
+    },
+    page_1_header: {
+        en: 'Your business',
+        fr: 'Votre entreprise'
+    },
+    page_2_header: {
+        en: 'Contact Info',
+        fr: 'Coordonnées'
+    },
+    page_3_header: {
+        en: 'Your current state',
+        fr: 'Votre état actuel'
+    },
+    page_4_header: {
+        en: 'Your dream state',
+        fr: 'Votre état de rêve'
+    },
+    page_5_header: {
+        en: 'Additional business details',
+        fr: "Détails supplémentaires sur l'entreprise"
+    },
+    business_name: {
+        en: 'Business Name',
+        fr: "Nom de l'entreprise"
+    },
+    business_type: {
+        en: 'Business Type',
+        fr: "Type d'entreprise"
+    },
+    please_describe: {
+        en: 'Please describe',
+        fr: "Décrivez s'il vous plait"
     }
 };
 
@@ -205,31 +251,31 @@ export default function PublicPage() {
                             <Tooltip content={language !== 'fr' ? "Veuillez noter que notre capacité en français est limitée." : ""} placement="leftEnd" color="invert" >
                                 <CustomButton onClick={toggleLanguage} style={{ textTransform: 'uppercase' }} >  {language}  <i className="fa-solid fa-arrows-spin" /></CustomButton>
                             </Tooltip>
-                            <CustomButton buttonStyle="btn--transparent" to='/newsletters?show_latest=true'> {sentences.newsletter[language]} <i className="fa-solid fa-angles-right" /></CustomButton>
+                            <CustomButton buttonStyle="btn--transparent" to='/newsletters?show_latest=true'> {dictionary.newsletter?.[language]} <i className="fa-solid fa-angles-right" /></CustomButton>
 
-                            <CustomButton buttonStyle="btn--transparent" to='/#about_us' onClick={scrollToAboutUs}> {sentences.about_us[language]} <i className="fa-solid fa-angles-right" /></CustomButton>
+                            <CustomButton buttonStyle="btn--transparent" to='/#about_us' onClick={scrollToAboutUs}> {dictionary.about_us?.[language]} <i className="fa-solid fa-angles-right" /></CustomButton>
 
-                            <CustomButton buttonStyle="btn--transparent" to='/#contact_us' onClick={scrollToContactUs} > {sentences.contact_us[language]} <i className="fa-solid fa-angles-right" /></CustomButton>
+                            <CustomButton buttonStyle="btn--transparent" to='/#contact_us' onClick={scrollToContactUs} > {dictionary.contact_us?.[language]} <i className="fa-solid fa-angles-right" /></CustomButton>
 
-                            <CustomButton buttonStyle="btn--transparent" to='/login'> {sentences.login[language]} <i className="fa-solid fa-angles-right" /></CustomButton>
+                            <CustomButton buttonStyle="btn--transparent" to='/login'> {dictionary.login?.[language]} <i className="fa-solid fa-angles-right" /></CustomButton>
 
                         </div>
 
-                        {!!referrer && <Text em size={13} css={{ color: 'lightgreen' }} >{sentences.referral_part_1[language]} {`"${referrer}"`}, {sentences.referral_part_2[language]}</Text>}
+                        {!!referrer && <Text em size={13} css={{ color: 'lightgreen' }} >{dictionary.referral_part_1?.[language]} {`"${referrer}"`}, {dictionary.referral_part_2?.[language]}</Text>}
 
-                        {!showIncompletePage ? <h3><i className="fa-solid fa-person-digging"></i>&nbsp;{sentences.being_built[language]}&nbsp;<i className="fa-solid fa-screwdriver-wrench"></i></h3> : <>
+                        {!showIncompletePage ? <h3><i className="fa-solid fa-person-digging"></i>&nbsp;{dictionary.being_built?.[language]}&nbsp;<i className="fa-solid fa-screwdriver-wrench"></i></h3> : <>
 
-                            <h2>{sentences.slogan3[language]}</h2>
+                            <h2>{dictionary.slogan3?.[language]}</h2>
                             <div>
                                 <Badge color="warning" >faster</Badge>
                                 <Badge color="success">safer</Badge>
                                 <Badge color="secondary">better</Badge>
                             </div>
                             <br />
-                            <h4>{sentences.slogan1[language]}</h4>
+                            <h4>{dictionary.slogan1?.[language]}</h4>
 
-                            <h3>{sentences.slogan2[language]}</h3>
-                            <CustomButton buttonStyle="btn--secondary" onClick={() => setSubscriptionModalOpen(true)} >{sentences.subscribe_button[language]}</CustomButton>
+                            <h3>{dictionary.slogan2?.[language]}</h3>
+                            <CustomButton buttonStyle="btn--secondary" onClick={() => setSubscriptionModalOpen(true)} >{dictionary.subscribe_button?.[language]}</CustomButton>
                         </>}
 
                         <SubscriptionModal isOpen={subscriptionModalOpen} setIsOpen={setSubscriptionModalOpen} language={language} />
@@ -241,8 +287,8 @@ export default function PublicPage() {
             <Element id="about_us" name="chapter2">
                 <section style={{ backgroundColor: 'grey' }} ref={pageAboutUs} className="chapter">
                     <div className="nav-button-wrapper">
-                        <CustomButton buttonStyle="btn--secondary" to='/#main_section' onClick={scrollToMainSection} > {sentences.back_up[language]} <i className="fa-solid fa-angles-up" /></CustomButton>
-                        <CustomButton buttonStyle="btn--secondary" to='/#contact_us' onClick={scrollToContactUs} > {sentences.contact_us[language]} <i className="fa-solid fa-angles-down" /></CustomButton>
+                        <CustomButton buttonStyle="btn--secondary" to='/#main_section' onClick={scrollToMainSection} > {dictionary.back_up?.[language]} <i className="fa-solid fa-angles-up" /></CustomButton>
+                        <CustomButton buttonStyle="btn--secondary" to='/#contact_us' onClick={scrollToContactUs} > {dictionary.contact_us?.[language]} <i className="fa-solid fa-angles-down" /></CustomButton>
                     </div>
                     <div className="section-contents" >
                         <h1>
@@ -254,50 +300,61 @@ export default function PublicPage() {
                         <p>well, to be honest we don't know that either : | </p>
                         <br />
                         <p> shall we find that out together?</p>
+                        <br />
+                        <h2>The Team</h2>
+                        <div className="team-cards" >
+                            <Card css={{ $$cardColor: '$colors$primary', width: '300px' }} isHoverable isPressable>
+                                <Link to='/mel-habip'>
+                                    <h3 style={{ color: 'var(--text-primary)' }}>Mel Habip</h3>
+                                    <h4 style={{ color: 'var(--text-primary)' }}>Founder & Developer</h4>
+
+                                    <Link>Add me as a friend! </Link>
+                                </Link>
+                            </Card>
+                            <Card css={{ $$cardColor: '$colors$primary', width: '300px' }} isHoverable isPressable>
+                                <Link to='/hira-qazi'>
+                                    <h3 style={{ color: 'var(--text-primary)' }}>Hira Qazi</h3>
+                                    <h4 style={{ color: 'var(--text-primary)' }}>Head of Sales & Operations</h4>
+
+                                    <Link>Add me as a friend! </Link>
+                                </Link>
+                            </Card>
+                            <Card css={{ $$cardColor: '$colors$primary', width: '300px' }} isHoverable isPressable>
+                                <Link to='/tiddles'>
+                                    <h3 style={{ color: 'var(--text-primary)' }}>Mr. Tiddles</h3>
+                                    <h4 style={{ color: 'var(--text-primary)' }}>Chief Emotional Support Officer</h4>
+                                </Link>
+                            </Card>
+                        </div>
                     </div>
                 </section>
             </Element>
 
             <Element id="contact_us" name="chapter3">
-                <section style={{ backgroundColor: 'lightgrey', display: 'flex', flexDirection: 'column', alignItems: 'center' }} ref={pageContactUs} className="chapter">
+                <section style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} ref={pageContactUs} className="chapter">
                     <div className="nav-button-wrapper">
-                        <CustomButton buttonStyle="btn--secondary" to='/#about_us' onClick={scrollToAboutUs} > {sentences.about_us[language]} <i className="fa-solid fa-angle-up" /></CustomButton>
-                        <CustomButton buttonStyle="btn--secondary" to='/#main_section' onClick={scrollToMainSection} > {sentences.back_up[language]} <i className="fa-solid fa-angles-up" /></CustomButton>
+                        <CustomButton buttonStyle="btn--secondary" to='/#about_us' onClick={scrollToAboutUs} > {dictionary.about_us?.[language]} <i className="fa-solid fa-angle-up" /></CustomButton>
+                        <CustomButton buttonStyle="btn--secondary" to='/#main_section' onClick={scrollToMainSection} > {dictionary.back_up?.[language]} <i className="fa-solid fa-angles-up" /></CustomButton>
                     </div>
-                    <div className="section-contents" >
-                        <h1> Oh what great lengths to reach us 👉👈</h1>
-                        <Spacer y={2} />
-                        <form style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', maxWidth: '900px', minWidth: '450px', alignSelf: 'center', gap: '25px', backgroundColor: 'darkgrey', padding: '20px', borderRadius: '0.75rem' }}  >
-                            <p>Just some small details please</p>
-                            <Input width={"80%"} labelPlaceholder="Name" required />
-                            <div style={{ width: '100%' }} >
-                                <Input width={"80%"} labelPlaceholder="Email" type="email" />
-                                <p>either ☝️ or 👇 </p>
-                                <Input width={"80%"} labelPlaceholder="Telephone" type="tel" />
-                            </div>
-                            <Textarea width={"80%"} label="What are you interested in?" minRows={4} placeholder='Please describe' />
-                            {/* add the same length based detection here */}
-                            <Button>Send</Button>
-                        </form>
-                        <br />
-                        <div style={{
-                            borderRadius: '0.75rem', backgroundColor: 'var(--background-color)', fontWeight: 'normal', textAlign: 'left', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', maxWidth: '700px', minWidth: '450px', alignSelf: 'center', gap: '25px', padding: '20px',
-                        }} >
-                            <p>Public Links: </p>
-                            <ul>
-                                <li> <CustomButton to="/newsLetters">NewsLetters <i className="fa-regular fa-newspaper" /></CustomButton> </li>
-                                <li> <CustomButton to="/tic-tac-toe">Tic-Tac-Toe <i className="fa-solid fa-table-cells-large" /></CustomButton> </li>
-                                <li> <CustomButton to="/randomizer">Randomizer <i className="fa-solid fa-dice" /></CustomButton> </li>
-                                <li> <CustomButton to="/notes">Quick notes <i className="fa-solid fa-pencil" /></CustomButton> </li>
-                                <li> <CustomButton to="/404">An awesome 404 page 😬</CustomButton> </li>
-                                <li> <CustomButton to="/403">An awesome 403 page ✋</CustomButton> </li>
-                                <li> <CustomButton to="/500">An awesome error page 💀</CustomButton> </li>
-                            </ul>
-                        </div>
+                    <h1> Oh what great lengths to reach us 👉👈</h1>
+                    <ContactForm />
+                    <div style={{
+                        borderRadius: '0.75rem', backgroundColor: 'var(--background-color)', fontWeight: 'normal', textAlign: 'left', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', maxWidth: '700px', minWidth: '450px', alignSelf: 'center', gap: '25px', padding: '20px',
+                    }} >
+                        <p>Public Links: </p>
+                        <ul>
+                            <li> <CustomButton to="/newsLetters">NewsLetters <i className="fa-regular fa-newspaper" /></CustomButton> </li>
+                            <li> <CustomButton to="/tic-tac-toe">Tic-Tac-Toe <i className="fa-solid fa-table-cells-large" /></CustomButton> </li>
+                            <li> <CustomButton to="/randomizer">Randomizer <i className="fa-solid fa-dice" /></CustomButton> </li>
+                            <li> <CustomButton to="/notes">Quick notes <i className="fa-solid fa-pencil" /></CustomButton> </li>
+                            <li> <CustomButton to="/404">An awesome 404 page 😬</CustomButton> </li>
+                            <li> <CustomButton to="/403">An awesome 403 page ✋</CustomButton> </li>
+                            <li> <CustomButton to="/500">An awesome error page 💀</CustomButton> </li>
+                        </ul>
                     </div>
                 </section>
             </Element>
-        </main>
+        </main >
     </>);
 };
 
@@ -318,7 +375,7 @@ function SubscriptionModal({ isOpen, setIsOpen, language }) {
         width='700px'
     >
         <Modal.Header>
-            <Text size={14} css={{ 'text-align': 'center' }}>{sentences.join_header[language]}</Text>
+            <Text size={14} css={{ 'text-align': 'center' }}>{dictionary.join_header?.[language]}</Text>
         </Modal.Header>
         <Modal.Body>
             <Suspense fallback="1 sec" >
@@ -349,9 +406,9 @@ function SubscriptionModal({ isOpen, setIsOpen, language }) {
                 }} >
                 {/* <pre>{JSON.stringify(subscriptionInfo, null, 2)}</pre> */}
                 <Input
-                    labelLeft={sentences.your_name[language]}
+                    labelLeft={dictionary.your_name?.[language]}
                     aria-label='name for subscription'
-                    placeholder={sentences.name_example[language]}
+                    placeholder={dictionary.name_example?.[language]}
                     color="primary"
                     helperColor='error'
                     helperText={errorTexts.name || ''}
@@ -365,8 +422,8 @@ function SubscriptionModal({ isOpen, setIsOpen, language }) {
                     color="primary"
                     underlined
                     aria-label='email for subscription'
-                    labelLeft={sentences.your_email[language]}
-                    placeholder={sentences.email_example[language]}
+                    labelLeft={dictionary.your_email?.[language]}
+                    placeholder={dictionary.email_example?.[language]}
                     css={{ mt: '15px', mb: '10px' }}
                     helperColor='error'
                     required
@@ -376,7 +433,7 @@ function SubscriptionModal({ isOpen, setIsOpen, language }) {
                 />
                 <Spacer y={0.5} />
                 {language !== 'en' && <Text size={12} em css={{ 'text-align': 'center', mb: '10px' }}>Veuillez noter que notre capacité en français est limitée.</Text>}
-                <Text size={12} em css={{ 'text-align': 'center' }}>{sentences.unsubscribe_note[language]}</Text>
+                <Text size={12} em css={{ 'text-align': 'center' }}>{dictionary.unsubscribe_note?.[language]}</Text>
                 <Button
                     type="submit"
                     css={{ width: '50%', alignSelf: 'center' }}
@@ -399,8 +456,75 @@ function SubscriptionModal({ isOpen, setIsOpen, language }) {
                             errs.name = 'Too long';
                         }
                         setErrorTexts(errs);
-                    }}>{sentences.sign_up[language]}</Button>
+                    }}>{dictionary.sign_up?.[language]}</Button>
             </form>
         </Modal.Body>
     </Modal >);
 };
+
+function ContactForm() {
+    const [formData, setFormData] = useState({});
+    const { language } = useContext(LanguageContext);
+    const [page, setPage] = useState(1);
+
+    const [error, setError] = useState('');
+
+    const next = () => setPage(p => p > 5 ? 6 : p + 1) || setError('');
+    const previous = () => setPage(p => p === 1 ? 1 : p - 1) || setError('');
+    const submit = () => {};
+
+    const Buttons = ({ nextCondition, isSubmit=false }) => <div className="buttons-group">
+        <Button auto shadow bordered color="warning" className="previous-button" onPress={previous}> {dictionary.previous?.[language]} </Button>
+        {isSubmit ? <Button disabled={!nextCondition} auto shadow bordered color="primary" className="submit-button" onPress={submit}> {dictionary.submit?.[language]} </Button> : <Button disabled={!nextCondition} auto shadow bordered color="primary" className="next-button" onPress={next}> {dictionary.next?.[language]} </Button> } 
+        
+    </div>
+
+    return (<>
+
+        <div className="wrapper" >
+            <Progress color="gradient" shadow value={(18 * page) + 1} />
+
+            <div className={`section ${page === 1 ? 'active' : ''}`} >
+                <h4>{dictionary.page_1_header?.[language]}</h4>
+                <Button disabled={!formData.business_name && !formData.business_type} auto shadow bordered color="primary" className="next-button" onPress={next}> {dictionary.next?.[language]} </Button>
+                <br />
+                <Input width="400px" onChange={e => setFormData(prev => ({ ...prev, business_name: e.target.value }))} className="search-field2" underlined clearable color="primary" labelPlaceholder={dictionary.business_name?.[language]} />
+                <br />
+                <Input width="400px" onChange={e => setFormData(prev => ({ ...prev, business_type: e.target.value }))} className="search-fiel2d" underlined clearable color="primary" labelPlaceholder={dictionary.business_type?.[language]} />
+            </div>
+
+            <div className={`section ${page === 2 ? 'active' : ''}`} >
+                <Buttons nextCondition={formData.contact_name && (formData.contact_email || formData.contact_phone)} />
+                <h4>{dictionary.page_2_header?.[language]}</h4>
+                <Input width={"80%"} underlined clearable color="primary" onChange={e => setFormData(prev => ({ ...prev, contact_name: e.target.value }))} labelPlaceholder="Your Name" />
+                <br />
+                <div style={{ width: '100%' }} >
+                    <Input width={"80%"} underlined clearable color="primary" onChange={e => setFormData(prev => ({ ...prev, contact_email: e.target.value }))} labelPlaceholder="Email" type="email" />
+                    <p>either ☝️ or 👇 (or both)</p>
+                    <Input width={"80%"} underlined clearable color="primary" onChange={e => setFormData(prev => ({ ...prev, contact_phone: e.target.value }))} labelPlaceholder="Telephone" type="tel" />
+                </div>
+            </div>
+
+            <div className={`section ${page === 3 ? 'active' : ''}`} >
+                <Buttons nextCondition={formData.current_state?.length > 20} />
+                <h4>{dictionary.page_3_header?.[language]}</h4>
+                <Textarea width="400px" onChange={e => setFormData(prev => ({ ...prev, current_state: e.target.value }))} className="search-field" underlined clearable color="primary" labelPlaceholder={dictionary.please_describe?.[language]} />
+            </div>
+
+            <div className={`section ${page === 4 ? 'active' : ''}`} >
+                <Buttons nextCondition={formData.dream_state?.length > 30} />
+                <h4>{dictionary.page_4_header?.[language]}</h4>
+                <Textarea width="400px" onChange={e => setFormData(prev => ({ ...prev, dream_state: e.target.value }))} className="search-field" underlined clearable color="primary" labelPlaceholder={dictionary.please_describe?.[language]} />
+            </div>
+
+            <div className={`section ${page === 5 ? 'active' : ''}`} >
+                <Buttons nextCondition={false} isSubmit />
+                <h4>{dictionary.page_5_header?.[language]}</h4>
+                <CustomizedDropdown mountDirectly optionsList={[{ key: '0-10', name: '0-10 daily users' }, { key: '10-100', name: '10-100 daily users' }, { key: '100-1000', name: '100-1,000 daily users' }, { key: '1000+', name: '1,000+ daily users' }]} title="Daily Users" />
+                <br />
+                <CustomizedDropdown mountDirectly optionsList={[{ key: 'non-essential', name: 'Non-Essential', description: `A "nice to have"` }, { key: 'supplementary', name: 'Supplementary', description: `Supplements existing system` }, { key: 'replacement', name: 'Replacement', description: `Replacing existing system` }, { key: 'critical', name: 'Critical', description: `Provides critical functionality` }]} title="System Priority" />
+                <br />
+            </div>
+        </div>
+    </>);
+}
