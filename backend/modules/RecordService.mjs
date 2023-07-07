@@ -204,6 +204,11 @@ export default class RecordService {
 
                 return votingSession;
             }
+            case 'Friendship': {
+                const sql = `SELECT F.*, U1.username AS user_1_username, U2.username AS user_2_username FROM friendships F LEFT JOIN users U1 ON (F.user_1_id = U1.user_id) LEFT JOIN users U2 ON (U2.user_id = F.user_2_id) WHERE (F.user_1_id = ? OR F.user_2_id = ?);`;
+                const [friendship] = await query(sql, record_id_1, record_id_2);
+                return friendship;
+            }
             default: {
                 const table_name = this.table_name || recordTypeMap.table_names[this.record_type];
 
@@ -348,7 +353,7 @@ export default class RecordService {
         if (!creation_details || !creation_details?.affectedRows) {
             return {
                 success: false,
-                message: creation_details?.affectedRows ? 'deleted' : 'failed',
+                message: 'failed',
                 details: creation_details
             };
         }
