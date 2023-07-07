@@ -10,7 +10,7 @@ import NavMenu from '../components/NavMenu';
 
 import { CustomButton } from '../fields/CustomButton';
 
-import { Button, Modal, Spacer, Text, Input, Checkbox, Tooltip, Row, Grid, Dropdown, Card } from '@nextui-org/react';
+import { Button, Spacer, Text, Input, Checkbox, Row } from '@nextui-org/react';
 
 import validatePassword from '../utils/validatePassword.mjs';
 
@@ -21,16 +21,15 @@ export default function Settings() {
 
     axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
 
-
-
     return (
         <>
             <NavMenu />
+            <CustomButton to={`/users/${user.id}`} >To my profile <i className="fa-solid fa-angles-right" /></CustomButton>
             <Text h1 css={{ 'margin-top': '4%' }} >{user.first_name ? `${user.first_name}'s` : 'Your'} Settings </Text>
             <hr className="line-primary"></hr>
             <ToDoCategoriesSection />
             <hr className="line-primary"></hr>
-            <h2>Purchases? go here...</h2>
+            <h2>Purchases? coming soon</h2>
             <hr className="line-primary"></hr>
 
 
@@ -78,7 +77,7 @@ function ToDoCategoriesSection() {
                 <CustomButton
                     buttonStyle="btn--transparent"
                     onClick={() => { setCurrentCategories(removeIndex(currentCategories, index)) }} >
-                    <i className="fa-regular fa-trash-can"/>
+                    <i className="fa-regular fa-trash-can" />
                 </CustomButton>
             </Row>)}
         <Row css={{ 'margin-top': '15px' }}>
@@ -264,7 +263,7 @@ function PersonalSettingsSection({ user, setUser }) {
                         }).then(response => {
                             if (response.status === 200) {
                                 setUser({
-                                    ...user, 
+                                    ...user,
                                     first_name: firstName,
                                     last_name: lastName,
                                     email,

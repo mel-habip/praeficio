@@ -337,7 +337,7 @@ function FeedbackItemUpdateModal({ is_open, set_is_open, updateCachedItems, setI
                                 console.log(response);
                             }
                         });
-                    }}> Update Feedback Item&nbsp;&nbsp;<i className="fa-regular fa-pen-to-square"></i> </Button>
+                    }}> Update Feedback Item&nbsp;&nbsp;<i className="fa-regular fa-pen-to-square"/> </Button>
             </Modal.Body>
         </Modal>);
 };

@@ -31,6 +31,9 @@ const ForbiddenPage = lazy(() => import('./pages/ForbiddenPage.jsx'));
 const LoadingPage = lazy(() => import('./pages/LoadingPage'));
 const ErrorPage = lazy(() => import('./pages/ErrorPage'));
 
+const MelPage = lazy(() => import('./pages/PersonalPages/Mel'));
+const HiraPage = lazy(() => import('./pages/PersonalPages/Hira'));
+const TiddlesPage = lazy(() => import('./pages/PersonalPages/Tiddles'));
 
 const ServiceDesk = lazy(() => import('./pages/ServiceDesk'));
 const SpecificDebtAccountPage = lazy(() => import('./pages/SpecificDebtAccountPage'));
@@ -160,6 +163,15 @@ function App() {
                     <Route path='/' element={<PublicPage />} exact />
                     <Route path='/company' element={<Navigate to="/" replace />} />
                     <Route path='/home' element={<Navigate to="/portal" replace />} />
+
+                    <Route path='/mel' element={<Navigate to="/mel-habip" replace />} />
+                    <Route path='/habip' element={<Navigate to="/mel-habip" replace />} />
+                    <Route path='/mel-habip' element={<MelPage />} exact />
+                    <Route path='/hira' element={<Navigate to="/hira-qazi" replace />} />
+                    <Route path='/qazi' element={<Navigate to="/hira-qazi" replace />} />
+                    <Route path='/hira-qazi' element={<HiraPage />} exact />
+                    <Route path='/tiddles' element={<TiddlesPage />} exact />
+
                     <Route path='/portal' element={isLoggedIn ? <Portal /> : <LoginPage />} exact />
                     <Route path='/newsletters' element={<Newsletters />} exact />
                     <Route path='/notes' element={<QuickNotes />} exact />

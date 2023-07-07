@@ -119,6 +119,11 @@ function UsersTable({ usersList = [] }) {
             sortable: true
         },
         {
+            key: 'discovery_token',
+            label: 'Discovery Token',
+            sortable: true
+        },
+        {
             key: "to_do_categories",
             label: "To-Do Categories"
         },

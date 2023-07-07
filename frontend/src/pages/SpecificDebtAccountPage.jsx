@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect, Suspense, lazy } from 'react';
+import { useState, useContext, useEffect, Suspense, lazy, useCallback } from 'react';
 import { useParams } from 'react-router-dom'
 import './stylesheets/SpecificDebtAccountPage.css';
 
@@ -8,16 +8,19 @@ import IsLoggedInContext from '../contexts/IsLoggedInContext';
 import LanguageContext from '../contexts/LanguageContext';
 import LoadingPage from './LoadingPage';
 import axios from 'axios';
-import { Button, Modal, Input, Tooltip, Table, Textarea, useAsyncList, useCollator, Loading, Text, Checkbox } from '@nextui-org/react';
+import { Button, Modal, Input, Tooltip, Table, Textarea, useAsyncList, useCollator, Loading, Text, Checkbox, Spacer } from '@nextui-org/react';
 
 import { CustomButton } from '../fields/CustomButton';
 import CustomizedDropdown from '../fields/CustomizedDropdown';
+import todaysDate from '../utils/todaysDate.js';
 
 import SearchableTable from '../components/SearchableTable';
 
 import dollarFormatter from '../utils/dollarFormatter.js';
+import DeletionModal from '../components/DeletionModal.jsx';
 
 const CurrencyInputField = lazy(() => import('../fields/CurrencyInputField.jsx'));
+const ConfirmationModal = lazy(() => import('../components/ConfirmationModal.jsx'));
 
 const dictionary = {
     borrower: {
@@ -43,8 +46,36 @@ const dictionary = {
     both: {
         en: 'Both',
         fr: 'Les deux'
+    },
+    posted_on: {
+        en: 'Posted on',
+        fr: 'Posté sur'
+    },
+    entered_by: {
+        en: 'Entered by',
+        fr: 'Entré par'
+    },
+    amount: {
+        en: 'Amount',
+        fr: 'Montant'
+    },
+    last_update: {
+        en: 'Last update',
+        fr: 'Dernière mise à jour'
+    },
+    header: {
+        en: 'Header',
+        fr: 'Titre'
+    },
+    details: {
+        en: 'Details',
+        fr: 'Détails'
+    },
+    create_new: {
+        en: 'Create new',
+        fr: 'Créer un nouveau'
     }
-}
+};
 
 export default function SpecificDebtAccountPage() {
     const { user } = useContext(IsLoggedInContext);
@@ -65,6 +96,14 @@ export default function SpecificDebtAccountPage() {
             }
         }).catch(handleError);
     }, [debt_account_id]);
+
+    const addTransaction = useCallback((newItem) => {
+        setAccountDetails(p => ({ ...p, transactions: p.transactions.concat(newItem) }));
+    }, [accountDetails]);
+
+    const removeTransaction = useCallback((id) => {
+        setAccountDetails(p => ({ ...p, transactions: p.transactions.filter(t => t.debt_account_transaction_id !== id) }));
+    }, [accountDetails]);
 
     if (!user.use_beta_features) return (
         <>
@@ -94,21 +133,31 @@ export default function SpecificDebtAccountPage() {
                     <br />
                     {dictionary.created_on[language]}: {accountDetails.created_on?.slice(0, 10)}
                     <br />
-                    {dictionary.current_balance[language]}: <strong style={{color: accountDetails.balance > 0 ? 'orange': 'green'}} >{dollarFormatter(accountDetails.balance)}</strong> 
+                    {dictionary.current_balance[language]}: <strong style={{ color: accountDetails.balance > 0 ? 'orange' : 'green' }} >{dollarFormatter(accountDetails.balance)}</strong>
                     <br />
                     {dictionary.trans_add_by[language]}: {dictionary[accountDetails.who_can_add_transactions]?.[language] || ' - '}
                     <br />
                     Insight: A total of {accountDetails.statistics?.number_of_transactions} transactions are distributed amongst {accountDetails.statistics?.number_of_unique_headers} sources
                 </p>
             </div>
-            {!!accountDetails?.transactions?.length ? <TransactionsTable data={accountDetails.transactions} /> : <h3>No transactions yet! Use the button below to add one</h3>}
+            {!!accountDetails?.transactions?.length ? <TransactionsTable data={accountDetails} setData={setAccountDetails} removeTransaction={removeTransaction} /> : <h3>No transactions yet! Use the button below to add one</h3>}
             <br />
-            <CreateTransactionModalWithButton setAccountDetails={setAccountDetails} />
+            <CreateTransactionModalWithButton addTransaction={addTransaction} />
         </>
     );
 }
 
-function TransactionsTable({ data = [] }) {
+function TransactionsTable({ data = { transactions: [] }, removeTransaction }) {
+
+    const [innerList, setInnerList] = useState(data.transactions);
+
+    useEffect(() => {
+        setInnerList(data.transactions)
+    }, [data]);
+
+    const { language } = useContext(LanguageContext);
+
+    const [deletionModalOpen, setDeletionModalOpen] = useState(false);
 
     const columns = [
         {
@@ -119,47 +168,69 @@ function TransactionsTable({ data = [] }) {
         },
         {
             key: "header",
-            label: "Header",
+            label: dictionary.header[language],
             sortable: true
+        },
+        {
+            key: "details",
+            label: dictionary.details[language],
+            sortable: true,
+            formatter: val => val?.length > 25 ? val.slice(0, 25) + '...' : val || ' - '
         },
         {
             key: "posted_on",
-            label: "Posted On",
-            sortable: true
+            label: dictionary.posted_on[language],
+            sortable: true,
+            formatter: v => v?.slice(0, 10) || ' - '
         },
         {
             key: 'entered_by_username',
-            label: 'Entered By',
+            label: dictionary.entered_by[language],
             sortable: true,
         },
         {
             key: "updated_on",
-            label: "Last Update",
+            label: dictionary.last_update[language],
             sortable: true
         },
         {
             key: 'amount',
-            label: 'Amount',
+            label: dictionary.amount[language],
             sortable: true,
             formatter: dollarFormatter,
         },
         {
             key: "actions",
             label: "Actions",
-            children: <></>
+            children: self => <>
+                <CustomButton onClick={() => console.log(self)} > <i className="fa-regular fa-pen-to-square" /> </CustomButton>
+                <CustomButton onClick={() => console.log(self) || setDeletionModalOpen(self)} > <i className="fa-regular fa-trash-can" /> </CustomButton>
+            </>
         }
     ];
 
-    return <SearchableTable columns={columns} data={data} />
+    return <>
+        <SearchableTable columns={columns} data={innerList} />
+        <DeletionModal
+            endPoint={`debt_account_transactions/${deletionModalOpen?.debt_account_transaction_id}`}
+            selfOpen={!!deletionModalOpen}
+            setSelfOpen={setDeletionModalOpen}
+            outerUpdater={() => removeTransaction(deletionModalOpen.debt_account_transaction_id)}
+        />
+    </>
 };
 
-function CreateTransactionModalWithButton({ setAccountDetails }) {
+function CreateTransactionModalWithButton({ editData = {}, addTransaction }) {
+    const { language } = useContext(LanguageContext);
     const [modalOpen, setModalOpen] = useState(false);
     const { debt_account_id } = useParams();
-    const [formData, setFormData] = useState({});
+    const [formData, setFormData] = useState({
+        posted_on: todaysDate(),
+        ...editData,
+    });
 
     return <>
-        <Button shadow onPress={() => setModalOpen(true)}> Create new &nbsp; <i className="fa-regular fa-square-plus" /></Button>
+        <Button shadow onPress={() => setModalOpen(true)}> {dictionary.create_new[language]} &nbsp; <i className="fa-regular fa-square-plus" /></Button>
         <Modal
             closeButton
             blur
@@ -169,24 +240,25 @@ function CreateTransactionModalWithButton({ setAccountDetails }) {
             scroll
         >
             <Modal.Header css={{ 'z-index': 86, position: 'relative' }}>
-                <Text size={14} > Please enter the ticket information below </Text>
+                <Text size={14} > Please enter the information below </Text>
             </Modal.Header>
             <Modal.Body>
                 {/* <pre>{JSON.stringify(formData, null, 2)}</pre> */}
-                <br />
-                <Input underlined clearable color="primary" labelPlaceholder='Transaction Name' onChange={e => setFormData(p => ({ ...p, header: e.target.value }))} />
-                <br />
+                <Spacer y={0.4} />
+                <Input initialValue={formData.header} underlined clearable color="primary" labelPlaceholder='Transaction Name' onChange={e => setFormData(p => ({ ...p, header: e.target.value }))} />
+                <Spacer y={0.4} />
 
-                <Textarea underlined minRows={1.5} labelPlaceholder='Details' onChange={e => setFormData(p => ({ ...p, details: e.target.value }))} />
+                <Textarea initialValue={formData.details} underlined minRows={1.5} labelPlaceholder='Details' onChange={e => setFormData(p => ({ ...p, details: e.target.value }))} />
 
                 <Suspense fallback="..." >
                     <CurrencyInputField
-                        onChange={e => setFormData(p => ({ ...p, amount: e.target.value }))}
+                        onChange={v => setFormData(p => ({ ...p, amount: v }))}
                         placeholder="Amount ($)" />
                 </Suspense>
-                <br />
+                <Spacer y={1} />
+                <Checkbox defaultSelected={formData.is_payment} onChange={e => setFormData(p => ({ ...p, is_payment: e }))} > <p>Is this a payment?</p></Checkbox>
 
-                <Input underlined defaultValue={Date.now()} color="primary" label='Posted On' type="date" onChange={e => setFormData(p => ({ ...p, posted_on: e.target.value }))} />
+                <Input underlined initialValue={formData.posted_on} color="primary" label='Posted On' type="date" onChange={e => setFormData(p => ({ ...p, posted_on: e.target.value }))} />
 
                 <Button
                     shadow
@@ -194,10 +266,11 @@ function CreateTransactionModalWithButton({ setAccountDetails }) {
                         axios.post(`${process.env.REACT_APP_API_LINK}/debt_account_transactions/`, {
                             debt_account_id: parseInt(debt_account_id),
                             ...formData,
-                            amount: parseFloat(formData.amount.slice(1)),
+                            amount: parseFloat(formData.amount.slice(1).replaceAll(',', '')) * (formData.is_payment ? -1 : 1),
                         }).then(response => {
                             if (response.status === 201) {
-                                setAccountDetails(p => ({ ...p, transactions: p.transactions.concat(response.data) }));
+                                // setAccountDetails(p => ({ ...p, transactions: p.transactions.concat(response.data) }));
+                                addTransaction(response.data);
                                 setModalOpen(false);
                             } else {
                                 console.warn('fetch', response);

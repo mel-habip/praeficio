@@ -17,3 +17,47 @@
     top: 1%;
     right: 1%;
 }
+
+.wrapper {
+    width: 550px;
+    min-height: 500px;
+    margin-top: 2rem;
+}
+
+.search-field {
+    margin: 15px;
+}
+
+.section {
+    margin-top: 15px;
+    display: none;
+    border: 1px solid var(--border-color);
+    border-radius: 0.7rem;
+    padding: 15px;
+}
+
+.section.active, .team-cards {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.team-cards {
+    gap: 1rem;
+}
+
+.buttons-group {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.section.active .next-button {
+    align-self: end
+}
+
+.section.active .previous-button {
+    align-self: start
+}

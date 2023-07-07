@@ -3,7 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { Dropdown } from '@nextui-org/react';
 
 
-
+/**
+ * @param {Array<{key: string, name: string}>} optionsList the list of options where key is the value stored and name is the label shown in the UI
+ */
 export default function CustomizedDropdown({ optionsList = [], outerUpdater = () => { }, default_value, title = '', selectionMode = 'single', disabled = false, trigger, disallowEmptySelection = true, mountDirectly = false, showDisabledColor = false }) {
 
     const optionsMap = optionsList.reduce((acc, cur) => ({ ...acc, [cur.key]: cur }), {});

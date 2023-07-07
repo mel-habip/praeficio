@@ -33,7 +33,7 @@ userRouter.get('/', authenticateToken, async (req, res) => {
 
     const include_deactivated = Boolean(req.query.include_deactivated);
 
-    let sql = `SELECT user_id, username, last_name, first_name, email, permissions, active, deleted, use_beta_features, created_on, updated_on, to_do_categories FROM users`;
+    let sql = `SELECT user_id, username, last_name, first_name, email, permissions, active, deleted, use_beta_features, created_on, updated_on, to_do_categories, discovery_token FROM users`;
 
     if (!include_deactivated) sql += ` WHERE active = 1;`;
 

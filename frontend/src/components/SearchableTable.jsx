@@ -21,9 +21,9 @@ export default function SearchableTable({ data = [], columns = [] }) {
 
     const formattersMap = {}, childrenMap = {};
 
-    columns.forEach(clm => {
+    columns.forEach((clm, index) => {
         if (typeof clm.formatter === 'function') formattersMap[clm.key] = clm.formatter;
-        if (clm.children) childrenMap[clm.key] = clm.children;
+        if (typeof clm.children === 'function') childrenMap[clm.key] = clm.children;
     });
 
     let load = async ({ filterText }) => ({
@@ -107,10 +107,9 @@ export default function SearchableTable({ data = [], columns = [] }) {
                 {item => (
                     <Table.Row key={item[primary_key]} className="position-table-row" css={{ padding: '0px', margin: '0px' }}>
                         {columnKey => {
-                            console.log(item);
                             if (columnKey === 'actions') {
                                 return <Table.Cell css={{ 'padding': '0px', wordWrap: 'break-word', margin: '0px' }} >
-                                    {childrenMap[columnKey] || <></>}
+                                    {childrenMap[columnKey](item) || <></>}
                                 </Table.Cell>
                             } else if (typeof formattersMap[columnKey] === 'function') {
                                 return <Table.Cell> {formattersMap[columnKey](item[columnKey]) || ' - '} </Table.Cell>
