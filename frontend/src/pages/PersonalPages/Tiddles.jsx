@@ -1,6 +1,7 @@
 import NavMenu from '../../components/NavMenu';
 
 export default function TiddlesPage() {
+    document.title = `Praeficio | Mr. Tiddles`;
 
 
     return (

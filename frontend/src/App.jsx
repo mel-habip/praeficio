@@ -23,6 +23,7 @@ const Workspaces = lazy(() => import('./pages/Workspaces.jsx'));
 const ToDos = lazy(() => import('./pages/ToDos.jsx'));
 const TestZone = lazy(() => import('./pages/TestZone'));
 const TicTacToePage = lazy(() => import('./pages/TicTacToePage.jsx'));
+const MonthlyPlanner = lazy(() => import('./pages/MonthlyPlanner.jsx'));
 const RandomizerPage = lazy(() => import('./pages/RandomizerPage.jsx'));
 const FeedbackLogsPage = lazy(() => import('./pages/FeedbackLogsPage.jsx'));
 const SpecificFeedbackLogPage = lazy(() => import('./pages/SpecificFeedbackLogPage.jsx'));
@@ -171,7 +172,6 @@ function App() {
                     <Route path='/qazi' element={<Navigate to="/hira-qazi" replace />} />
                     <Route path='/hira-qazi' element={<HiraPage />} exact />
                     <Route path='/tiddles' element={<TiddlesPage />} exact />
-
                     <Route path='/portal' element={isLoggedIn ? <Portal /> : <LoginPage />} exact />
                     <Route path='/newsletters' element={<Newsletters />} exact />
                     <Route path='/notes' element={<QuickNotes />} exact />
@@ -185,6 +185,7 @@ function App() {
                     <Route path='/positions' element={isLoggedIn ? <Positions /> : <LoginPage />} exact />
                     <Route path='/alerts' element={isLoggedIn ? <Alerts /> : <LoginPage />} exact />
                     <Route path='/service_desk' element={isLoggedIn ? <ServiceDesk /> : <LoginPage />} exact />
+                    <Route path='/monthly_planner' element={isLoggedIn ? <MonthlyPlanner /> : <LoginPage />} exact />
 
                     <Route path="/tic-tac-toe" element={<Navigate to="/tictactoe" replace />} />
                     <Route path="/tic_tac_toe" element={<Navigate to="/tictactoe" replace />} />

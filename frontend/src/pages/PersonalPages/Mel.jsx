@@ -2,7 +2,7 @@
 import NavMenu from '../../components/NavMenu';
 
 export default function MelPage() {
-
+    document.title = `Praeficio | Mel Habip`;
 
     return (
         <>

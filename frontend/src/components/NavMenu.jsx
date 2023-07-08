@@ -143,6 +143,10 @@ function NavMenu({ show_language_button_externally = false }) {
             en: 'to set over any thing (as officer, superintendent, leader, etc.), to place in authority over, place at the head, appoint to the command of',
             fr: 'placer sur toute chose (comme officier, surintendant, chef, etc.), placer en autorité sur, placer à la tête, nommer au commandement de'
         },
+        monthly_planner: {
+            en: 'Monthly Planner',
+            fr: 'Planificateur Mensuel'
+        },
     };
 
     return (
@@ -310,6 +314,15 @@ function NavMenu({ show_language_button_externally = false }) {
                             onClick={closeNavMenu}
                         >
                             {dictionary.notes_page[language]}&nbsp; <i className="fa-solid fa-pencil" />
+                        </Link>
+                    </li>
+                    <li className='nav-item'>
+                        <Link
+                            to='/monthly_planner'
+                            className='nav-links'
+                            onClick={closeNavMenu}
+                        >
+                            {dictionary.monthly_planner[language]}&nbsp; <i className="fa-regular fa-calendar-days" />
                         </Link>
                     </li>
                 </ul>

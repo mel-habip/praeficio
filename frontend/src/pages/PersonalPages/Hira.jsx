@@ -2,7 +2,7 @@
 import NavMenu from '../../components/NavMenu';
 
 export default function HiraPage() {
-
+    document.title = `Praeficio | Hira Qazi`;
 
     return (
         <>
