@@ -81,6 +81,15 @@ userRouter.post('/search', authenticateToken, validateAndSanitizeBodyParts({
             deleted: false,
             active: true,
         });
+        if (!result.details?.length) {
+            //no exact match found, do similarity based check
+            const sql = `SELECT username, user_id, discovery_token, created_on FROM users WHERE deleted = FALSE AND active = TRUE AND username LIKE ?`;
+            const substring = `%${req.body.username}%`;
+            result = {
+                details: await query(sql, substring),
+            };
+            result.success = !!result.details;
+        }
     } else if (req.body.discovery_token) {
         result = await helper.fetch_by_criteria({
             discovery_token: req.body.discovery_token,
@@ -89,16 +98,18 @@ userRouter.post('/search', authenticateToken, validateAndSanitizeBodyParts({
         });
     }
 
+
     if (!result?.success) return res.status(422).json({
         message: result?.message || `Something went wrong`,
     });
+
 
     return res.status(200).json({
         message: `Found ${result.details.length} results`,
         data: result.details.map(user => ({
             username: user.username,
             user_id: user.user_id,
-            discovery_token: (user.discovery_token === req.body.discovery_token || req.user.is_dev || !!req.user.friendships.find(frnd => [frnd.user_1_id, frnd.user_2_id].includes(user.id)) ) ? user.discovery_token : undefined,
+            discovery_token: (user.discovery_token === req.body.discovery_token || req.user.is_dev || !!req.user.friendships.find(frnd => [frnd.user_1_id, frnd.user_2_id].includes(user.id))) ? user.discovery_token : undefined,
             created_on: user.created_on,
         }))
     });
