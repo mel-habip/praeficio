@@ -389,13 +389,13 @@ CREATE TABLE business_contact_forms (
     deleted BOOLEAN DEFAULT FALSE,
     details JSON, -- a hash detailing who they voted for
     updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
-    created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE tiddles_photos (
 	photo_id INT PRIMARY KEY AUTO_INCREMENT,
     description VARCHAR(400),
-    url VARCHAR(200) NOT NULL,
+    file_name VARCHAR(200) NOT NULL,
     tags VARCHAR (400),
     updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP

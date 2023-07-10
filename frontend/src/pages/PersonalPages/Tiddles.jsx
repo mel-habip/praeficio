@@ -1,22 +1,34 @@
 import NavMenu from '../../components/NavMenu';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Modal, Text, Button } from '@nextui-org/react';
+import CustomButton from '../../fields/CustomButton.jsx';
 import axios from 'axios';
 
 export default function TiddlesPage() {
     document.title = `Praeficio | Mr. Tiddles`;
 
     const [uploadModalOpen, setUploadModalOpen] = useState(false);
+    const [imageDetails, setImageDetails] = useState(null);
+
+    const fetchRandom = () => axios.get(`${process.env.REACT_APP_API_LINK}/tiddles/random`).then(res => setImageDetails(res.data));
+
+    useEffect(() => {
+        fetchRandom();
+    }, []);
 
     return (
         <>
             <NavMenu />
             <h1>Hi! I'm Tiddles 👋👋 </h1>
             <h3>This page is still being built ...&nbsp;<i className="fa-solid fa-cat"></i> </h3>
-
+            {/* <pre>{JSON.stringify(imageDetails || {}, null, 1)}</pre> */}
             <h3>This will soon be a gallery page with lots of photos & videos</h3>
-            <Button onPress={() => setUploadModalOpen(true)} >Upload</Button>
-            <Button onPress={() => axios.get(`${process.env.REACT_APP_API_LINK}/tiddles/random`).then(res => console.log(res))} > Fetch a Random photo</Button>
+            {imageDetails && <img src={imageDetails.url} style={{ borderRadius: '1rem', filter: `drop-shadow(0 -10px 4.5rem blue)`, width: '85%', minWidth: '50%', maxWidth: '700px' }} />}
+            <h3>Enjoy a random photo of me on this page in the meantime!</h3>
+
+            <CustomButton style={{ position: 'absolute', top: '10%', right: '5%' }} tooltip='Upload' onClick={() => setUploadModalOpen(true)} ><i className="fa-solid fa-cloud-arrow-up" /></CustomButton>
+
+            <Button onPress={fetchRandom} > Fetch another random photo</Button>
             <UploadModal setSelfOpen={setUploadModalOpen} selfOpen={uploadModalOpen} />
         </>
     )

@@ -17,4 +17,12 @@ export default class TiddlesGalleryService extends RecordService {
 
         return result;
     }
+
+    fetch_all = async (limit = 50) => {
+        const sql = `SELECT * FROM ${this.table_name} LIMIT ${limit}`;
+
+        const results = await query(sql);
+
+        return results;
+    }
 }
