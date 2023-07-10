@@ -1,7 +1,5 @@
 import React, { useContext } from 'react';
-import IsLoggedInContext from '../contexts/IsLoggedInContext';
 import ThemeContext from '../contexts/ThemeContext';
-import { Button } from '@nextui-org/react';
 import { Link } from 'react-router-dom';
 
 import NavMenu from '../components/NavMenu';
@@ -10,15 +8,11 @@ import centerpiece from '../media/gandalf-you-shall-not-pass.gif';
 
 
 export default function ForbiddenPage() {
-  const { isLoggedIn } = useContext(IsLoggedInContext);
   const { isDark, toggleTheme } = useContext(ThemeContext);
 
   return (
     <>
-      {isLoggedIn && <NavMenu></NavMenu>}
-      {!isLoggedIn && <Button
-        css={{ width: '4rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white', position: 'fixed', left: '0%', top: '0%', margin: '1rem' }}
-        onPress={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"}></i></Button>}
+      <NavMenu/>
       <h1>Ah! Sorry bud!</h1>
       <h2>Forbidden: You don't have access to this page 🙁 </h2>
       <h6>(this is a 403 error)</h6>

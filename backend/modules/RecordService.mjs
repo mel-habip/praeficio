@@ -38,7 +38,9 @@ export const recordTypeMap = {
  */
 export default class RecordService {
     constructor(data) {
-        if (data) console.log(`You shouldn't initialize this Class directly.`);
+        if (data !== undefined) console.log(`You shouldn't initialize this Class directly.`);
+
+        this.query = query;
     };
 
     data = {};

@@ -70,7 +70,7 @@ debtAccountTransactionRouter.put('/:debt_account_transaction_id', validateAndSan
 
 //delete a debt account transaction
 debtAccountTransactionRouter.delete('/:debt_account_transaction_id', async (req, res) => {
-
+    
 });
 
 export default debtAccountTransactionRouter;

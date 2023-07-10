@@ -382,6 +382,25 @@ CREATE TABLE votes (
         ON DELETE CASCADE
 );
 
+CREATE TABLE business_contact_forms (
+	business_contact_form_id INT PRIMARY KEY AUTO_INCREMENT,
+	sender_ip_address VARCHAR(40) NOT NULL,
+    stage VARCHAR(100) DEFAULT 'SUBMITTED',
+    deleted BOOLEAN DEFAULT FALSE,
+    details JSON, -- a hash detailing who they voted for
+    updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE tiddles_photos (
+	photo_id INT PRIMARY KEY AUTO_INCREMENT,
+    description VARCHAR(400),
+    file_name VARCHAR(200) NOT NULL,
+    tags VARCHAR (400),
+    updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 SET GLOBAL event_scheduler = ON;
 
 -- soft-deletes inactive users after 3 months
