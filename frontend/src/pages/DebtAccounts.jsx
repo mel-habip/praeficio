@@ -57,9 +57,11 @@ export default function DebtAccounts() {
         <>
             <NavMenu />
             <DebtAccountCreationModalWithButton accountsList={accountsList} setAccountsList={setAccountsList} />
-            {accountsList.map((acct, index) =>
-                <DebtAccountCard key={`${index}-debt-account-card`} details={acct} />
-            )}
+            <div style={{display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem'}} >
+                {accountsList.map((acct, index) =>
+                    <DebtAccountCard key={`${index}-debt-account-card`} details={acct} />
+                )}
+            </div>
         </>
     );
 }

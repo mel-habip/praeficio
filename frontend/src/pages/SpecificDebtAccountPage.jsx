@@ -64,8 +64,8 @@ const dictionary = {
         fr: 'Dernière mise à jour'
     },
     header: {
-        en: 'Header',
-        fr: 'Titre'
+        en: 'Vendor',
+        fr: 'Fournisseur'
     },
     details: {
         en: 'Details',
@@ -98,25 +98,12 @@ export default function SpecificDebtAccountPage() {
     }, [debt_account_id]);
 
     const addTransaction = useCallback((newItem) => {
-        setAccountDetails(p => ({ ...p, transactions: p.transactions.concat(newItem) }));
+        setAccountDetails(p => ({ ...p, balance: p.balance + newItem.amount, transactions: p.transactions.concat(newItem) }));
     }, [accountDetails]);
 
     const removeTransaction = useCallback((id) => {
-        setAccountDetails(p => ({ ...p, transactions: p.transactions.filter(t => t.debt_account_transaction_id !== id) }));
+        setAccountDetails(p => ({ ...p, balance: p.balance - p.transactions.find(t => t.debt_account_transaction_id === id)?.amount || 0, transactions: p.transactions.filter(t => t.debt_account_transaction_id !== id) }));
     }, [accountDetails]);
-
-    if (!user.use_beta_features) return (
-        <>
-            <NavMenu />
-            <h1>DEBT ACCOUNT PAGE HERE</h1>
-            <h2>
-                <i className="fa-solid fa-file-invoice-dollar" />
-                <i className="fa-solid fa-file-invoice-dollar" />
-                <i className="fa-solid fa-file-invoice-dollar" />
-            </h2>
-            <h3>coming soon to a theater near you! ...&nbsp;<i className="fa-solid fa-hand-spock"></i> </h3>
-        </>
-    );
 
     if (!accountDetails) return (<LoadingPage />);
 
@@ -158,6 +145,8 @@ function TransactionsTable({ data = { transactions: [] }, removeTransaction }) {
     const { language } = useContext(LanguageContext);
 
     const [deletionModalOpen, setDeletionModalOpen] = useState(false);
+
+    const [editDetails, setEditDetails] = useState(false);
 
     const columns = [
         {
@@ -203,7 +192,7 @@ function TransactionsTable({ data = { transactions: [] }, removeTransaction }) {
             key: "actions",
             label: "Actions",
             children: self => <>
-                <CustomButton onClick={() => console.log(self)} > <i className="fa-regular fa-pen-to-square" /> </CustomButton>
+                <CustomButton onClick={() => console.log(self) || setEditDetails(self)} > <i className="fa-regular fa-pen-to-square" /> </CustomButton>
                 <CustomButton onClick={() => console.log(self) || setDeletionModalOpen(self)} > <i className="fa-regular fa-trash-can" /> </CustomButton>
             </>
         }
@@ -211,6 +200,8 @@ function TransactionsTable({ data = { transactions: [] }, removeTransaction }) {
 
     return <>
         <SearchableTable columns={columns} data={innerList} />
+        {!!editDetails && <TransactionModal isEdit editData={editDetails} setModalOpen={setEditDetails} />}
+
         <DeletionModal
             endPoint={`debt_account_transactions/${deletionModalOpen?.debt_account_transaction_id}`}
             selfOpen={!!deletionModalOpen}
@@ -223,19 +214,29 @@ function TransactionsTable({ data = { transactions: [] }, removeTransaction }) {
 function CreateTransactionModalWithButton({ editData = {}, addTransaction }) {
     const { language } = useContext(LanguageContext);
     const [modalOpen, setModalOpen] = useState(false);
-    const { debt_account_id } = useParams();
-    const [formData, setFormData] = useState({
-        posted_on: todaysDate(),
-        ...editData,
-    });
 
     return <>
         <Button shadow onPress={() => setModalOpen(true)}> {dictionary.create_new[language]} &nbsp; <i className="fa-regular fa-square-plus" /></Button>
+        {modalOpen && <TransactionModal addTransaction={addTransaction} setModalOpen={setModalOpen} />}
+    </>
+};
+
+function TransactionModal({ isEdit = false, editData = {}, addTransaction, setModalOpen }) {
+    const { language } = useContext(LanguageContext);
+    const { debt_account_id } = useParams();
+    const [formData, setFormData] = useState(isEdit ? {
+        posted_on: todaysDate(),
+        ...editData,
+    } : {
+        posted_on: todaysDate(),
+    });
+
+    return <>
         <Modal
             closeButton
             blur
             aria-labelledby="modal-title"
-            open={modalOpen}
+            open={true}
             onClose={() => setModalOpen(false)}
             scroll
         >
@@ -252,32 +253,37 @@ function CreateTransactionModalWithButton({ editData = {}, addTransaction }) {
 
                 <Suspense fallback="..." >
                     <CurrencyInputField
+                        value={formData.amount || undefined}
                         onChange={v => setFormData(p => ({ ...p, amount: v }))}
                         placeholder="Amount ($)" />
                 </Suspense>
                 <Spacer y={1} />
-                <Checkbox defaultSelected={formData.is_payment} onChange={e => setFormData(p => ({ ...p, is_payment: e }))} > <p>Is this a payment?</p></Checkbox>
+                <Checkbox defaultSelected={formData.is_payment || formData.amount < 0} onChange={e => setFormData(p => ({ ...p, is_payment: e }))} > <p>Is this a payment?</p></Checkbox>
 
-                <Input underlined initialValue={formData.posted_on} color="primary" label='Posted On' type="date" onChange={e => setFormData(p => ({ ...p, posted_on: e.target.value }))} />
+                <Input underlined initialValue={formData.posted_on?.slice(0,10)} color="primary" label='Posted On' type="date" onChange={e => setFormData(p => ({ ...p, posted_on: e.target.value }))} />
 
                 <Button
                     shadow
                     onPress={() => {
-                        axios.post(`${process.env.REACT_APP_API_LINK}/debt_account_transactions/`, {
-                            debt_account_id: parseInt(debt_account_id),
-                            ...formData,
-                            amount: parseFloat(formData.amount.slice(1).replaceAll(',', '')) * (formData.is_payment ? -1 : 1),
-                        }).then(response => {
-                            if (response.status === 201) {
-                                // setAccountDetails(p => ({ ...p, transactions: p.transactions.concat(response.data) }));
-                                addTransaction(response.data);
-                                setModalOpen(false);
-                            } else {
-                                console.warn('fetch', response);
-                            }
-                        }).catch(() => { });
+                        if (isEdit) {
+
+                        } else {
+                            axios.post(`${process.env.REACT_APP_API_LINK}/debt_account_transactions/`, {
+                                debt_account_id: parseInt(debt_account_id),
+                                ...formData,
+                                amount: parseFloat(formData.amount.slice(1).replaceAll(',', '')) * (formData.is_payment ? -1 : 1),
+                            }).then(response => {
+                                if (response.status === 201) {
+                                    // setAccountDetails(p => ({ ...p, transactions: p.transactions.concat(response.data) }));
+                                    addTransaction(response.data);
+                                    setModalOpen(false);
+                                } else {
+                                    console.warn('fetch', response);
+                                }
+                            }).catch(() => { });
+                        }
                     }}
-                > Create &nbsp; <i className="fa-regular fa-square-plus" /> </Button>
+                > {isEdit ? <> Edit &nbsp; <i className="fa-regular fa-pen-to-square" /></> : <> Create &nbsp; <i className="fa-regular fa-square-plus" /></>}  </Button>
             </Modal.Body>
         </Modal>
     </>

@@ -1,4 +1,13 @@
 "use strict"
+
+/**
+ * The /api/ route serves all the functionality that was otherwise not possible to group
+ * such as: 
+ *  - retrieving one's own IP address
+ *  - testing if the server is up
+ *  - 
+ */
+
 import express from 'express';
 const apiRouter = express.Router();
 import emailService from '../jobs/emailService.js';
@@ -11,6 +20,8 @@ import fuzzySearch from '../utils/fuzzy_search.js';
 import {
     recordTypeMap
 } from '../modules/RecordService.mjs';
+
+
 
 const log = console.log;
 
@@ -129,6 +140,12 @@ apiRouter.get('/my_ip', async (req, res) => {
         <h1>Your IP address > > ${JSON.stringify(req.custom_ip)} </h1>
     </div>
 </body>`);
+});
+
+apiRouter.get('/dashboard', authenticateToken, async (req, res) => {
+
+
+
 });
 
 export default apiRouter;
