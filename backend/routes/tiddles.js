@@ -115,7 +115,7 @@ tiddlesRouter.get('/random', async (req, res) => {
         random = await helper.query(`SELECT * FROM ${helper.table_name}`);
         random = random?. [0];
     } else {
-        const last_id_served_to_this_requester = tiddlesRouterCache.get(req.user.ip);
+        const last_id_served_to_this_requester = tiddlesRouterCache.get(req.ip);
 
         while (!random && fetch_counter < 10) {
             fetch_counter++;
@@ -133,7 +133,7 @@ tiddlesRouter.get('/random', async (req, res) => {
     });
 
     //save the last served to that IP in cache to not serve the same one again
-    tiddlesRouterCache.set(req.user.ip, random[helper.primary_key]);
+    tiddlesRouterCache.set(req.ip, random[helper.primary_key]);
 
     random.url = await fetchFromS3(random.file_name);
 
