@@ -271,9 +271,9 @@ userRouter.post('/login', validateAndSanitizeBodyParts({
     username: 'string',
     password: 'string'
 }, ['username', 'password']), async (req, res) => {
-    let sql = `SELECT * FROM users WHERE username = ?`;
+    let sql = `SELECT * FROM users WHERE upper(username) = ?`;
 
-    const [relevantUser] = await query(sql, req.body.username);
+    const [relevantUser] = await query(sql, req.body.username.trim().toUpperCase());
 
     if (!relevantUser || relevantUser?.deleted) {
         return res.status(401).json({
