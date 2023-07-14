@@ -8,7 +8,7 @@ import IsLoggedInContext from '../contexts/IsLoggedInContext';
 import LanguageContext from '../contexts/LanguageContext';
 import LoadingPage from './LoadingPage';
 import axios from 'axios';
-import { Button, Modal, Input, Tooltip, Table, Textarea, useAsyncList, useCollator, Loading, Text, Checkbox, Spacer } from '@nextui-org/react';
+import { Button, Modal, Input, Tooltip, Textarea, Text, Checkbox, Spacer } from '@nextui-org/react';
 
 import { CustomButton } from '../fields/CustomButton';
 import CustomizedDropdown from '../fields/CustomizedDropdown';
@@ -148,6 +148,8 @@ function TransactionsTable({ data = { transactions: [] }, removeTransaction }) {
 
     const [editDetails, setEditDetails] = useState(false);
 
+    const shortener = val => val?.length > 25 ? val.slice(0, 25) + '...' : val || ' - ';
+
     const columns = [
         {
             is_key: true,
@@ -164,7 +166,7 @@ function TransactionsTable({ data = { transactions: [] }, removeTransaction }) {
             key: "details",
             label: dictionary.details[language],
             sortable: true,
-            formatter: val => val?.length > 25 ? val.slice(0, 25) + '...' : val || ' - '
+            children: self => <Tooltip content={self.details} enterDelay={250} >{shortener(self.details)}</Tooltip>
         },
         {
             key: "posted_on",
@@ -260,7 +262,7 @@ function TransactionModal({ isEdit = false, editData = {}, addTransaction, setMo
                 <Spacer y={1} />
                 <Checkbox defaultSelected={formData.is_payment || formData.amount < 0} onChange={e => setFormData(p => ({ ...p, is_payment: e }))} > <p>Is this a payment?</p></Checkbox>
 
-                <Input underlined initialValue={formData.posted_on?.slice(0,10)} color="primary" label='Posted On' type="date" onChange={e => setFormData(p => ({ ...p, posted_on: e.target.value }))} />
+                <Input underlined initialValue={formData.posted_on?.slice(0, 10)} color="primary" label='Posted On' type="date" onChange={e => setFormData(p => ({ ...p, posted_on: e.target.value }))} />
 
                 <Button
                     shadow
