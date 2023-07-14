@@ -36,21 +36,6 @@ export default function DebtAccounts() {
         }).catch(handleError);
     }, []);
 
-    if (!user?.use_beta_features) {
-        return (
-            <>
-                <NavMenu />
-                <h1>DEBT ACCOUNTS HERE</h1>
-                <h2>
-                    <i className="fa-solid fa-file-invoice-dollar" /> &nbsp;
-                    <i className="fa-solid fa-file-invoice-dollar" /> &nbsp;
-                    <i className="fa-solid fa-file-invoice-dollar" /> &nbsp;
-                </h2>
-                <h3>coming soon to a theater near you! ...&nbsp;<i className="fa-solid fa-hand-spock"></i> </h3>
-            </>
-        );
-    }
-
     if (!accountsList) { return (<LoadingPage />); }
 
     return (
