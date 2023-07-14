@@ -10,6 +10,7 @@ import {
 } from '../utils/s3_connection.js';
 
 import TiddlesGalleryService from '../modules/TiddlesGalleryService.mjs';
+import authenticateToken from '../jobs/authenticateToken.js';
 import validateAndSanitizeBodyParts from '../jobs/validateAndSanitizeBodyParts.js';
 import {
     ranNumber
@@ -22,7 +23,13 @@ const upload = multer({
     storage: storage
 })
 
-tiddlesRouter.post('/', upload.single('image'), async (req, res) => {
+tiddlesRouter.post('/', authenticateToken, upload.single('image'), async (req, res) => {
+
+    //Mel & Alek's user's IDs
+    if (![1, 13].includes(req.user.id)) return res.status(403).json({
+        message: "Forbidden: You do not have access to this."
+    });
+
     const file = req.file;
     const {
         description,
