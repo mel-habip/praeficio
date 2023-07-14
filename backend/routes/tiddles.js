@@ -2,6 +2,9 @@
 import express from 'express';
 const tiddlesRouter = express.Router();
 
+import NodeCache from "node-cache";
+const tiddlesRouterCache = new NodeCache();
+
 import multer from 'multer';
 
 import {
@@ -97,6 +100,7 @@ tiddlesRouter.get('/', async (req, res) => {
 tiddlesRouter.get('/random', async (req, res) => {
     const sql = `SELECT COUNT(${helper.primary_key}) FROM ${helper.table_name}`;
 
+
     const [{
         "COUNT(photo_id)": count
     }] = await helper.query(sql);
@@ -107,18 +111,29 @@ tiddlesRouter.get('/random', async (req, res) => {
 
     let random, fetch_counter = 0;
 
-    while (!random && fetch_counter < 10) {
-        fetch_counter++;
-        let random_id = ranNumber(count + 1);
-        if (!random_id) random_id = 1;
-        random = await helper.query(`SELECT * FROM ${helper.table_name} WHERE ${helper.primary_key} = ?`, random_id);
+    if (count === 1) {
+        random = await helper.query(`SELECT * FROM ${helper.table_name}`);
         random = random?. [0];
-        console.log(`Fetching ${random_id}`, random);
+    } else {
+        const last_id_served_to_this_requester = tiddlesRouterCache.get(req.user.ip);
+
+        while (!random && fetch_counter < 10) {
+            fetch_counter++;
+            let random_id = ranNumber(count + 1);
+            if (last_id_served_to_this_requester === random_id) continue;
+            if (!random_id) random_id = 1;
+            random = await helper.query(`SELECT * FROM ${helper.table_name} WHERE ${helper.primary_key} = ?`, random_id);
+            random = random?. [0];
+            console.log(`Fetching ${random_id}`, random);
+        }
     }
 
     if (!random) return res.status(422).json({
         message: `Something went wrong`
     });
+
+    //save the last served to that IP in cache to not serve the same one again
+    tiddlesRouterCache.set(req.user.ip, random[helper.primary_key]);
 
     random.url = await fetchFromS3(random.file_name);
 
