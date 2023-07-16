@@ -97,12 +97,39 @@ export default function SpecificDebtAccountPage() {
         }).catch(handleError);
     }, [debt_account_id]);
 
-    const addTransaction = useCallback((newItem) => {
+    const addTransaction = ((newItem) => {
         setAccountDetails(p => ({ ...p, balance: p.balance + newItem.amount, transactions: p.transactions.concat(newItem) }));
     }, [accountDetails]);
 
     const removeTransaction = useCallback((id) => {
         setAccountDetails(p => ({ ...p, balance: p.balance - p.transactions.find(t => t.debt_account_transaction_id === id)?.amount || 0, transactions: p.transactions.filter(t => t.debt_account_transaction_id !== id) }));
+    }, [accountDetails]);
+
+    const editTransaction = useCallback((id, newData) => {
+        setAccountDetails(p => {
+
+            let old;
+
+            let newTransactions = p.transactions.map(trans => {
+                if (trans.debt_account_transaction_id === id) {
+                    old = trans;
+                    return newData;
+                }
+                return trans;
+            });
+
+            let balanceModification = 0; //if positive, balance will go up
+
+            if (old) {
+                balanceModification = newData.amount - old.amount;
+            }
+
+            return {
+                ...p,
+                balance: p.balance + balanceModification,
+                transactions: newTransactions
+            }
+        });
     }, [accountDetails]);
 
     if (!accountDetails) return (<LoadingPage />);
@@ -127,14 +154,14 @@ export default function SpecificDebtAccountPage() {
                     Insight: A total of {accountDetails.statistics?.number_of_transactions} transactions are distributed amongst {accountDetails.statistics?.number_of_unique_headers} sources
                 </p>
             </div>
-            {!!accountDetails?.transactions?.length ? <TransactionsTable data={accountDetails} setData={setAccountDetails} removeTransaction={removeTransaction} /> : <h3>No transactions yet! Use the button below to add one</h3>}
+            {!!accountDetails?.transactions?.length ? <TransactionsTable editTransaction={editTransaction} data={accountDetails} setData={setAccountDetails} removeTransaction={removeTransaction} /> : <h3>No transactions yet! Use the button below to add one</h3>}
             <br />
             <CreateTransactionModalWithButton addTransaction={addTransaction} />
         </>
     );
-}
+};
 
-function TransactionsTable({ data = { transactions: [] }, removeTransaction }) {
+function TransactionsTable({ data = { transactions: [] }, removeTransaction, editTransaction }) {
 
     const [innerList, setInnerList] = useState(data.transactions);
 
@@ -166,7 +193,7 @@ function TransactionsTable({ data = { transactions: [] }, removeTransaction }) {
             key: "details",
             label: dictionary.details[language],
             sortable: true,
-            children: self => <Tooltip content={self.details} enterDelay={250} >{shortener(self.details)}</Tooltip>
+            children: self => <Tooltip content={<span dangerouslySetInnerHTML={{ __html: convertLinks(self.details) }} ></span>} enterDelay={250} > {shortener(self.details)} </Tooltip>
         },
         {
             key: "posted_on",
@@ -202,7 +229,7 @@ function TransactionsTable({ data = { transactions: [] }, removeTransaction }) {
 
     return <>
         <SearchableTable columns={columns} data={innerList} />
-        {!!editDetails && <TransactionModal isEdit editData={editDetails} setModalOpen={setEditDetails} />}
+        {!!editDetails && <TransactionModal isEdit editTransaction={editTransaction} editData={editDetails} setModalOpen={setEditDetails} />}
 
         <DeletionModal
             endPoint={`debt_account_transactions/${deletionModalOpen?.debt_account_transaction_id}`}
@@ -218,12 +245,14 @@ function CreateTransactionModalWithButton({ editData = {}, addTransaction }) {
     const [modalOpen, setModalOpen] = useState(false);
 
     return <>
-        <Button shadow onPress={() => setModalOpen(true)}> {dictionary.create_new[language]} &nbsp; <i className="fa-regular fa-square-plus" /></Button>
+        <Button
+            shadow
+            onPress={() => setModalOpen(true)}> {dictionary.create_new[language]} &nbsp; <i className="fa-regular fa-square-plus" /></Button>
         {modalOpen && <TransactionModal addTransaction={addTransaction} setModalOpen={setModalOpen} />}
     </>
 };
 
-function TransactionModal({ isEdit = false, editData = {}, addTransaction, setModalOpen }) {
+function TransactionModal({ isEdit = false, editData = {}, addTransaction, setModalOpen, editTransaction }) {
     const { language } = useContext(LanguageContext);
     const { debt_account_id } = useParams();
     const [formData, setFormData] = useState(isEdit ? {
@@ -246,9 +275,8 @@ function TransactionModal({ isEdit = false, editData = {}, addTransaction, setMo
                 <Text size={14} > Please enter the information below </Text>
             </Modal.Header>
             <Modal.Body>
-                {/* <pre>{JSON.stringify(formData, null, 2)}</pre> */}
                 <Spacer y={0.4} />
-                <Input initialValue={formData.header} underlined clearable color="primary" labelPlaceholder='Transaction Name' onChange={e => setFormData(p => ({ ...p, header: e.target.value }))} />
+                <Input initialValue={formData.header} underlined clearable color="primary" labelPlaceholder='Vendor' onChange={e => setFormData(p => ({ ...p, header: e.target.value }))} />
                 <Spacer y={0.4} />
 
                 <Textarea initialValue={formData.details} underlined minRows={1.5} labelPlaceholder='Details' onChange={e => setFormData(p => ({ ...p, details: e.target.value }))} />
@@ -268,7 +296,19 @@ function TransactionModal({ isEdit = false, editData = {}, addTransaction, setMo
                     shadow
                     onPress={() => {
                         if (isEdit) {
-
+                            axios.put(`${process.env.REACT_APP_API_LINK}/debt_account_transactions/${formData.debt_account_transaction_id}`, {
+                                debt_account_id: parseInt(debt_account_id),
+                                ...formData,
+                                amount: parseFloat(formData.amount.slice(1).replaceAll(',', '')) * (formData.is_payment ? -1 : 1),
+                            }).then(response => {
+                                if (response.status === 200) {
+                                    // setAccountDetails(p => ({ ...p, transactions: p.transactions.concat(response.data) }));
+                                    setModalOpen(false);
+                                    editTransaction(response.data);
+                                } else {
+                                    console.warn('fetch', response);
+                                }
+                            }).catch(() => { });
                         } else {
                             axios.post(`${process.env.REACT_APP_API_LINK}/debt_account_transactions/`, {
                                 debt_account_id: parseInt(debt_account_id),
@@ -277,8 +317,8 @@ function TransactionModal({ isEdit = false, editData = {}, addTransaction, setMo
                             }).then(response => {
                                 if (response.status === 201) {
                                     // setAccountDetails(p => ({ ...p, transactions: p.transactions.concat(response.data) }));
-                                    addTransaction(response.data);
                                     setModalOpen(false);
+                                    addTransaction(response.data);
                                 } else {
                                     console.warn('fetch', response);
                                 }
@@ -289,4 +329,39 @@ function TransactionModal({ isEdit = false, editData = {}, addTransaction, setMo
             </Modal.Body>
         </Modal>
     </>
+}
+
+function convertLinks(input) {
+
+    let text = input;
+    const linksFound = text.match(/(?:www|https?)[^\s]+/g);
+    const aLink = [];
+
+    if (linksFound != null) {
+
+        for (let i = 0; i < linksFound.length; i++) {
+            let replace = linksFound[i];
+            if (!(linksFound[i].match(/(http(s?)):\/\//))) { replace = 'http://' + linksFound[i] }
+            let linkText = replace.split('/')[2];
+            if (linkText.substring(0, 3) == 'www') { linkText = linkText.replace('www.', '') }
+            if (linkText.match(/youtu/)) {
+
+                let youtubeID = replace.split('/').slice(-1)[0];
+                aLink.push('<div class="video-wrapper"><iframe src="https://www.youtube.com/embed/' + youtubeID + '" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>')
+            }
+            else if (linkText.match(/vimeo/)) {
+                let vimeoID = replace.split('/').slice(-1)[0];
+                aLink.push('<div class="video-wrapper"><iframe src="https://player.vimeo.com/video/' + vimeoID + '" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></div>')
+            }
+            else {
+                aLink.push('<a href="' + replace + '" target="_blank">' + linkText + '</a>');
+            }
+            text = text.split(linksFound[i]).map(item => { return aLink[i].includes('iframe') ? item.trim() : item }).join(aLink[i]);
+        }
+        return text;
+
+    }
+    else {
+        return input;
+    }
 }

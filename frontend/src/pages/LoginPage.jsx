@@ -106,7 +106,7 @@ export default function LoginPage() {
 
                             <Checkbox defaultSelected > <Text size={14}>Remember me</Text> </Checkbox>
 
-                            {clickedType === 'login' ? <Text style={{cursor: 'pointer', textDecoration: 'underline'}} aria-haspopup onClick={() => setForgotPassModalOpen(true)} size={14}>Forgot password?</Text> : ''}
+                            {clickedType === 'login' ? <Text style={{ cursor: 'pointer', textDecoration: 'underline' }} aria-haspopup onClick={() => setForgotPassModalOpen(true)} size={14}>Forgot password?</Text> : ''}
 
                             <Modal
                                 closeButton

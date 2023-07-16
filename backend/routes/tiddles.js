@@ -23,7 +23,7 @@ const helper = new TiddlesGalleryService();
 
 const storage = multer.memoryStorage()
 const upload = multer({
-    storage: storage
+    storage
 })
 
 tiddlesRouter.post('/', authenticateToken, upload.single('image'), async (req, res) => {
@@ -36,14 +36,18 @@ tiddlesRouter.post('/', authenticateToken, upload.single('image'), async (req, r
     const file = req.file;
     const {
         description,
-        tags
+        tags,
+        file_name
     } = req.body;
 
     if (!description) return res.status(400).json({
         message: `Description is required.`
     });
-    if (!file) return res.status(400).json({
+    if (!file_name || !file) return res.status(400).json({
         message: `File (image) is required.`
+    });
+    if (!['jpeg', 'jpg', 'png', 'gif'].includes(file_name.toLowerCase().trim())) return res.status(400).json({
+        message: `File type not supported.`
     });
 
     const upload_result = await uploadToS3(file.buffer, file.mimetype);
