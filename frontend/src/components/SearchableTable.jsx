@@ -107,11 +107,11 @@ export default function SearchableTable({ data = [], columns = [] }) {
                 {item => (
                     <Table.Row key={item[primary_key]} className="position-table-row" css={{ padding: '0px', margin: '0px' }}>
                         {columnKey => {
-                            if (columnKey === 'actions') {
-                                return <Table.Cell css={{ 'padding': '0px', wordWrap: 'break-word', margin: '0px' }} >
-                                    {childrenMap[columnKey](item) || <></>}
-                                </Table.Cell>
-                            } else if (typeof formattersMap[columnKey] === 'function') {
+
+                            if (childrenMap.hasOwnProperty(columnKey)) return <Table.Cell css={{ 'padding': '0px', wordWrap: 'break-word', margin: '0px' }} >
+                                {childrenMap[columnKey](item) || <></>}
+                            </Table.Cell>
+                            if (typeof formattersMap[columnKey] === 'function') {
                                 return <Table.Cell> {formattersMap[columnKey](item[columnKey]) || ' - '} </Table.Cell>
                             } else if (['updated_on', 'created_on', 'posted_on'].includes(columnKey)) {
                                 return <Table.Cell> {item[columnKey] ? timestampFormatter(item[columnKey]) : ' - '} </Table.Cell>

@@ -23,7 +23,7 @@ const helper = new TiddlesGalleryService();
 
 const storage = multer.memoryStorage()
 const upload = multer({
-    storage: storage
+    storage
 })
 
 tiddlesRouter.post('/', authenticateToken, upload.single('image'), async (req, res) => {
