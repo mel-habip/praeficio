@@ -1,8 +1,10 @@
 import NavMenu from '../../components/NavMenu';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Modal, Text, Button } from '@nextui-org/react';
+
 import CustomButton from '../../fields/CustomButton.jsx';
 import axios from 'axios';
+const ErrorModule = lazy(() => import('../../components/ErrorModule'));
 
 export default function TiddlesPage() {
     document.title = `Praeficio | Mr. Tiddles`;
@@ -39,15 +41,17 @@ function UploadModal({ setSelfOpen, selfOpen }) {
     const [file, setFile] = useState('');
     const [description, setDescription] = useState('');
     const [tags, setTags] = useState('');
+    const [errors, setErrors] = useState('');
 
     const submit = async event => {
         event.preventDefault()
 
         const formData = new FormData();
         formData.append("image", file);
+        formData.append("file_name", file?.name);
         formData.append("description", description);
         formData.append("tags", tags);
-        await axios.post(`${process.env.REACT_APP_API_LINK}/tiddles/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }).then(res => setSelfOpen(false))
+        await axios.post(`${process.env.REACT_APP_API_LINK}/tiddles/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }).then(res => setSelfOpen(false)).catch(e => console.log(e) || setErrors(e?.response?.data?.message || e?.status || e?.response?.data || e?.data))
     }
 
     return (
@@ -60,6 +64,7 @@ function UploadModal({ setSelfOpen, selfOpen }) {
             <Modal.Header css={{ 'z-index': 86, position: 'relative' }}>
                 <Text size={14} > Please enter the information below </Text> </Modal.Header>
             <Modal.Body>
+                <ErrorModule errorMessage={errors} />
                 <form onSubmit={submit} >
                     <input onChange={e => setFile(e.target.files[0])} type="file" accept="image/*"></input>
                     <input value={description} onChange={e => setDescription(e.target.value)} type="text" placeholder='Description'></input>
