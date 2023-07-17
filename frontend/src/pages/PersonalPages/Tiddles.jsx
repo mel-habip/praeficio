@@ -51,7 +51,7 @@ function UploadModal({ setSelfOpen, selfOpen }) {
         formData.append("file_name", file?.name);
         formData.append("description", description);
         formData.append("tags", tags);
-        await axios.post(`${process.env.REACT_APP_API_LINK}/tiddles/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }).then(res => setSelfOpen(false)).catch(e => console.log(e) || setErrors(e?.response?.data?.message || e?.status || e?.response?.data || e?.data))
+        await axios.post(`${process.env.REACT_APP_API_LINK}/tiddles/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }).then(res => setSelfOpen(false) || setErrors('')).catch(e => console.log(e) || setErrors(e?.response?.data?.message || e?.status || e?.response?.data || e?.data))
     }
 
     return (
@@ -66,7 +66,7 @@ function UploadModal({ setSelfOpen, selfOpen }) {
             <Modal.Body>
                 <ErrorModule errorMessage={errors} />
                 <form onSubmit={submit} >
-                    <input onChange={e => setFile(e.target.files[0])} type="file" accept="image/*"></input>
+                    <input onChange={e => setFile(e.target.files[0]) || setErrors('')} type="file" accept="image/*"></input>
                     <input value={description} onChange={e => setDescription(e.target.value)} type="text" placeholder='Description'></input>
                     <Button
                         disabled={!file || !description}
