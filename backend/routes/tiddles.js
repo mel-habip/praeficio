@@ -46,7 +46,11 @@ tiddlesRouter.post('/', authenticateToken, upload.single('image'), async (req, r
     if (!file_name || !file) return res.status(400).json({
         message: `File (image) is required.`
     });
-    if (!['jpeg', 'jpg', 'png', 'gif'].includes(file_name.toLowerCase().trim())) return res.status(400).json({
+
+
+    console.log('file_name', file_name);
+
+    if (!['jpeg', 'jpg', 'png', 'gif'].some(file_type => file_name.toLowerCase().trim().endsWith('.' + file_type))) return res.status(400).json({
         message: `File type not supported.`
     });
 

@@ -51,7 +51,7 @@ APP.set('trust proxy', 1);
 APP.get('/ip', (request, response) => response.send(request.ip)); //for testing purposes
 APP.use(cors());
 APP.use(express.json({
-    limit: '5mb' //any request larger than this ought to throw a 413 Entity Too Large error 
+    limit: '10mb' //any JSON request larger than this ought to throw a 413 Entity Too Large error 
 }));
 APP.use(extractIP);
 APP.use(rateLimiter);
