@@ -1,0 +1,26 @@
+.fade-in {
+  transition: opacity 1.8s ease;
+}
+
+.fade-out {
+  opacity: 0;
+  transition: opacity 1.8s ease;
+}
+
+.carousel-underline-section {
+  position: relative;
+  flex: 1;
+  display: inline-block;
+}
+
+.line {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  background-color: var(--text-primary);
+  /* Replace with your desired color */
+  z-index: 0;
+  /* Behind the text */
+}

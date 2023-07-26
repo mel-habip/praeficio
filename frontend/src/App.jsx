@@ -53,6 +53,7 @@ const VotingSessionClosedPage = lazy(() => import('./pages/VotingPages/VotingSes
 
 
 function App() {
+  axios.defaults.baseURL = process.env.REACT_APP_API_LINK;
   const browserDarkPreference = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const localTheme = localStorage.getItem('theme');
   let isDarkInitial = true; //proves persistence, sets State based on localStorage
@@ -121,7 +122,7 @@ function App() {
   useEffect(() => {
     if (localAccessToken) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${localAccessToken}`;
-      axios.get(`${process.env.REACT_APP_API_LINK}/users/session`).then(response => {
+      axios.get(`/users/session`).then(response => {
         console.log('/session fetch results', response)
         if (response.status === 200) {
           setUser(response.data);

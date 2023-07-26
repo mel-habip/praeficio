@@ -5,10 +5,11 @@
  * such as: 
  *  - retrieving one's own IP address
  *  - testing if the server is up
- *  - 
+ *  - serving Mel's CV PDF.
  */
 
 import express from 'express';
+import path from 'path';
 const apiRouter = express.Router();
 import emailService from '../jobs/emailService.js';
 import authenticateToken from '../jobs/authenticateToken.js';
@@ -21,19 +22,30 @@ import {
     recordTypeMap
 } from '../modules/RecordService.mjs';
 
-
-
 const log = console.log;
 
 apiRouter.get('/test', async (_, res) => {
     res.status(200).send('<h1>Hello World from the API! (with HTML) <h1/>');
 });
 
-
 apiRouter.get('/', async (_, res) => {
     res.status(200).send('Hello World from the API!');
 });
 
+apiRouter.get('/mel-cv', async (_, res) => {
+
+    const file = `${__dirname}/constants/Mel_Habip_Resume.pdf`;
+    res.download(file); // Set disposition and send it.
+    return;
+
+
+    const filePath = path.join(__dirname, 'constants', 'Mel_Habip_Resume.pdf');
+
+    res.setHeader('Content-Disposition', `attachment; filename=Mel_Habip_Resume.pdf`);
+    res.setHeader('Content-Type', 'application/octet-stream');
+
+    res.status(200).download(filePath);
+});
 
 apiRouter.post('/test_email_service', async (req, res) => {
     let result = await emailService(req.data);

@@ -20,7 +20,7 @@ const permissionsMap = {
     dev_lead: 'Lead Dev',
 };
 
-function NavMenu({ show_language_button_externally = false }) {
+function NavMenu({ show_language_button_externally = false, hide_language_button=false }) {
 
     const { isDark, toggleTheme } = useContext(ThemeContext);
     const { language, toggleLanguage } = useContext(LanguageContext);
@@ -50,14 +50,12 @@ function NavMenu({ show_language_button_externally = false }) {
         return (
             <>
                 <Button
+                    className='nav-menu-toggle'
                     css={{ width: '4rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white', position: 'fixed', left: '0%', top: '0%', margin: '1rem' }}
                     onPress={toggleTheme}
-                > <i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"} />
+                > &nbsp; <i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"} />
                 </Button>
-                <CustomButton
-                    onClick={toggleLanguage}
-                    style={{ textTransform: 'uppercase', position: 'absolute', top: '5%', right: '5%' }}
-                >  {language} <i className="fa-solid fa-arrows-spin" /></CustomButton>
+                {!hide_language_button && <LangButton />}
             </>
         );
     }
@@ -153,7 +151,7 @@ function NavMenu({ show_language_button_externally = false }) {
         <>
             <Toggle />
 
-            {show_language_button_externally && <LangButton />}
+            {show_language_button_externally && !hide_language_button && <LangButton />}
 
             <nav className={NavMenuOpen ? 'nav-menu active' : 'nav-menu'}>
 

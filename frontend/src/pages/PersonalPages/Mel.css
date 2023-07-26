@@ -1,0 +1,95 @@
+.mel-page-container,
+.mel-page-container section {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    flex-direction: column;
+    z-index: 0;
+}
+
+.red {
+    color: red;
+}
+
+.green {
+    color: green;
+}
+
+.gold {
+    color: gold;
+}
+
+.mel-page-container p,
+.mel-page-container span {
+    text-align: left;
+    max-width: 1000px;
+}
+
+.mel-page-container li {
+    list-style-type: disc;
+}
+
+.mel-page-container .two-column-list {
+    columns: 2;
+    -webkit-columns: 2;
+    -moz-columns: 2;
+    column-gap: 40px;
+}
+
+.mel-page-container ul {
+    text-align: left;
+}
+
+/* Add media query for mobile devices with a maximum width of 600px (adjust this value as needed) */
+@media (max-width: 600px) {
+    .mel-page-container {
+        max-width: 600px;
+        padding: 10px;
+    }
+
+    .mel-page-container p {
+        text-align: left;
+        padding: 10px;
+        max-width: 600px;
+    }
+}
+
+.mel-page-container {
+    overflow: hidden;
+}
+
+.header {
+    position: relative;
+    opacity: 0;
+    animation: changeMargins 4s ease-in forwards;
+    transition: opacity 1s ease-in;
+}
+
+.content {
+    position: relative;
+    top: 100vh;
+    opacity: 0;
+    transition: top 3s ease-in, opacity 3s ease-out;
+}
+
+.show {
+    top: 0;
+    opacity: 1;
+}
+
+@keyframes changeMargins {
+    0% {
+        margin-top: 50vh;
+        /* Initial margin */
+    }
+
+    50% {
+        margin-top: 50vh;
+        /* Initial margin */
+    }
+
+    100% {
+        margin-top: 25px;
+        /* Final margin after 4 seconds */
+    }
+}

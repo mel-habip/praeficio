@@ -3,6 +3,13 @@ const PORT = process.env.PORT || 8000;
 import express from 'express';
 import cors from 'cors';
 
+import {
+    fileURLToPath
+} from 'url';
+import {
+    dirname
+} from 'path';
+
 //global middlewares
 import rateLimit from 'express-rate-limit'
 import extractIP from './jobs/extractIP.js';
@@ -45,6 +52,13 @@ const rateLimiter = rateLimit({
         message: 'Too many requests, please try again later.'
     })
 });
+
+const __filename = fileURLToPath(
+    import.meta.url);
+const __dirname = dirname(__filename);
+
+global.__dirname = __dirname;
+global.__basedir = __filename;
 
 const APP = express(); //creating and starting the server
 APP.set('trust proxy', 1);
