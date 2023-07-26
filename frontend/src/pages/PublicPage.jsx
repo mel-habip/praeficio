@@ -178,8 +178,6 @@ export default function PublicPage() {
         pageContactUs.current.scrollIntoView({ behavior: 'smooth' });
     };
 
-    const showIncompletePage = process.env.REACT_APP_BUILD_ENV === 'beta';
-
     const { isLoggedIn } = useContext(IsLoggedInContext);
     const { language, toggleLanguage } = useContext(LanguageContext);
     const { isDark, toggleTheme } = useContext(ThemeContext);
@@ -233,9 +231,7 @@ export default function PublicPage() {
     return (<>
 
         <main className="public-site-body scroll-container" style={{ height: '300svh', scrollSnapType: 'y mandatory', width: '100vw', 'overflowBehaviorY': 'contain' }} >
-            {isLoggedIn ? <NavMenu /> : <Button
-                css={{ width: '4rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white', position: 'fixed', left: '0%', top: '0%', margin: '1rem' }}
-                onPress={toggleTheme}><i className={isDark ? "fa-regular fa-moon" : "fa-regular fa-sun"} /></Button>}
+            <NavMenu />
 
             <div className="audio-player-wrapper" >
                 <Suspense fallback={<Loading />}>
@@ -263,8 +259,7 @@ export default function PublicPage() {
 
                         {!!referrer && <Text em size={13} css={{ color: 'lightgreen' }} >{dictionary.referral_part_1?.[language]} {`"${referrer}"`}, {dictionary.referral_part_2?.[language]}</Text>}
 
-                        {!showIncompletePage ? <h3><i className="fa-solid fa-person-digging"></i>&nbsp;{dictionary.being_built?.[language]}&nbsp;<i className="fa-solid fa-screwdriver-wrench"></i></h3> : <>
-
+                        <>
                             <h2>{dictionary.slogan3?.[language]}</h2>
                             <div>
                                 <Badge color="warning" >faster</Badge>
@@ -276,7 +271,7 @@ export default function PublicPage() {
 
                             <h3>{dictionary.slogan2?.[language]}</h3>
                             <CustomButton buttonStyle="btn--secondary" onClick={() => setSubscriptionModalOpen(true)} >{dictionary.subscribe_button?.[language]}</CustomButton>
-                        </>}
+                        </>
 
                         <SubscriptionModal isOpen={subscriptionModalOpen} setIsOpen={setSubscriptionModalOpen} language={language} />
 
@@ -390,7 +385,7 @@ function SubscriptionModal({ isOpen, setIsOpen, language }) {
                         return; //means there are errors}
                     }
                     console.log('submitted');
-                    axios.post(`${process.env.REACT_APP_API_LINK}:8000/subscribers/`, { email: subscriptionInfo.email, name: subscriptionInfo.name })
+                    axios.post(`subscribers/`, { email: subscriptionInfo.email, name: subscriptionInfo.name })
                         .then(res => {
                             if (res.status === 201) {
                                 setIsOpen(false);
@@ -471,12 +466,12 @@ function ContactForm() {
 
     const next = () => setPage(p => p > 5 ? 6 : p + 1) || setError('');
     const previous = () => setPage(p => p === 1 ? 1 : p - 1) || setError('');
-    const submit = () => {};
+    const submit = () => { };
 
-    const Buttons = ({ nextCondition, isSubmit=false }) => <div className="buttons-group">
+    const Buttons = ({ nextCondition, isSubmit = false }) => <div className="buttons-group">
         <Button auto shadow bordered color="warning" className="previous-button" onPress={previous}> {dictionary.previous?.[language]} </Button>
-        {isSubmit ? <Button disabled={!nextCondition} auto shadow bordered color="primary" className="submit-button" onPress={submit}> {dictionary.submit?.[language]} </Button> : <Button disabled={!nextCondition} auto shadow bordered color="primary" className="next-button" onPress={next}> {dictionary.next?.[language]} </Button> } 
-        
+        {isSubmit ? <Button disabled={!nextCondition} auto shadow bordered color="primary" className="submit-button" onPress={submit}> {dictionary.submit?.[language]} </Button> : <Button disabled={!nextCondition} auto shadow bordered color="primary" className="next-button" onPress={next}> {dictionary.next?.[language]} </Button>}
+
     </div>
 
     return (<>
