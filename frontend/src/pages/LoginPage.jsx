@@ -81,7 +81,7 @@ export default function LoginPage() {
                             onChange={e => setFormValues(prev => ({ ...prev, username: e.target.value }))} />
                         <Spacer y={0.5} />
 
-                        <div style={{ display: 'flex', justifyContent: 'space-around', flexFlow: 'nowrap', alignItems: 'center', gap: '1rem' }} >
+                        <div className="nextui-modal-body" style={{ display: 'flex', justifyContent: 'space-around', flexFlow: 'nowrap', alignItems: 'center', gap: '1rem'}} >
                             <Input.Password
                                 rounded
                                 initialValue=""
@@ -95,7 +95,13 @@ export default function LoginPage() {
                                 helperText={errors.password}
                                 helperColor={errors.password ? "error" : "primary"}
                                 onChange={e => setFormValues(prev => ({ ...prev, password: e.target.value }))} />
-                            <Tooltip content={<p style={{ whiteSpace: 'pre' }} >{`A strong password should have: \n\t${passwordGood.hasLength ? '✔️' : '❌'} 6-15 digits \n\t${passwordGood.hasSymbol ? '✔️' : '❌'} one symbol, \n\t${passwordGood.hasNumber ? '✔️' : '❌'} one number, \n\t${passwordGood.hasUppercase ? '✔️' : '❌'} one uppercase and \n\t${passwordGood.hasLowercase ? '✔️' : '❌'} one lowercase character`}</p>} css={{ zIndex: 9999 }} >
+                            <Tooltip
+                                trigger='click'
+                                content={
+                                    <p style={{ whiteSpace: 'pre'}} >{`A strong password should have: \n\t${passwordGood.hasLength ? '✔️' : '❌'} 6-15 digits \n\t${passwordGood.hasSymbol ? '✔️' : '❌'} one symbol, \n\t${passwordGood.hasNumber ? '✔️' : '❌'} one number, \n\t${passwordGood.hasUppercase ? '✔️' : '❌'} one uppercase and \n\t${passwordGood.hasLowercase ? '✔️' : '❌'} one lowercase character`}
+                                    </p>}
+                                css={{ zIndex: 9999 }}
+                            >
                                 <div>
                                     <i style={{ color: passwordGood.hasAll ? 'green' : 'red' }} className="fa-solid fa-shield-halved" />
                                 </div>
