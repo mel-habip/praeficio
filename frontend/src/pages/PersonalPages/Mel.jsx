@@ -108,6 +108,16 @@ export default function MelPage() {
                 </Tooltip>
                 {downloadSuccessful === false && <i className="fa-regular fa-thumbs-down red" />}
                 {downloadSuccessful && <i className="fa-regular fa-thumbs-up green" />}
+                <Button
+                    css={{ width: '4rem', marginRight: '1rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white' }}
+                    onClick={handleDownload}
+                    href="https://github.com/mel-habip"
+                >Mel <i className="fa-brands fa-github" /></Button>
+                <Button
+                    css={{ width: '4rem', marginRight: '1rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white' }}
+                    onClick={handleDownload}
+                    href="https://github.com/mel-habip/praeficio"
+                >This site <i className="fa-brands fa-github" /></Button>
 
             </div>
             <div className='mel-page-container' >
@@ -124,7 +134,7 @@ export default function MelPage() {
                                 Profile
                             </em>
                         </h2>
-                        <p style={{marginBottom: '1em'}} >
+                        <p style={{ marginBottom: '1em' }} >
                             Dynamic and results-driven professional with a solid background as a
                             Customer Success Engineering Lead, adept at leveraging cutting-edge
                             tools and features to deliver innovative solutions to clients.
