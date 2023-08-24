@@ -161,7 +161,7 @@ export default function MelPage() {
                         <div >
                             <span>
                                 <h3><strong>Mako Fintech</strong> &#183; <em>Engineering Lead, Customer Success</em> &#183; Montreal (remote), QC</h3>
-                                <h4>April 2021 - <em>present</em></h4>
+                                <h4>April 2021 - August 2023</h4>
                             </span>
                             <ul>
                                 <li><p>Spearheaded a high-performing team of up to 5 individuals, including 2
