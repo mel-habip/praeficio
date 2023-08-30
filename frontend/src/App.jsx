@@ -23,6 +23,7 @@ const Workspaces = lazy(() => import('./pages/Workspaces.jsx'));
 const ToDos = lazy(() => import('./pages/ToDos.jsx'));
 const TestZone = lazy(() => import('./pages/TestZone'));
 const TicTacToePage = lazy(() => import('./pages/TicTacToePage.jsx'));
+const SuperTicTacToePage = lazy(() => import('./pages/SuperTicTacToePage.jsx'));
 const MonthlyPlanner = lazy(() => import('./pages/MonthlyPlanner.jsx'));
 const RandomizerPage = lazy(() => import('./pages/RandomizerPage.jsx'));
 const FeedbackLogsPage = lazy(() => import('./pages/FeedbackLogsPage.jsx'));
@@ -191,6 +192,11 @@ function App() {
                     <Route path="/tic-tac-toe" element={<Navigate to="/tictactoe" replace />} />
                     <Route path="/tic_tac_toe" element={<Navigate to="/tictactoe" replace />} />
                     <Route path='/tictactoe' element={<TicTacToePage />} />
+
+
+                    <Route path="/supertictactoe" element={<Navigate to="/super-tictactoe" replace />} />
+                    <Route path="/super-tic-tac-toe" element={<Navigate to="/super-tictactoe" replace />} />
+                    <Route path='/super-tictactoe' element={<SuperTicTacToePage />} />
 
                     <Route path='/randomizer' element={<RandomizerPage />} />
 
