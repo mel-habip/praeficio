@@ -10,6 +10,9 @@ import { CustomButton } from '../fields/CustomButton';
 const { AlekSpecial, generateWinningCombinations, resultWords, winning, playerOne, playerTwo, TicTacToeGrid } = TicTacToeUtils;
 const NavMenu = lazy(() => import('../components/NavMenu'));
 
+/**
+ *  Inspiration --> https://youtube.com/shorts/_Na3a1ZrX7c?si=iEaKOoAD9PibwNWS
+ */
 
 export default function SuperTictacToe() {
     document.title = "SUPER Tic-Tac-Toe";
