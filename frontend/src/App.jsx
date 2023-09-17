@@ -170,10 +170,23 @@ function App() {
                     <Route path='/mel' element={<Navigate to="/mel-habip" replace />} />
                     <Route path='/habip' element={<Navigate to="/mel-habip" replace />} />
                     <Route path='/mel-habip' element={<MelPage />} exact />
+
                     <Route path='/hira' element={<Navigate to="/hira-qazi" replace />} />
                     <Route path='/qazi' element={<Navigate to="/hira-qazi" replace />} />
                     <Route path='/hira-qazi' element={<HiraPage />} exact />
+
+                    <Route path='/mr.tiddles' element={<Navigate to="/tiddles" replace />} />
+                    <Route path='/mr-tiddles' element={<Navigate to="/tiddles" replace />} />
                     <Route path='/tiddles' element={<TiddlesPage />} exact />
+
+                    <Route path='/mr.sylvester' element={<Navigate to="/sylvester" replace />} />
+                    <Route path='/mr-sylvester' element={<Navigate to="/sylvester" replace />} />
+                    <Route path='/mr.slyvester' element={<Navigate to="/sylvester" replace />} />
+                    <Route path='/mr-slyvester' element={<Navigate to="/sylvester" replace />} />
+                    <Route path='/slyvester' element={<Navigate to="/sylvester" replace />} />
+                    <Route path='/sylvest' element={<Navigate to="/sylvester" replace />} />
+                    <Route path='/sylvester' element={<SylvesterPage />} exact />
+
                     <Route path='/portal' element={isLoggedIn ? <Portal /> : <LoginPage />} exact />
                     <Route path='/newsletters' element={<Newsletters />} exact />
                     <Route path='/notes' element={<QuickNotes />} exact />

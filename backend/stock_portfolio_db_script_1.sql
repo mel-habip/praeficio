@@ -396,6 +396,17 @@ CREATE TABLE tiddles_photos (
 	photo_id INT PRIMARY KEY AUTO_INCREMENT,
     description VARCHAR(400),
     file_name VARCHAR(200) NOT NULL,
+    mime_type VARCHAR(100),
+    tags VARCHAR (400),
+    updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE sylvester_photos (
+	photo_id INT PRIMARY KEY AUTO_INCREMENT,
+    description VARCHAR(400),
+    file_name VARCHAR(200) NOT NULL,
+    mime_type VARCHAR(100),
     tags VARCHAR (400),
     updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP

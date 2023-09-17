@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 import './WordList.css';
 
@@ -62,7 +62,6 @@ export default function WordListField({ style = {}, onListChange = (e) => consol
                         type="button"
                         className="word-list-bubble-delete-button"
                         onClick={() => handleDeleteWord(word)}
-
                     >
                         X
                     </button>

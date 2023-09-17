@@ -1,9 +1,9 @@
 "use strict"
 import express from 'express';
-const tiddlesRouter = express.Router();
+const sylvesterRouter = express.Router();
 
 import NodeCache from "node-cache";
-const tiddlesRouterCache = new NodeCache();
+const sylvesterRouterCache = new NodeCache();
 
 import multer from 'multer';
 
@@ -19,17 +19,17 @@ import {
     ranNumber
 } from '../utils/random_value_generators.js';
 
-const helper = new GalleryService('tiddles');
+const helper = new GalleryService('sylvester');
 
 const storage = multer.memoryStorage()
 const upload = multer({
     storage
 })
 
-tiddlesRouter.post('/', authenticateToken, upload.single('image'), async (req, res) => {
+sylvesterRouter.post('/', authenticateToken, upload.single('image'), async (req, res) => {
 
-    //Mel & Alek's user's IDs
-    if (![1, 13].includes(req.user.id)) return res.status(403).json({
+    //Mel & Molly's user's IDs
+    if (![1, 16].includes(req.user.id)) return res.status(403).json({
         message: "Forbidden: You do not have access to this."
     });
 
@@ -43,6 +43,7 @@ tiddlesRouter.post('/', authenticateToken, upload.single('image'), async (req, r
     if (!description) return res.status(400).json({
         message: `Description is required.`
     });
+
     if (!file_name || !file) return res.status(400).json({
         message: `File (image) is required.`
     });
@@ -60,7 +61,6 @@ tiddlesRouter.post('/', authenticateToken, upload.single('image'), async (req, r
             message: `Invalid Tags`
         });
     }
-
 
     console.log('file_name', file_name);
 
@@ -90,7 +90,7 @@ tiddlesRouter.post('/', authenticateToken, upload.single('image'), async (req, r
     });
 });
 
-tiddlesRouter.post('/search', validateAndSanitizeBodyParts({
+sylvesterRouter.post('/search', validateAndSanitizeBodyParts({
     keyword: 'string'
 }, ['keyword']), async (req, res) => {
     const search_results = await helper.search_by_keyword(req.body.keyword);
@@ -105,7 +105,7 @@ tiddlesRouter.post('/search', validateAndSanitizeBodyParts({
     });
 });
 
-tiddlesRouter.get('/', async (req, res) => {
+sylvesterRouter.get('/', async (req, res) => {
     const results = await helper.fetch_all();
 
     if (!results) return res.status(422).json({
@@ -120,7 +120,7 @@ tiddlesRouter.get('/', async (req, res) => {
 });
 
 //fetches a random entry from the DB
-tiddlesRouter.get('/random', async (req, res) => {
+sylvesterRouter.get('/random', async (req, res) => {
     const sql = `SELECT COUNT(${helper.primary_key}) FROM ${helper.table_name}`;
 
 
@@ -138,7 +138,7 @@ tiddlesRouter.get('/random', async (req, res) => {
         random = await helper.query(`SELECT * FROM ${helper.table_name}`);
         random = random?. [0];
     } else {
-        const last_id_served_to_this_requester = tiddlesRouterCache.get(req.ip);
+        const last_id_served_to_this_requester = sylvesterRouterCache.get(req.ip);
 
         while (!random && fetch_counter < 10) {
             fetch_counter++;
@@ -156,7 +156,7 @@ tiddlesRouter.get('/random', async (req, res) => {
     });
 
     //save the last served to that IP in cache to not serve the same one again
-    tiddlesRouterCache.set(req.ip, random[helper.primary_key]);
+    sylvesterRouterCache.set(req.ip, random[helper.primary_key]);
 
     random.url = await fetchFromS3(random.file_name);
 
@@ -164,4 +164,4 @@ tiddlesRouter.get('/random', async (req, res) => {
 });
 
 
-export default tiddlesRouter;
+export default sylvesterRouter;
