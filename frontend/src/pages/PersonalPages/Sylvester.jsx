@@ -5,7 +5,24 @@ import { Modal, Text, Button } from '@nextui-org/react';
 import CustomButton from '../../fields/CustomButton.jsx';
 import axios from 'axios';
 import IsLoggedInContext from '../../contexts/IsLoggedInContext';
+import LanguageContext from '../../contexts/LanguageContext';
+
 const ErrorModule = lazy(() => import('../../components/ErrorModule'));
+
+const sentences = {
+    title: {
+        en: "Hi! I'm Sylvester",
+        fr: "Salut! Je m'appelle Sylvestre"
+    },
+    fetch_another: {
+        en: "Fetch another random photo",
+        fr: "Récupérer une autre photo aléatoire"
+    },
+    enjoy_random: {
+        en: "Enjoy a random photo of me on this page!",
+        fr: "Amousez vous à regardent ces photos !"
+    }
+};
 
 export default function SylvesterPage() {
     document.title = `Sylvester`;
@@ -14,6 +31,8 @@ export default function SylvesterPage() {
     const [imageDetails, setImageDetails] = useState(null);
 
     const fetchRandom = () => axios.get(`${process.env.REACT_APP_API_LINK}/sylvester/random`).then(res => setImageDetails(res.data));
+
+    const { language } = useContext(LanguageContext);
 
     const currentUser = useContext(IsLoggedInContext);
 
@@ -28,15 +47,15 @@ export default function SylvesterPage() {
     return (
         <>
             <NavMenu />
-            <h1>Hi! I'm Sylvester 👋👋 </h1>
+            <h1>{sentences.title[language]} 👋👋 </h1>
             {(!!imageDetails && imageDetails.mime_type?.startsWith('video/')) ? <video src={imageDetails?.url} style={mediaStyling} autoPlay controls /> : (!!imageDetails && <img src={imageDetails?.url} style={mediaStyling} />)}
-            <h3>Enjoy a random photo of me on this page!</h3>
+            <h3>{sentences.enjoy_random[language]}</h3>
 
             {[1, 16].includes(userId) &&
                 <CustomButton style={{ position: 'absolute', top: '10%', right: '5%' }} tooltip='Upload' onClick={() => setUploadModalOpen(true)} ><i className="fa-solid fa-cloud-arrow-up" /></CustomButton>
             }
 
-            <Button onPress={fetchRandom} > Fetch another random photo</Button>
+            <Button onPress={fetchRandom} > {sentences.fetch_another[language]} <i className="fa-solid fa-rotate" /></Button>
             <UploadModal setSelfOpen={setUploadModalOpen} selfOpen={uploadModalOpen} />
         </>
     )

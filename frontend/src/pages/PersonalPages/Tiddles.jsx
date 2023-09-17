@@ -5,9 +5,33 @@ import { Modal, Text, Button } from '@nextui-org/react';
 import CustomButton from '../../fields/CustomButton.jsx';
 import axios from 'axios';
 import IsLoggedInContext from '../../contexts/IsLoggedInContext';
+import LanguageContext from '../../contexts/LanguageContext';
 
 const ErrorModule = lazy(() => import('../../components/ErrorModule'));
 const WordListField = lazy(() => import('../../fields/WordList'));
+
+const sentences = {
+    title: {
+        en: "Hi! I'm Tiddles",
+        fr: "Salut! Je suis Monsieur Tiddles"
+    },
+    fetch_another: {
+        en: "Fetch another random photo",
+        fr: "Récupérer une autre photo aléatoire"
+    },
+    enjoy_random: {
+        en: "In the meantime, enjoy a random photo of me on this page!",
+        fr: "En attendant, amousez vous à regardent ces photos !"
+    },
+    in_construction: {
+        en: "This page is still being built",
+        fr: "Cette page est temporairement en construction"
+    },
+    future_state: {
+        en: "This will soon be a gallery page with lots of photos & videos",
+        fr: "Ce sera bientôt une page de galerie avec de nombreuses photos et vidéos"
+    }
+};
 
 export default function TiddlesPage() {
     document.title = `Praeficio | Mr. Tiddles`;
@@ -18,6 +42,7 @@ export default function TiddlesPage() {
     const fetchRandom = () => axios.get(`${process.env.REACT_APP_API_LINK}/tiddles/random`).then(res => setImageDetails(res.data));
 
     const currentUser = useContext(IsLoggedInContext);
+    const { language } = useContext(LanguageContext);
 
     let userId = currentUser?.user?.id;
     console.log('userId', userId);
@@ -33,17 +58,17 @@ export default function TiddlesPage() {
     return (
         <>
             <NavMenu />
-            <h1>Hi! I'm Tiddles 👋👋 </h1>
-            <h3>This page is still being built ...&nbsp;<i className="fa-solid fa-cat"></i> </h3>
-            <h3>This will soon be a gallery page with lots of photos & videos</h3>
+            <h1>{sentences.title[language]} 👋👋 </h1>
+            <h3>{sentences.in_construction[language]} ...&nbsp;<i className="fa-solid fa-cat"></i> </h3>
+            <h3>{sentences.future_state[language]}</h3>
             {(!!imageDetails && imageDetails.mime_type?.startsWith('video/')) ? <video src={imageDetails?.url} style={mediaStyling} autoPlay controls /> : (!!imageDetails && <img src={imageDetails?.url} style={mediaStyling} />)}
-            <h3>Enjoy a random photo of me on this page in the meantime!</h3>
+            <h3>{sentences.enjoy_random[language]}</h3>
 
             {[1, 13].includes(userId) &&
                 <CustomButton style={{ position: 'absolute', top: '10%', right: '5%' }} tooltip='Upload' onClick={() => setUploadModalOpen(true)} ><i className="fa-solid fa-cloud-arrow-up" /></CustomButton>
             }
 
-            <Button onPress={fetchRandom} > Fetch another random photo</Button>
+            <Button onPress={fetchRandom} > {sentences.fetch_another[language]} <i className="fa-solid fa-rotate" /> </Button>
             <UploadModal setSelfOpen={setUploadModalOpen} selfOpen={uploadModalOpen} />
         </>
     )
