@@ -36,6 +36,7 @@ const ErrorPage = lazy(() => import('./pages/ErrorPage'));
 const MelPage = lazy(() => import('./pages/PersonalPages/Mel'));
 const HiraPage = lazy(() => import('./pages/PersonalPages/Hira'));
 const TiddlesPage = lazy(() => import('./pages/PersonalPages/Tiddles'));
+const SylvesterPage = lazy(() => import('./pages/PersonalPages/Sylvester'));
 
 const ServiceDesk = lazy(() => import('./pages/ServiceDesk'));
 const SpecificDebtAccountPage = lazy(() => import('./pages/SpecificDebtAccountPage'));

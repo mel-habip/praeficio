@@ -8,7 +8,7 @@ export default class GalleryService extends RecordService {
         if (gallery_name === 'tiddles') {
             this.record_type = 'TiddlesPhoto';
             this.table_name = 'tiddles_photos';
-        } else if (gallery_name.name === 'sylvester') {
+        } else if (gallery_name === 'sylvester') {
             this.record_type = 'SylvesterPhoto';
             this.table_name = 'sylvester_photos';
         } else {
