@@ -20,6 +20,9 @@ export default function TiddlesPage() {
     const currentUser = useContext(IsLoggedInContext);
 
     let userId = currentUser?.user?.id;
+    console.log('userId', userId);
+    console.log('userId2', currentUser?.userId);
+    console.log('currentUser', currentUser);
 
     let mediaStyling = { borderRadius: '1rem', filter: `drop-shadow(0 -10px 4.5rem blue)`, width: '85%', minWidth: '50%', maxWidth: '700px' };
 
