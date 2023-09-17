@@ -38,6 +38,7 @@ import votingSessionRouter from './routes/voting_sessions.js'
 import friendshipsRouter from './routes/friendships.js';
 import businessContactFormsRouter from './routes/business_contact_forms.js';
 import tiddlesRouter from './routes/tiddles.js';
+import sylvesterRouter from './routes/sylvester.js';
 
 
 import REGULAR_SCHEDULED_JOBS from './scheduled_jobs/regular_internal_jobs.js';
@@ -105,6 +106,7 @@ APP.use('/debt_accounts', debtAccountRouter);
 APP.use('/debt_account_transactions', debtAccountTransactionRouter);
 APP.use('/voting_sessions', votingSessionRouter);
 APP.use('/tiddles', tiddlesRouter);
+APP.use('/sylvester', sylvesterRouter);
 APP.use('/business_contact_forms', businessContactFormsRouter);
 
 //starts the cron jobs
