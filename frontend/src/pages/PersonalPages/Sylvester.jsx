@@ -29,7 +29,7 @@ export default function SylvesterPage() {
         <>
             <NavMenu />
             <h1>Hi! I'm Sylvester 👋👋 </h1>
-            {(!!imageDetails && imageDetails.mime_type?.startsWith('video/')) ? <video src={imageDetails.url} style={mediaStyling} autoPlay controls /> : <img src={imageDetails.url} style={mediaStyling} />}
+            {(!!imageDetails && imageDetails.mime_type?.startsWith('video/')) ? <video src={imageDetails?.url} style={mediaStyling} autoPlay controls /> : (!!imageDetails && <img src={imageDetails?.url} style={mediaStyling} />)}
             <h3>Enjoy a random photo of me on this page!</h3>
 
             {[1, 16].includes(userId) &&

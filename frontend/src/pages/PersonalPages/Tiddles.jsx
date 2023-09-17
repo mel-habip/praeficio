@@ -36,7 +36,7 @@ export default function TiddlesPage() {
             <h1>Hi! I'm Tiddles 👋👋 </h1>
             <h3>This page is still being built ...&nbsp;<i className="fa-solid fa-cat"></i> </h3>
             <h3>This will soon be a gallery page with lots of photos & videos</h3>
-            {(!!imageDetails && imageDetails.mime_type?.startsWith('video/')) ? <video src={imageDetails.url} style={mediaStyling} autoPlay controls /> : <img src={imageDetails.url} style={mediaStyling} />}
+            {(!!imageDetails && imageDetails.mime_type?.startsWith('video/')) ? <video src={imageDetails?.url} style={mediaStyling} autoPlay controls /> : (!!imageDetails && <img src={imageDetails?.url} style={mediaStyling} />)}
             <h3>Enjoy a random photo of me on this page in the meantime!</h3>
 
             {[1, 13].includes(userId) &&
