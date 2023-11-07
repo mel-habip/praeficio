@@ -185,7 +185,7 @@ function TransactionsTable({ data = { transactions: [] }, removeTransaction, edi
             sortable: true
         },
         {
-            key: "header",
+            key: "vendor",
             label: dictionary.header[language],
             sortable: true
         },
