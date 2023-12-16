@@ -59,7 +59,7 @@ const VotingSessionClosedPage = lazy(() => import('./pages/VotingPages/VotingSes
 
 
 function App() {
-  axios.defaults.baseURL = 'http://localhost:8000';
+  axios.defaults.baseURL = 'https://api.praeficio.com';
   const browserDarkPreference = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const localTheme = localStorage.getItem('theme');
   let isDarkInitial = true; //proves persistence, sets State based on localStorage

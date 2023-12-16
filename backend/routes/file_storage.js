@@ -36,7 +36,7 @@ fileStorageRouter.post('/logged', authenticateToken, upload.single('file'), asyn
 
     const upload = await uploadToS3(file.buffer, file.mimetype);
 
-    const retrieval_key = generateTemporaryPassword(keyLength, true);
+    const retrieval_key = generateTemporaryPassword(keyLength, true).toLowerCase();
 
     const recordCreation = await helper.create_single({
         user_id: req.user.id,
@@ -68,7 +68,7 @@ fileStorageRouter.post('/anon', upload.single('file'), async (req, res) => {
 
     const upload = await uploadToS3(file.buffer, file.mimetype);
 
-    const retrieval_key = generateTemporaryPassword(keyLength, true);
+    const retrieval_key = generateTemporaryPassword(keyLength, true).toLowerCase();
 
     const recordCreation = await helper.create_single({
         user_id: null,
@@ -87,9 +87,7 @@ fileStorageRouter.post('/anon', upload.single('file'), async (req, res) => {
 
 fileStorageRouter.get('/:retrieval_key', async (req, res) => {
 
-    const {
-        retrieval_key
-    } = req.params;
+    const retrieval_key = req.params.retrieval_key.trim().toLowerCase();
 
     if (retrieval_key.length < 6 || retrieval_key.length > 32) return res.status(400).json({
         message: `Bad Request: Invalid format for Retrieval Key.`
