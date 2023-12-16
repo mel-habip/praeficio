@@ -26,7 +26,7 @@ export default function DebtAccounts() {
 
     //fetch the data
     useEffect(() => {
-        axios.get(`${process.env.REACT_APP_API_LINK}/debt_accounts/`).then(response => {
+        axios.get(`/debt_accounts/`).then(response => {
             if (response.status === 200) {
                 let { data: accounts, ...rest } = response.data;
                 setAccountsList(accounts ?? []);
@@ -92,7 +92,7 @@ function DebtAccountCreationModalWithButton({ setAccountsList = () => { }, accou
         if (user.friendships) {
             setFriends(user.friendships);
         } else if (modalOpen && !user.friendships) {
-            axios.get(`${process.env.REACT_APP_API_LINK}/friendships/`).then(response => {
+            axios.get(`/friendships/`).then(response => {
                 if (response.status === 200) {
                     setFriends(response.data?.data ?? []);
                 } else {
@@ -182,7 +182,7 @@ function DebtAccountCreationModalWithButton({ setAccountsList = () => { }, accou
                     auto
                     onPress={async () => {
                         console.log('creating voting session', debtAccountDetails?.name);
-                        await axios.post(`${process.env.REACT_APP_API_LINK}/debt_accounts/`, {
+                        await axios.post(`/debt_accounts/`, {
                             name: debtAccountDetails?.name,
                             lender_id: debtAccountDetails?.lender_id,
                             borrower_id: debtAccountDetails?.borrower_id,

@@ -23,54 +23,68 @@ const log = console.log;
 const REGULAR_SCHEDULED_JOBS = {
     monthly: cron.schedule("1 0 1 * *", async function () { //at 0:01am
         log(`Monthly triggered`);
-        let monthly_tasks = await query(`Select * FROM alerts WHERE frequency = 'MONTHLY' AND active = TRUE`);
-        for await (const task of monthly_tasks) {
-            job_handler(task);
-            //no tasks yet
-        }
+        // let monthly_tasks = await query(`Select * FROM alerts WHERE frequency = 'MONTHLY' AND active = TRUE`);
+        // for await (const task of monthly_tasks) {
+        //     job_handler(task);
+        //     //no tasks yet
+        // }
     }),
     weekly: cron.schedule("1 1 * * 1", async function () { //at 1:01am
         log(`Weekly triggered`);
-        let weekly_tasks = await query(`Select * FROM alerts WHERE frequency = 'WEEKLY' AND active = TRUE`);
-        for await (const task of weekly_tasks) {
-            job_handler(task);
-            //no tasks yet
-        }
+        // let weekly_tasks = await query(`Select * FROM alerts WHERE frequency = 'WEEKLY' AND active = TRUE`);
+        // for await (const task of weekly_tasks) {
+        //     job_handler(task);
+        //     //no tasks yet
+        // }
     }),
     daily: cron.schedule("1 2 * * *", async function () { //at 2:01 am
         log(`Daily triggered`);
-        let daily_tasks = await query(`Select * FROM alerts WHERE frequency = 'DAILY' AND active = TRUE`);
-        for await (const task of daily_tasks) {
-            job_handler(task);
-            //no tasks yet
-        }
+        let temporaryFileExpirations = await query(`Select * FROM stored_files;`);
+
+        temporaryFileExpirations.forEach(stored_file => {
+            const neededDelay = calculateDelay(stored_file.created_on);
+
+            setTimeout(() => {
+                query(`DELETE FROM stored_files WHERE stored_file_id = ${stored_file.stored_file_id};`);
+            }, neededDelay);
+        })
+
+
+
+        // let daily_tasks = await query(`Select * FROM alerts WHERE frequency = 'DAILY' AND active = TRUE`);
+        // for await (const task of daily_tasks) {
+        //     job_handler(task);
+        //     //no tasks yet
+        // }
+    }, {
+        runOnInit: true
     }),
     quarterly: cron.schedule("1 3 1 1,4,7,10 *", async function () { //at 3:01am
         log(`Quarterly triggered`);
-        let quarterly_tasks = await query(`Select * FROM alerts WHERE frequency = 'QUARTERLY' AND active = TRUE`);
-        for await (const task of quarterly_tasks) {
-            job_handler(task);
-            //no tasks yet
-        }
+        // let quarterly_tasks = await query(`Select * FROM alerts WHERE frequency = 'QUARTERLY' AND active = TRUE`);
+        // for await (const task of quarterly_tasks) {
+        //     job_handler(task);
+        //     //no tasks yet
+        // }
     }),
     annual: cron.schedule("1 4 1 1 *", async function () { //at 4:01am
         log(`Annual triggered`);
-        let annual_tasks = await query(`Select * FROM alerts WHERE frequency = 'ANNUAL' AND active = TRUE`);
-        for await (const task of annual_tasks) {
-            job_handler(task);
-            //no tasks yet
-        }
+        // let annual_tasks = await query(`Select * FROM alerts WHERE frequency = 'ANNUAL' AND active = TRUE`);
+        // for await (const task of annual_tasks) {
+        //     job_handler(task);
+        //     //no tasks yet
+        // }
     }),
     semi_annual: cron.schedule("1 5 1 1,7 *", async function () { //at 5:01am
         log(`Semi annual triggered`);
-        let semi_annual_tasks = await query(`Select * FROM alerts WHERE frequency = 'SEMI_ANNUAL' AND active = TRUE`);
-        for await (const task of semi_annual_tasks) {
-            job_handler(task);
-            //no tasks yet
-        }
+        // let semi_annual_tasks = await query(`Select * FROM alerts WHERE frequency = 'SEMI_ANNUAL' AND active = TRUE`);
+        // for await (const task of semi_annual_tasks) {
+        //     job_handler(task);
+        //     //no tasks yet
+        // }
     }),
     minutely: cron.schedule("* * * * *", async function () { //at 5:01am
-        // log(`Minutely triggered`);
+        log(`Minutely triggered`);
 
         // let quarterly_tasks = await query(`Select * FROM alerts WHERE frequency = 'SEMI_ANNUAL' AND active = TRUE`);
         // for await (const task of quarterly_tasks) {
@@ -85,7 +99,7 @@ export default REGULAR_SCHEDULED_JOBS;
 const KNOWN_TASKS = {
     future_dividends: async function (time_period) {},
     past_dividends: async function (time_period) {},
-    past_performance : async function (time_period) {},
+    past_performance: async function (time_period) {},
     analyst_recommendations: async function () {}
 };
 
@@ -98,3 +112,19 @@ async function job_handler(job, details) {
         emailService({}); //to the owner, if email is known. do LEFT JOIN in query to know the emails.
     }
 };
+
+
+function calculateDelay(createdAt) {
+    const expirationHours = 24;
+
+    // Calculate expiration time
+    const expirationTime = new Date(createdAt);
+    expirationTime.setHours(expirationTime.getHours() + expirationHours);
+
+    // Calculate the delay in milliseconds
+    const currentDateTime = new Date();
+    const delay = expirationTime - currentDateTime;
+
+    // Ensure the delay is non-negative
+    return Math.max(0, delay);
+}

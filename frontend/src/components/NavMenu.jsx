@@ -145,6 +145,10 @@ function NavMenu({ show_language_button_externally = false, hide_language_button
             en: 'Monthly Planner',
             fr: 'Planificateur Mensuel'
         },
+        movies: {
+            en: 'Movies',
+            fr: 'Films'
+        },
     };
 
     return (
@@ -321,6 +325,15 @@ function NavMenu({ show_language_button_externally = false, hide_language_button
                             onClick={closeNavMenu}
                         >
                             {dictionary.monthly_planner[language]}&nbsp; <i className="fa-regular fa-calendar-days" />
+                        </Link>
+                    </li>
+                    <li className='nav-item'>
+                        <Link
+                            to='/movies'
+                            className='nav-links'
+                            onClick={closeNavMenu}
+                        >
+                            {dictionary.movies[language]}&nbsp; <i className="fa-regular fa-calendar-days" />
                         </Link>
                     </li>
                 </ul>

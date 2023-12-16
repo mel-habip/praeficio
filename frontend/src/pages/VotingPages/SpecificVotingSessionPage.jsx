@@ -37,7 +37,7 @@ export default function SpecificVotingSessionPage() {
     }, [voting_session_id, votingSessionDetails?.voter_key]);
 
     useEffect(() => {
-        axios.get(`${process.env.REACT_APP_API_LINK}/voting_sessions/${voting_session_id}`).then(response => {
+        axios.get(`/voting_sessions/${voting_session_id}`).then(response => {
             if (response.status === 401) {
                 setIsLoggedIn(false);
             } else if (response.status === 200) {
@@ -143,7 +143,7 @@ export default function SpecificVotingSessionPage() {
                         selfOpen={voterKeyRenewModalOpen}
                         setSelfOpen={setVoterKeyRenewModalOpen}
                         outerUpdater={() => {
-                            axios.post(`${process.env.REACT_APP_API_LINK}/voting_sessions/${voting_session_id}/renew_voter_key`).then(response => {
+                            axios.post(`/voting_sessions/${voting_session_id}/renew_voter_key`).then(response => {
                                 if (response.status === 401) {
                                     setIsLoggedIn(false);
                                 } else if (response.status === 200) {
@@ -166,7 +166,7 @@ export default function SpecificVotingSessionPage() {
                         selfOpen={completionModalOpen}
                         setSelfOpen={setCompletionModalOpen}
                         outerUpdater={() => {
-                            axios.post(`${process.env.REACT_APP_API_LINK}/voting_sessions/${voting_session_id}/complete`).then(response => {
+                            axios.post(`/voting_sessions/${voting_session_id}/complete`).then(response => {
                                 if (response.status === 401) {
                                     setIsLoggedIn(false);
                                 } else if (response.status === 200) {
@@ -319,7 +319,7 @@ function VotersTable({ votersList = [], refreshCounter }) {
                             if (columnKey === 'actions') {
                                 return <Table.Cell css={{ 'padding': '0px', wordWrap: 'break-word', margin: '0px' }} >
                                     <CustomButton buttonStyle="btn--transparent" onClick={() => {
-                                        axios.delete(`${process.env.REACT_APP_API_LINK}/voting_sessions/${item.voting_session_id}/vote/${item.vote_id}`).then(response => {
+                                        axios.delete(`/voting_sessions/${item.voting_session_id}/vote/${item.vote_id}`).then(response => {
                                             if (response.status === 401) {
                                                 setIsLoggedIn(false);
                                             } else if ([200, 204].includes(response.status)) {
@@ -456,7 +456,7 @@ function EditModalWithButton({ votingSessionDetails = {}, setVotingSessionDetail
                     shadow
                     auto
                     onPress={async () => {
-                        await axios.put(`${process.env.REACT_APP_API_LINK}/voting_sessions/${votingSessionDetails.voting_session_id}`, {
+                        await axios.put(`/voting_sessions/${votingSessionDetails.voting_session_id}`, {
                             ...formData,
                             remove_voter_limit: !formData.voter_limit, //send `true` if we want to remove the limit intentionally.
                             number_of_votes: (formData.method === 'multiple_votes' || formData.limit_number_of_votes) ? formData.number_of_votes : undefined,

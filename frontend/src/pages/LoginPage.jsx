@@ -134,7 +134,7 @@ export default function LoginPage() {
                                 auto
                                 onPress={async () => {
                                     console.log('logging in');
-                                    await axios.post(`${process.env.REACT_APP_API_LINK}/users/login`, formValues).then(async response => {
+                                    await axios.post(`/users/login`, formValues).then(async response => {
                                         console.log('response', response);
                                         if (response.status === 200) {
                                             const { access_token } = response.data;
@@ -188,11 +188,11 @@ export default function LoginPage() {
                             <Button
                                 auto
                                 onPress={async () => {
-                                    await axios.post(`${process.env.REACT_APP_API_LINK}/users/create_new_user`, formValues)
+                                    await axios.post(`/users/create_new_user`, formValues)
                                         .then(async creationResponse => {
                                             console.log('CREATION', creationResponse);
                                             if (creationResponse.status === 201) {
-                                                await axios.post(`${process.env.REACT_APP_API_LINK}/users/login`, formValues)
+                                                await axios.post(`/users/login`, formValues)
                                                     .then(async loginRes => {
                                                         console.log('LOG IN', loginRes);
                                                         if (loginRes.status === 200) {

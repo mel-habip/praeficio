@@ -109,7 +109,7 @@ export default function SpecificVoterPage() {
     const [voteDeleted, setVoteDeleted] = useState(false);
 
     useEffect(() => {
-        axios.get(`${process.env.REACT_APP_API_LINK}/voting_sessions/${voting_session_id}/vote/${voter_key}`).then(response => {
+        axios.get(`/voting_sessions/${voting_session_id}/vote/${voter_key}`).then(response => {
             if (response.status === 200) {
                 if (response.data.already_voted) setVotedAlready(true);
                 setVotingSessionDetails(response.data ?? {});
@@ -169,7 +169,7 @@ export default function SpecificVoterPage() {
                     setVotedAlready(false);
                 }} > {dictionary.edit[language]} <i className="fa-regular fa-pen-to-square" /> </CustomButton>
                 <CustomButton onClick={() => {
-                    axios.delete(`${process.env.REACT_APP_API_LINK}/voting_sessions/${voting_session_id}/vote/${votingSessionDetails.vote_id}`).then(response => {
+                    axios.delete(`/voting_sessions/${voting_session_id}/vote/${votingSessionDetails.vote_id}`).then(response => {
                         if (response.status === 200) {
                             setVoteDeleted(true);
                         } else {
@@ -230,7 +230,7 @@ export default function SpecificVoterPage() {
     function submit(selections = []) {
 
         if (votingSessionDetails.vote_id) {
-            axios.put(`${process.env.REACT_APP_API_LINK}/voting_sessions/${voting_session_id}/vote/${votingSessionDetails.vote_id}`, {
+            axios.put(`/voting_sessions/${voting_session_id}/vote/${votingSessionDetails.vote_id}`, {
                 voter_key,
                 selections,
             }).then(response => {
@@ -241,7 +241,7 @@ export default function SpecificVoterPage() {
                 }
             })
         } else {
-            axios.post(`${process.env.REACT_APP_API_LINK}/voting_sessions/${voting_session_id}/vote/`, {
+            axios.post(`/voting_sessions/${voting_session_id}/vote/`, {
                 voter_key,
                 selections,
             }).then(response => {

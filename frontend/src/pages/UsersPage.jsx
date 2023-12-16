@@ -76,7 +76,7 @@ export default function UsersPage() {
     useEffect(() => {
         if (pageOpen === 2) {
             setTimeout(() => {
-                axios.post(`${process.env.REACT_APP_API_LINK}/users/search`, {
+                axios.post(`/users/search`, {
                     discovery_token: formData.discovery_token || undefined,
                     user_id: !isNaN(formData.user) ? parseInt(formData.user) : undefined,
                     username: isNaN(formData.user) ? formData.user : undefined,

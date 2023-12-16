@@ -123,7 +123,6 @@ tiddlesRouter.get('/', async (req, res) => {
 tiddlesRouter.get('/random', async (req, res) => {
     const sql = `SELECT COUNT(${helper.primary_key}) FROM ${helper.table_name}`;
 
-
     const [{
         "COUNT(photo_id)": count
     }] = await helper.query(sql);

@@ -155,7 +155,7 @@ export function MyWorkspacesSection({ setSelectedSubSection, favesOnly = false }
     ]);
 
     useEffect(() => {
-        axios.get(`${process.env.REACT_APP_API_LINK}/workspaces`).then(response => {
+        axios.get(`/workspaces`).then(response => {
             if (response.status === 200) {
                 let { data: items, ...rest } = response.data;
                 setUserWorkspaces((items ?? []).filter(item => item.starred || !favesOnly));
@@ -192,7 +192,7 @@ function WorkspaceCard({ details, invitationModalOpen, setSelectedDetails }) {
         <Card css={{ $$cardColor: '$colors$primary', width: '300px', height: '150px' }} key={innerDetails.workspace_id + '-card-inner'} isHoverable isPressable>
             <i
                 onClick={(ev) => {
-                    axios.put(`${process.env.REACT_APP_API_LINK}/workspaces/${innerDetails.workspace_id}/user/${user.id}`, { starred: true }).then(response => {
+                    axios.put(`/workspaces/${innerDetails.workspace_id}/user/${user.id}`, { starred: true }).then(response => {
                         if (response.status === 200) {
                             console.log('successful?')
                         } else {
@@ -254,7 +254,7 @@ function SpecificWorkspaceMessagesPanel({ user, setSelectedSubSection, selectedS
     const [messages, setMessages] = useState(null);
 
     useEffect(() => {
-        axios.get(`${process.env.REACT_APP_API_LINK}/workspaces/${workspace_id}`).then(response => {
+        axios.get(`/workspaces/${workspace_id}`).then(response => {
             if (response.status === 200) {
                 let { users, messages, ...rest } = response.data;
                 setMessages(messages ?? []);
@@ -342,7 +342,7 @@ function Comment({ message, level = 0, sectionLength = 1, role, user, handleErro
                         shadow
                         onClick={() => {
                             console.log('sending message', newMessageText);
-                            axios.post(`${process.env.REACT_APP_API_LINK}/workspace_messages/${workspace_id}`, {
+                            axios.post(`/workspace_messages/${workspace_id}`, {
                                 content: newMessageText,
                                 parent_workspace_message_id: innerDetails.workspace_message_id,
                             }).then(response => {
@@ -411,7 +411,7 @@ function CommentsList({ messages, role, user, workspace_id, setMessages, handleE
                         shadow
                         onClick={() => {
                             console.log('sending message', newMessageText);
-                            axios.post(`${process.env.REACT_APP_API_LINK}/workspace_messages/${workspace_id}`, {
+                            axios.post(`/workspace_messages/${workspace_id}`, {
                                 content: newMessageText,
                             }).then(response => {
                                 console.log('response:', response.data);
@@ -477,7 +477,7 @@ function WorkspaceCreationModal({ modalOpen, setModalOpen, setUserWorkspaces, us
                 auto
                 onPress={async () => {
                     console.log('creating workspace', newWorkspaceDetails);
-                    await axios.post(`${process.env.REACT_APP_API_LINK}/workspaces/`, {
+                    await axios.post(`/workspaces/`, {
                         name: newWorkspaceDetails.name,
                         publicity: newWorkspaceDetails.publicity,
                         starred: isFave,
@@ -523,7 +523,7 @@ function InvitationAcceptConfirmModal({ modalOpen, setModalOpen, setUserWorkspac
                     color="error"
                     onPress={async () => {
                         console.log(`deleting invite`);
-                        await axios.delete(`${process.env.REACT_APP_API_LINK}/workspaces/${selectedWorkspace.id}/user/${user.id}`).then(response => {
+                        await axios.delete(`/workspaces/${selectedWorkspace.id}/user/${user.id}`).then(response => {
                             if (response.status === 401) {
                                 setIsLoggedIn(false);
                             } else if (response.status === 200) {
@@ -538,7 +538,7 @@ function InvitationAcceptConfirmModal({ modalOpen, setModalOpen, setUserWorkspac
                     shadow
                     color="success"
                     onPress={async () => {
-                        await axios.put(`${process.env.REACT_APP_API_LINK}/workspaces/${selectedWorkspace.id}/user/${user.id}`, { invitation_accepted: true }).then(response => {
+                        await axios.put(`/workspaces/${selectedWorkspace.id}/user/${user.id}`, { invitation_accepted: true }).then(response => {
                             if (response.status === 401) {
                                 setIsLoggedIn(false);
                             } else if (response.status === 200) {

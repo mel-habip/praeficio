@@ -59,7 +59,7 @@ export default function ToDos({ archive }) {
 
 
     function updateToDoStatus(to_do_id, status) {
-        axios.put(`${process.env.REACT_APP_API_LINK}/todos/${to_do_id}`, { completed: status }).then(response => {
+        axios.put(`/todos/${to_do_id}`, { completed: status }).then(response => {
             if (response.status === 401) {
                 setIsLoggedIn(false);
             } else if (response.status === 200) {
@@ -87,7 +87,7 @@ export default function ToDos({ archive }) {
     }
 
     useEffect(() => { //main fetcher on load
-        axios.get(`${process.env.REACT_APP_API_LINK}/todos/my_todos${archive ? '?archived=true' : ''}`).then(response => {
+        axios.get(`/todos/my_todos${archive ? '?archived=true' : ''}`).then(response => {
             if (response.status === 401) {
                 setIsLoggedIn(false);
             } else if (response.status === 200) {
@@ -173,7 +173,7 @@ export default function ToDos({ archive }) {
             disabled={toDoList.every(item => !item.completed)}
             onClick={() => {
 
-                axios.post(`${process.env.REACT_APP_API_LINK}/todos/archive_all_completed`).then(response => {
+                axios.post(`/todos/archive_all_completed`).then(response => {
                     if (response.status === 401) {
                         setIsLoggedIn(false);
                     } else if (response.status === 201) {
@@ -217,7 +217,7 @@ export default function ToDos({ archive }) {
                     auto
                     onPress={async () => {
                         console.log('creating to-do', selectedCategoryValue, content.text);
-                        await axios.post(`${process.env.REACT_APP_API_LINK}/todos/`, {
+                        await axios.post(`/todos/`, {
                             content: content.text,
                             category: selectedCategoryValue,
                             due_on: content.due_on || undefined,

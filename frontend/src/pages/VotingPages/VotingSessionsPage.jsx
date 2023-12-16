@@ -25,7 +25,7 @@ export default function VotingSessionsPage() {
     const [votingSessions, setVotingSessions] = useState(null);
 
     useEffect(() => {
-        axios.get(`${process.env.REACT_APP_API_LINK}/voting_sessions`).then(response => {
+        axios.get(`/voting_sessions`).then(response => {
             if (response.status === 401) {
                 setIsLoggedIn(false);
             } else if (response.status === 200) {
@@ -156,7 +156,7 @@ function VotingSessionCreationModalWithButton({ setVotingSessions = () => { }, v
                     auto
                     onPress={async () => {
                         console.log('creating voting session', votingSessionDetails?.name);
-                        await axios.post(`${process.env.REACT_APP_API_LINK}/voting_sessions/`, {
+                        await axios.post(`/voting_sessions/`, {
                             name: votingSessionDetails?.name,
                             details: {
                                 method: votingSessionDetails.method,

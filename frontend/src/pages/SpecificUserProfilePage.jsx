@@ -56,7 +56,7 @@ function UserSelfPage({ details, setDetails }) {
             <div className="profile-section">
                 <h4>Control Panel</h4>
                 <CustomButton onClick={() => {
-                    axios.post(`${process.env.REACT_APP_API_LINK}/users/${details.id}/renew_discovery_token`).then(response => {
+                    axios.post(`/users/${details.id}/renew_discovery_token`).then(response => {
                         if (response.status === 200) {
                             setDetails(prev => ({ ...prev, discovery_token: response.data.discovery_token }));
                         } else {
@@ -114,7 +114,7 @@ function OtherUserPage({ already_added = false, user_id }) {
 
     useEffect(() => {
         if (!token && !already_added) return;
-        axios.get(`${process.env.REACT_APP_API_LINK}/users/${user_id}?discovery_token=${token}`).then(response => {
+        axios.get(`/users/${user_id}?discovery_token=${token}`).then(response => {
             if (response.status === 200) {
                 setViewedUserDetails({ ...response.data, already_added });
             } else {
@@ -129,7 +129,7 @@ function OtherUserPage({ already_added = false, user_id }) {
         {!token && !viewedUserDetails.already_added && <DiscoveryTokenEntryModal setToken={setToken} />}
 
         {viewedUserDetails.already_added ? <CustomButton disabled >Added ✔️</CustomButton> : <CustomButton onClick={() => {
-            axios.post(`${process.env.REACT_APP_API_LINK}/friendships`, {
+            axios.post(`/friendships`, {
                 user_id,
                 discovery_token: token
             }).then(response => {

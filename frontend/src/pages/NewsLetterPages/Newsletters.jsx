@@ -31,7 +31,7 @@ export default function Newsletters() {
     useEffect(() => { //main fetcher on load
         setIsLoading(true);
         console.log(`Loading page #${pageNumber}`);
-        axios.get(`${process.env.REACT_APP_API_LINK}/newsletters?size=25&page=${pageNumber}`).then(response => {
+        axios.get(`/newsletters?size=25&page=${pageNumber}`).then(response => {
             setNewsletterArticleList(prevList => toUniqueArray([...(prevList || []), ...response.data.data], 'newsletter_id'));
             setHasMore(response.data.has_more);
             setIsLoading(false);

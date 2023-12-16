@@ -412,32 +412,84 @@ CREATE TABLE sylvester_photos (
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-SET GLOBAL event_scheduler = ON;
+CREATE TABLE sylvester_photos (
+	photo_id INT PRIMARY KEY AUTO_INCREMENT,
+    description VARCHAR(400),
+    file_name VARCHAR(200) NOT NULL,
+    mime_type VARCHAR(100),
+    tags VARCHAR (400),
+    updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
 
--- soft-deletes inactive users after 3 months
-CREATE EVENT soft_deleting_inactive_users ON SCHEDULE EVERY 1 WEEK ENABLE
-  DO 
-  UPDATE users SET deleted = TRUE 
-  WHERE active = FALSE AND `updated_on` < CURRENT_TIMESTAMP - INTERVAL 3 MONTH;
+CREATE TABLE movies (
+	movie_id INT PRIMARY KEY AUTO_INCREMENT,
+    file_name VARCHAR(200) NOT NULL,
+    name VARCHAR(200) NOT NULL,
+    description VARCHAR(400),
+    updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE movie_ratings (
+	movie_id INT NOT NULL,
+    user_id INT NOT NULL,
+    value INT,
+    updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (movie_id , user_id),
+
+    FOREIGN KEY (user_id)
+        REFERENCES users (user_id)
+        ON DELETE CASCADE,
+    FOREIGN KEY (movie_id)
+        REFERENCES movies (movie_id)
+        ON DELETE CASCADE
+);
+
+CREATE TABLE stored_files (
+    stored_file_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT,
+
+    file_name VARCHAR(200) NOT NULL,
+    retrieval_key VARCHAR(200) NOT NULL,
+    useCount INT NOT NULL DEFAULT 1,
+    updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id)
+        REFERENCES users (user_id)
+        ON DELETE SET NULL,
+    UNIQUE KEY `retrieval_key_UNIQUE` (`retrieval_key`)
+);
+
+-- SET GLOBAL event_scheduler = ON;
+
+-- -- soft-deletes inactive users after 3 months
+-- CREATE EVENT soft_deleting_inactive_users ON SCHEDULE EVERY 1 WEEK ENABLE
+--   DO 
+--   UPDATE users SET deleted = TRUE 
+--   WHERE active = FALSE AND `updated_on` < CURRENT_TIMESTAMP - INTERVAL 3 MONTH;
   
--- deletes soft-deleted users & positions after 3 months
-CREATE EVENT users_table_cleaning ON SCHEDULE EVERY 1 WEEK ENABLE
-  DO 
-  DELETE FROM users
-  WHERE deleted = TRUE AND `updated_on` < CURRENT_TIMESTAMP - INTERVAL 3 MONTH;
+-- -- deletes soft-deleted users & positions after 3 months
+-- CREATE EVENT users_table_cleaning ON SCHEDULE EVERY 1 WEEK ENABLE
+--   DO 
+--   DELETE FROM users
+--   WHERE deleted = TRUE AND `updated_on` < CURRENT_TIMESTAMP - INTERVAL 3 MONTH;
 
-CREATE EVENT positions_table_cleaning ON SCHEDULE EVERY 3 DAY ENABLE
-  DO 
-  DELETE FROM positions
-  WHERE deleted = TRUE AND `updated_on` < CURRENT_TIMESTAMP - INTERVAL 1 WEEK;
+-- CREATE EVENT positions_table_cleaning ON SCHEDULE EVERY 3 DAY ENABLE
+--   DO 
+--   DELETE FROM positions
+--   WHERE deleted = TRUE AND `updated_on` < CURRENT_TIMESTAMP - INTERVAL 1 WEEK;
   
-CREATE EVENT expired_workspace_invitations_cleaning ON SCHEDULE EVERY 1 WEEK ENABLE
-	DO
-    DELETE FROM workspace_user_associations
-    WHERE invitation_accepted = FALSE AND `updated_on` < CURRENT_TIMESTAMP - INTERVAL 2 MONTH;
+-- CREATE EVENT expired_workspace_invitations_cleaning ON SCHEDULE EVERY 1 WEEK ENABLE
+-- 	DO
+--     DELETE FROM workspace_user_associations
+--     WHERE invitation_accepted = FALSE AND `updated_on` < CURRENT_TIMESTAMP - INTERVAL 2 MONTH;
 
--- deletes empty workspaces
-CREATE EVENT workspaces_cleaning ON SCHEDULE EVERY 1 WEEK ENABLE 
-  DO 
-  DELETE workspaces FROM workspaces LEFT JOIN workspace_user_associations ON workspaces.workspace_id = workspace_user_associations.workspace_id WHERE user_id IS NULL;
+-- -- deletes empty workspaces
+-- CREATE EVENT workspaces_cleaning ON SCHEDULE EVERY 1 WEEK ENABLE 
+--   DO 
+--   DELETE workspaces FROM workspaces LEFT JOIN workspace_user_associations ON workspaces.workspace_id = workspace_user_associations.workspace_id WHERE user_id IS NULL;
   

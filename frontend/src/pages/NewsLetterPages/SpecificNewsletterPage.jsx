@@ -23,7 +23,7 @@ export default function SpecificNewsletterPage() {
 
     useEffect(() => { //main fetcher on load
         console.log(`Loading newsletter_id #${newsletter_id}`);
-        axios.get(`${process.env.REACT_APP_API_LINK}/newsletters/${newsletter_id}`).then(response => {
+        axios.get(`/newsletters/${newsletter_id}`).then(response => {
             setNewsletterDetails(response.data);
         }).catch(handleError);
     }, []);

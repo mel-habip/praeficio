@@ -8,6 +8,10 @@ import LanguageContext from './contexts/LanguageContext';
 import { NextUIProvider, createTheme, Loading } from '@nextui-org/react';
 import axios from 'axios';
 
+import MovieRatingPage from './pages/MovieRatingPage.jsx';
+import TemporaryFilePage from './pages/TemporaryFilePage.jsx';
+import TemporaryFileRetrievalPage from './pages/TemporaryFileRetrievalPage.jsx';
+
 const PublicPage = lazy(() => import('./pages/PublicPage'));
 const QuickNotes = lazy(() => import('./pages/QuickNotes'));
 const Newsletters = lazy(() => import('./pages/NewsLetterPages/Newsletters'));
@@ -55,7 +59,7 @@ const VotingSessionClosedPage = lazy(() => import('./pages/VotingPages/VotingSes
 
 
 function App() {
-  axios.defaults.baseURL = process.env.REACT_APP_API_LINK;
+  axios.defaults.baseURL = 'http://localhost:8000';
   const browserDarkPreference = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const localTheme = localStorage.getItem('theme');
   let isDarkInitial = true; //proves persistence, sets State based on localStorage
@@ -168,6 +172,9 @@ function App() {
                     <Route path='/company' element={<Navigate to="/" replace />} />
                     <Route path='/home' element={<Navigate to="/portal" replace />} />
 
+                    <Route path='/movies' element={<MovieRatingPage />} exact />
+
+
                     <Route path='/mel' element={<Navigate to="/mel-habip" replace />} />
                     <Route path='/habip' element={<Navigate to="/mel-habip" replace />} />
                     <Route path='/mel-habip' element={<MelPage />} exact />
@@ -187,6 +194,9 @@ function App() {
                     <Route path='/slyvester' element={<Navigate to="/sylvester" replace />} />
                     <Route path='/sylvest' element={<Navigate to="/sylvester" replace />} />
                     <Route path='/sylvester' element={<SylvesterPage />} exact />
+
+                    <Route path='/temporary-files' element={<TemporaryFilePage />} exact />
+                    <Route path='/temporary-files/:retrievalKey' element={<TemporaryFileRetrievalPage />} exact />
 
                     <Route path='/portal' element={isLoggedIn ? <Portal /> : <LoginPage />} exact />
                     <Route path='/newsletters' element={<Newsletters />} exact />

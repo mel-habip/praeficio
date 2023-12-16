@@ -39,9 +39,10 @@ import friendshipsRouter from './routes/friendships.js';
 import businessContactFormsRouter from './routes/business_contact_forms.js';
 import tiddlesRouter from './routes/tiddles.js';
 import sylvesterRouter from './routes/sylvester.js';
-
+import moviesRouter from './routes/movies.js';
 
 import REGULAR_SCHEDULED_JOBS from './scheduled_jobs/regular_internal_jobs.js';
+import fileStorageRouter from './routes/file_storage.js';
 
 const log = console.log;
 const rateLimiter = rateLimit({
@@ -108,6 +109,8 @@ APP.use('/voting_sessions', votingSessionRouter);
 APP.use('/tiddles', tiddlesRouter);
 APP.use('/sylvester', sylvesterRouter);
 APP.use('/business_contact_forms', businessContactFormsRouter);
+APP.use('/movies', moviesRouter);
+APP.use('/temporary-files', fileStorageRouter);
 
 //starts the cron jobs
 Object.values(REGULAR_SCHEDULED_JOBS).forEach(job => job.start());

@@ -88,7 +88,7 @@ export default function SpecificDebtAccountPage() {
     const [accountDetails, setAccountDetails] = useState(null);
     const handleError = useHandleError();
     useEffect(() => {
-        axios.get(`${process.env.REACT_APP_API_LINK}/debt_accounts/${debt_account_id}`).then(response => {
+        axios.get(`/debt_accounts/${debt_account_id}`).then(response => {
             if (response.status === 200) {
                 setAccountDetails(response.data);
             } else {
@@ -296,7 +296,7 @@ function TransactionModal({ isEdit = false, editData = {}, addTransaction, setMo
                     shadow
                     onPress={() => {
                         if (isEdit) {
-                            axios.put(`${process.env.REACT_APP_API_LINK}/debt_account_transactions/${formData.debt_account_transaction_id}`, {
+                            axios.put(`/debt_account_transactions/${formData.debt_account_transaction_id}`, {
                                 debt_account_id: parseInt(debt_account_id),
                                 ...formData,
                                 amount: parseFloat(formData.amount.slice(1).replaceAll(',', '')) * (formData.is_payment ? -1 : 1),
@@ -310,7 +310,7 @@ function TransactionModal({ isEdit = false, editData = {}, addTransaction, setMo
                                 }
                             }).catch(() => { });
                         } else {
-                            axios.post(`${process.env.REACT_APP_API_LINK}/debt_account_transactions/`, {
+                            axios.post(`/debt_account_transactions/`, {
                                 debt_account_id: parseInt(debt_account_id),
                                 ...formData,
                                 amount: parseFloat(formData.amount.slice(1).replaceAll(',', '')) * (formData.is_payment ? -1 : 1),

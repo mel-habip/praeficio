@@ -110,7 +110,7 @@ function ToDoCategoriesSection() {
                 shadow
                 color="success"
                 onPress={() => {
-                    axios.put(`${process.env.REACT_APP_API_LINK}/users/${user.id}`, { to_do_categories: currentCategories }).then(response => {
+                    axios.put(`/users/${user.id}`, { to_do_categories: currentCategories }).then(response => {
                         if (response.status === 200) {
                             console.log('got here! :D ', setUser)
                             setUser({ ...user, to_do_categories: currentCategories });
@@ -253,7 +253,7 @@ function PersonalSettingsSection({ user, setUser }) {
                     shadow
                     color="success"
                     onPress={() => {
-                        axios.put(`${process.env.REACT_APP_API_LINK}/users/${user.id}`, {
+                        axios.put(`/users/${user.id}`, {
                             first_name: firstName,
                             last_name: lastName,
                             email,

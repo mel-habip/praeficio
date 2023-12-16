@@ -32,7 +32,7 @@ const config = undefined;
 function AdminNewsletterCardWrap({ setNewsletterArticleList, ...card_details }) {
 
     function handleDelete() {
-        // axios.delete(`${process.env.REACT_APP_API_LINK}/newsletters/${card_details.newsletter_id}`).then(response => {
+        // axios.delete(`/newsletters/${card_details.newsletter_id}`).then(response => {
         // if (response.status === 200) {
         setNewsletterArticleList(prev => prev.filter(post => post.newsletter_id !== card_details.newsletter_id))
         // } else {
@@ -84,7 +84,7 @@ export default function NewslettersAdmin() {
 
     useEffect(() => { //main fetcher on load
         console.log(`fetching all NewsletterArticles`);
-        axios.get(`${process.env.REACT_APP_API_LINK}/newsletters`).then(response => {
+        axios.get(`/newsletters`).then(response => {
             setNewsletterArticleList(prevList => toUniqueArray([...(prevList || []), ...response.data.data], 'newsletter_id'));
         }).catch(e => { console.error(e); });
     }, []);
@@ -116,7 +116,7 @@ function NewsletterCreationModal({ selfOpen, setSelfOpen, isEdit = false, starti
 
     function handleEdit() {
         console.log('updating');
-        axios.put(`${process.env.REACT_APP_API_LINK}/newsletters/${formData.newsletter_id}`, formData).then(response => {
+        axios.put(`/newsletters/${formData.newsletter_id}`, formData).then(response => {
             if (response.status === 200) {
                 setNewsletterArticleList(prev => prev.map(post => post.newsletter_id === startingValue.newsletter_id ? formData : post));
                 setSelfOpen(false);
@@ -128,7 +128,7 @@ function NewsletterCreationModal({ selfOpen, setSelfOpen, isEdit = false, starti
 
     function handleCreate() {
         console.log('creating');
-        axios.post(`${process.env.REACT_APP_API_LINK}/newsletters/`, formData).then(response => {
+        axios.post(`/newsletters/`, formData).then(response => {
             if (response.status === 201) {
                 setNewsletterArticleList(prev => prev.concat({ ...response.data }));
                 setSelfOpen(false);

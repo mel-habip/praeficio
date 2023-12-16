@@ -28,6 +28,14 @@ export function ranOption(array) {
   return array[(Math.floor(Math.random() * (len - 1)))].value
 };
 
+/**
+ * Returns one of the values of the options at random 
+ */
+export function ranItemInArray(array) {
+  let len = array.length;
+  return array[(Math.floor(Math.random() * (len)))];
+};
+
 /** * Generates a random phone number */
 export function ranPhone() {
   const ranNum2 = (dig) => {

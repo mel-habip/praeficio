@@ -40,7 +40,7 @@ export default function DeletionModal({ endPoint, setSelfOpen = () => { }, selfO
                         color="error"
                         onPress={() => {
                             console.log(`deleting ${endPoint?.split('/')?.find(i => !isNaN(parseInt(i)))}`);
-                            axios.delete(`${process.env.REACT_APP_API_LINK}/${endPoint}`).then(response => {
+                            axios.delete(`/${endPoint}`).then(response => {
                                 if (response.status === 401) {
                                     setIsLoggedIn(false);
                                 } else if ([200, 204].includes(response.status)) {

@@ -30,7 +30,7 @@ export default function SylvesterPage() {
     const [uploadModalOpen, setUploadModalOpen] = useState(false);
     const [imageDetails, setImageDetails] = useState(null);
 
-    const fetchRandom = () => axios.get(`${process.env.REACT_APP_API_LINK}/sylvester/random`).then(res => setImageDetails(res.data));
+    const fetchRandom = () => axios.get(`/sylvester/random`).then(res => setImageDetails(res.data));
 
     const { language } = useContext(LanguageContext);
 
@@ -76,7 +76,7 @@ function UploadModal({ setSelfOpen, selfOpen }) {
         formData.append("file_name", file?.name);
         formData.append("description", description);
         formData.append("tags", tags);
-        await axios.post(`${process.env.REACT_APP_API_LINK}/sylvester/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }).then(res => setSelfOpen(false) || setErrors('')).catch(e => console.log(e) || setErrors(e?.response?.data?.message || e?.status || e?.response?.data || e?.data))
+        await axios.post(`/sylvester/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }).then(res => setSelfOpen(false) || setErrors('')).catch(e => console.log(e) || setErrors(e?.response?.data?.message || e?.status || e?.response?.data || e?.data))
     }
 
     return (

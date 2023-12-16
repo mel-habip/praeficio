@@ -27,7 +27,7 @@ export default function InternalAdmin() {
 
     //fetch the data
     useEffect(() => {
-        axios.get(`${process.env.REACT_APP_API_LINK}/users/`).then(response => {
+        axios.get(`/users/`).then(response => {
             if (response.status === 200) {
                 setListItems(response.data);
             } else {
