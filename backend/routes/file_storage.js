@@ -91,7 +91,7 @@ fileStorageRouter.get('/:retrieval_key', async (req, res) => {
         retrieval_key
     } = req.params;
 
-    if (retrieval_key.length < 8 || retrieval_key.length > 32) return res.status(400).json({
+    if (retrieval_key.length < 6 || retrieval_key.length > 32) return res.status(400).json({
         message: `Bad Request: Invalid format for Retrieval Key.`
     });
 
