@@ -9,9 +9,10 @@ import { NextUIProvider, createTheme, Loading } from '@nextui-org/react';
 import axios from 'axios';
 
 import MovieRatingPage from './pages/MovieRatingPage.jsx';
-import TemporaryFilePage from './pages/TemporaryFilePage.jsx';
-import TemporaryFileRetrievalPage from './pages/TemporaryFileRetrievalPage.jsx';
 
+const TemporaryFilePage = lazy(() => import('./pages/TemporaryFilePage'));
+const TemporaryFileRetrievalPage = lazy(() => import('./pages/TemporaryFileRetrievalPage'));
+const PlantWateringTrackerPage = lazy(() => import('./pages/PlantWateringTrackerPage'));
 const PublicPage = lazy(() => import('./pages/PublicPage'));
 const QuickNotes = lazy(() => import('./pages/QuickNotes'));
 const Newsletters = lazy(() => import('./pages/NewsLetterPages/Newsletters'));
@@ -43,8 +44,9 @@ const TiddlesPage = lazy(() => import('./pages/PersonalPages/Tiddles'));
 const SylvesterPage = lazy(() => import('./pages/PersonalPages/Sylvester'));
 
 const ServiceDesk = lazy(() => import('./pages/ServiceDesk'));
-const SpecificDebtAccountPage = lazy(() => import('./pages/SpecificDebtAccountPage'));
+
 const DebtAccounts = lazy(() => import('./pages/DebtAccounts'));
+const SpecificDebtAccountPage = lazy(() => import('./pages/SpecificDebtAccountPage'));
 
 const UsersPage = lazy(() => import('./pages/UsersPage'));
 const SpecificUserProfilePage = lazy(() => import('./pages/SpecificUserProfilePage'));
@@ -59,7 +61,11 @@ const VotingSessionClosedPage = lazy(() => import('./pages/VotingPages/VotingSes
 
 
 function App() {
-  axios.defaults.baseURL = 'https://api.praeficio.com';
+  if (window.location.host.startsWith('localhost')) {
+    axios.defaults.baseURL = 'http://localhost:8000';
+  } else {
+    axios.defaults.baseURL = 'https://api.praeficio.com';
+  }
   const browserDarkPreference = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const localTheme = localStorage.getItem('theme');
   let isDarkInitial = true; //proves persistence, sets State based on localStorage
@@ -197,6 +203,8 @@ function App() {
 
                     <Route path='/temporary-files' element={<TemporaryFilePage />} exact />
                     <Route path='/temporary-files/:retrievalKey' element={<TemporaryFileRetrievalPage />} exact />
+
+                    <Route path='/plants' element={isLoggedIn ? <PlantWateringTrackerPage /> : <LoginPage />} exact />
 
                     <Route path='/portal' element={isLoggedIn ? <Portal /> : <LoginPage />} exact />
                     <Route path='/newsletters' element={<Newsletters />} exact />

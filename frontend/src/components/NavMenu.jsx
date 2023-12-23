@@ -20,7 +20,7 @@ const permissionsMap = {
     dev_lead: 'Lead Dev',
 };
 
-function NavMenu({ show_language_button_externally = false, hide_language_button=false }) {
+function NavMenu({ show_language_button_externally = false, hide_language_button = false }) {
 
     const { isDark, toggleTheme } = useContext(ThemeContext);
     const { language, toggleLanguage } = useContext(LanguageContext);
@@ -149,6 +149,10 @@ function NavMenu({ show_language_button_externally = false, hide_language_button
             en: 'Movies',
             fr: 'Films'
         },
+        temporaryFiles: {
+            en: 'Temporary Files',
+            fr: 'Documents Temporaire'
+        },  
     };
 
     return (
@@ -334,6 +338,15 @@ function NavMenu({ show_language_button_externally = false, hide_language_button
                             onClick={closeNavMenu}
                         >
                             {dictionary.movies[language]}&nbsp; <i className="fa-regular fa-calendar-days" />
+                        </Link>
+                    </li>
+                    <li className='nav-item'>
+                        <Link
+                            to='/temporary-files'
+                            className='nav-links'
+                            onClick={closeNavMenu}
+                        >
+                            {dictionary.temporaryFiles[language]}&nbsp; <i className="fa-regular fa-calendar-days" />
                         </Link>
                     </li>
                 </ul>

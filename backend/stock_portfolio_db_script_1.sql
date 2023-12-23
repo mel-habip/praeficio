@@ -23,7 +23,14 @@ CREATE TABLE users (
     deleted BOOLEAN DEFAULT FALSE,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE KEY `username_UNIQUE` (`username`)
+    UNIQUE KEY `username_UNIQUE` (`username`),
+
+    INDEX idx_email (email),
+    INDEX idx_username (username),
+    INDEX idx_discovery_token (discovery_token),
+    INDEX idx_active (active),
+    INDEX idx_deleted (deleted),
+    INDEX idx_active_deleted (active, deleted)
 );
 
 CREATE TABLE positions (
@@ -99,7 +106,11 @@ CREATE TABLE workspace_user_associations (
         ON DELETE SET NULL,
 	FOREIGN KEY (application_accepted_by)
         REFERENCES users (user_id)
-        ON DELETE SET NULL
+        ON DELETE SET NULL,
+
+    INDEX idx_workspace_id (workspace_id),
+    INDEX idx_user_id (user_id),
+    INDEX idx_role (role)
 );
 
 CREATE TABLE workspace_position_associations (
@@ -176,7 +187,14 @@ CREATE TABLE todos (
     updated_on DATETIME DEFAULT NULL ON UPDATE current_timestamp,
     FOREIGN KEY (user_id)
         REFERENCES users (user_id)
-        ON DELETE CASCADE
+        ON DELETE CASCADE,
+
+    INDEX idx_user_id (user_id),
+    INDEX idx_archived (archived),
+    INDEX idx_completed (archived),
+    INDEX idx_user_id_archived (user_id, archived),
+    INDEX idx_user_id_completed (user_id, completed),
+    INDEX idx_user_id_archived_completed (user_id, archived, completed)
 );
 
 CREATE TABLE feedback_logs (
@@ -189,7 +207,9 @@ CREATE TABLE feedback_logs (
     updated_on DATETIME DEFAULT NULL ON UPDATE current_timestamp,
     FOREIGN KEY (default_filter_id) 
 		REFERENCES feedback_log_filters (feedback_log_filter_id)
-        ON DELETE SET NULL
+        ON DELETE SET NULL,
+
+    INDEX idx_archived (archived)
 );
 
 CREATE TABLE feedback_log_user_associations (
@@ -202,7 +222,9 @@ CREATE TABLE feedback_log_user_associations (
         ON DELETE CASCADE,
 	FOREIGN KEY (feedback_log_id)
         REFERENCES feedback_logs (feedback_log_id)
-        ON DELETE CASCADE
+        ON DELETE CASCADE,
+
+    INDEX idx_user_id (user_id)
 );
 
 CREATE TABLE feedback_log_items (
@@ -319,7 +341,12 @@ CREATE TABLE debt_accounts (
         ON DELETE CASCADE,
 	FOREIGN KEY (lender_id)
         REFERENCES users (user_id)
-        ON DELETE CASCADE
+        ON DELETE CASCADE,
+
+    INDEX idx_borrower_id (borrower_id),
+    INDEX idx_lender_id (lender_id),
+    INDEX idx_archived (archived),
+    INDEX idx_lender_borrower_id (lender_id, borrower_id)
 );
 
 CREATE TABLE debt_account_transactions (
@@ -337,7 +364,11 @@ CREATE TABLE debt_account_transactions (
         ON DELETE CASCADE,
 	FOREIGN KEY (debt_account_id)
         REFERENCES debt_accounts (debt_account_id)
-        ON DELETE CASCADE
+        ON DELETE CASCADE,
+
+    INDEX idx_debt_account_id (debt_account_id),
+    INDEX idx_entered_by (entered_by),
+    INDEX idx_posted_on (posted_on)
 );
 
 CREATE TABLE friendships (
@@ -350,7 +381,11 @@ CREATE TABLE friendships (
         ON DELETE CASCADE,
 	FOREIGN KEY (user_2_id)
         REFERENCES users (user_id)
-        ON DELETE CASCADE
+        ON DELETE CASCADE,
+
+    INDEX idx_user_1_id (user_1_id),
+    INDEX idx_user_2_id (user_2_id),
+    INDEX idx_user_1_2_id (user_1_id, user_2_id)
 );
 
 CREATE TABLE voting_sessions (
@@ -412,16 +447,6 @@ CREATE TABLE sylvester_photos (
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE sylvester_photos (
-	photo_id INT PRIMARY KEY AUTO_INCREMENT,
-    description VARCHAR(400),
-    file_name VARCHAR(200) NOT NULL,
-    mime_type VARCHAR(100),
-    tags VARCHAR (400),
-    updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
-    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
 CREATE TABLE movies (
 	movie_id INT PRIMARY KEY AUTO_INCREMENT,
     file_name VARCHAR(200) NOT NULL,
@@ -451,7 +476,6 @@ CREATE TABLE movie_ratings (
 CREATE TABLE stored_files (
     stored_file_id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT,
-
     file_name VARCHAR(200) NOT NULL,
     retrieval_key VARCHAR(200) NOT NULL,
     useCount INT NOT NULL DEFAULT 1,
@@ -461,7 +485,29 @@ CREATE TABLE stored_files (
     FOREIGN KEY (user_id)
         REFERENCES users (user_id)
         ON DELETE SET NULL,
-    UNIQUE KEY `retrieval_key_UNIQUE` (`retrieval_key`)
+    UNIQUE KEY `retrieval_key_UNIQUE` (`retrieval_key`),
+
+    INDEX idx_retrieval_key (retrieval_key),
+    INDEX idx_user_id (user_id),
+    INDEX idx_created_on (created_on)
+);
+
+CREATE TABLE plants (
+    plant_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    name VARCHAR(200) NOT NULL,
+    description VARCHAR(400),
+    file_name VARCHAR(200),
+    schedule JSON,
+    active BOOLEAN DEFAULT TRUE,
+    updated_on DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id)
+        REFERENCES users (user_id)
+        ON DELETE CASCADE,
+
+    INDEX idx_user_id (user_id)
 );
 
 -- SET GLOBAL event_scheduler = ON;
