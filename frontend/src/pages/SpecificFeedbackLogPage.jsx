@@ -9,8 +9,8 @@ import ThemeContext from '../contexts/ThemeContext';
 import LoadingPage from './LoadingPage';
 
 import axios from 'axios';
-
-import { Button, Modal, Spacer, Text, Input, Tooltip, Row, Table, Textarea, useAsyncList, useCollator, Loading, Badge } from '@nextui-org/react';
+import { Badge } from "@nextui-org/badge";
+import { Button, Modal, Spacer, Text, Input, Tooltip, Row, Table, Textarea, useAsyncList, useCollator, Loading } from '@nextui-org/react';
 
 import { CustomButton } from '../fields/CustomButton';
 import CustomizedDropdown from '../fields/CustomizedDropdown';

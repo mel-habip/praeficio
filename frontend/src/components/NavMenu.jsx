@@ -4,7 +4,8 @@ import { Link } from 'react-router-dom';
 import ThemeContext from '../contexts/ThemeContext';
 import LanguageContext from '../contexts/LanguageContext';
 import IsLoggedInContext from '../contexts/IsLoggedInContext';
-import { Badge, Row, Text, Button } from '@nextui-org/react';
+import { Row, Text, Button } from '@nextui-org/react';
+import { Badge } from "@nextui-org/badge";
 
 import praeficio_pronunciation from '../media/praeficio_pronunciation.mp3';
 
@@ -152,7 +153,11 @@ function NavMenu({ show_language_button_externally = false, hide_language_button
         temporaryFiles: {
             en: 'Temporary Files',
             fr: 'Documents Temporaire'
-        },  
+        },
+        plants: {
+            en: 'Plants',
+            fr: 'Plantes'
+        },
     };
 
     return (
@@ -346,7 +351,16 @@ function NavMenu({ show_language_button_externally = false, hide_language_button
                             className='nav-links'
                             onClick={closeNavMenu}
                         >
-                            {dictionary.temporaryFiles[language]}&nbsp; <i className="fa-regular fa-calendar-days" />
+                            {dictionary.temporaryFiles[language]}&nbsp; <i class="fa-solid fa-business-time" />
+                        </Link>
+                    </li>
+                    <li className='nav-item'>
+                        <Link
+                            to='/plants'
+                            className='nav-links'
+                            onClick={closeNavMenu}
+                        >
+                            {dictionary.plants[language]}&nbsp; <i class="fa-solid fa-seedling" />
                         </Link>
                     </li>
                 </ul>

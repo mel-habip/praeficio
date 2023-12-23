@@ -1,6 +1,6 @@
 
 import NavMenu from '../components/NavMenu';
-import { Button, Card, Modal, Spacer, Text, Input, Grid, Row, Textarea, Loading, Badge, Dropdown, Tooltip } from '@nextui-org/react';
+import { Button, Card, Modal, Spacer, Text, Input, Grid, Row, Textarea, Loading, Dropdown, Tooltip } from '@nextui-org/react';
 import useHandleError from '../utils/handleError';
 import axios from 'axios';
 import { useEffect, useState } from 'react';

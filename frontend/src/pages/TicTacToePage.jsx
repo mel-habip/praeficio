@@ -8,8 +8,8 @@ import TicTacToeUtils from './TicTacToeUtils';
 
 
 import './stylesheets/TicTacToePage.css';
-
-import { Button, Badge } from '@nextui-org/react';
+import { Badge } from "@nextui-org/badge";
+import { Button } from '@nextui-org/react';
 
 const { AlekSpecial, generateWinningCombinations, resultWords, winning, playerOne, playerTwo, TicTacToeGrid } = TicTacToeUtils;
 const NavMenu = lazy(() => import('../components/NavMenu'));

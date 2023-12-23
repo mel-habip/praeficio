@@ -66,8 +66,27 @@ plantRouter.get('/', async (req, res) => {
 // creates a single plant record
 plantRouter.post('/', upload.single('file'), async (req, res) => {
 
-    if (!validateScheduleDescription(req.body.scheduleDescription)) return res.status(400).json({
-        message: 'Bad Schedule Description'
+    console.log('receivedBody', req.body);
+
+    const scheduleDescription = {
+        pattern: req.body.pattern,
+    };
+
+    try {
+        scheduleDescription[req.body.pattern] = JSON.parse(req.body[req.body.pattern]);
+
+        console.log('scheduleDescription', scheduleDescription);
+    } catch {
+        return res.status(400).json({
+            message: 'Could not read Schedule description'
+        });
+    }
+
+    const validationResults = validateScheduleDescription(scheduleDescription);
+
+    if (validationResults.length) return res.status(400).json({
+        message: 'Bad Schedule Description',
+        validationResults,
     });
 
     const file = req.file;
@@ -79,14 +98,15 @@ plantRouter.post('/', upload.single('file'), async (req, res) => {
     }
 
     const recordCreation = await helper.create_single({
+        name: req.body.name,
+        description: req.body.description,
         user_id: req.user.id,
         file_name: uploadedFile?.name_used,
-        schedule: req.body.scheduleDescription,
+        schedule: JSON.stringify(scheduleDescription),
         active: true,
-
     });
 
-    if (recordCreation) return res.status(200).json(recordCreation.details);
+    if (recordCreation.success) return res.status(200).json(recordCreation.details);
 
     return res.status(422).json({
         message: `Failed to create.`
@@ -213,34 +233,69 @@ function validateScheduleDescription(scheduleDescription) {
         pattern
     } = scheduleDescription;
 
+    let errors = [];
+
     if (pattern === 'interval') {
-        if (typeof scheduleDescription?.interval?.quantity !== 'number' || scheduleDescription?.interval?.quantity < 1 || scheduleDescription?.interval?.quantity > 500) return false;
+        if (typeof scheduleDescription?.interval?.quantity !== 'number') {
+            errors.push('quantity not number');
+        }
+        if (scheduleDescription?.interval?.quantity > 500) {
+            errors.push('quantity too high');
+        }
+        if (scheduleDescription?.interval?.quantity < 1) {
+            errors.push('quantity too low');
+        }
 
-        if (Math.floor(scheduleDescription?.interval?.quantity) !== scheduleDescription?.interval?.quantity) return false; //this means its a float and not an integer
+        if (Math.floor(scheduleDescription?.interval?.quantity) !== scheduleDescription?.interval?.quantity) {
+            errors.push('quantity not integer');
+        }
 
-        if (!['day', 'week'].includes(scheduleDescription?.interval?.unit)) return false;
-        return true;
+        if (!['day', 'week'].includes(scheduleDescription?.interval?.unit)) {
+            errors.push(`unrecognized unit`);
+        }
+        return errors;
     }
 
     let entries = [];
 
     if (['weekly', 'monthly'].includes(pattern)) {
-        if (!scheduleDescription?. [pattern] || typeof scheduleDescription?. [pattern] !== 'object') return false;
+        if (!scheduleDescription?. [pattern] || typeof scheduleDescription?. [pattern] !== 'object') {
+            errors.push(`scheduleDescription[pattern] falsy`);
+        }
+        if (typeof scheduleDescription?. [pattern] !== 'object') {
+            errors.push(`scheduleDescription[pattern] not object`);
+        }
         entries = Object.entries(scheduleDescription?. [pattern]);
-        if (!entries.length) return false;
+        if (!entries.length) {
+            errors.push(`no entries in scheduleDescription[pattern]`);
+        }
     }
 
     if (pattern === 'weekly') {
-        if (entries.some(([key, value]) => !daysOfTheWeek.includes(key) || (typeof value !== 'boolean' && value != null))) return false;
-        return true;
+        entries.forEach(([key, value]) => {
+            if (!daysOfTheWeek.includes(key)) {
+                errors.push(`unrecognized key ${key}`);
+            }
+            if (typeof value !== 'boolean' && value != null) {
+                errors.push(`unrecognized value ${value}`);
+            }
+        });
+        return errors;
     }
 
     if (pattern === 'monthly') {
-        if (entries.some(([key, value]) => !daysOfTheMonthMap[key] || (typeof value !== 'boolean' && value != null))) return false;
-        return true;
+        entries.forEach(([key, value]) => {
+            if (!daysOfTheMonthMap[key]) {
+                errors.push(`unrecognized key ${key}`);
+            }
+            if (typeof value !== 'boolean' && value != null) {
+                errors.push(`unrecognized value ${value}`);
+            }
+        });
+        return errors;
     }
 
-    return false;
+    return errors;
 };
 
 // const daysOfTheWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];

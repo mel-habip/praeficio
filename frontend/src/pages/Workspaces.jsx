@@ -12,8 +12,8 @@ import ThemeContext from '../contexts/ThemeContext';
 import LoadingPage from './LoadingPage';
 
 import axios from 'axios';
-
-import { Button, Navbar, Card, Modal, Spacer, Text, Input, Grid, Row, Textarea, Loading, Badge, Dropdown, Tooltip } from '@nextui-org/react';
+import { Navbar } from "@nextui-org/navbar";
+import { Button, Card, Modal, Spacer, Text, Input, Grid, Row, Textarea, Loading, Dropdown, Tooltip } from '@nextui-org/react';
 
 import { CustomButton } from '../fields/CustomButton';
 import CustomizedDropdown from '../fields/CustomizedDropdown';

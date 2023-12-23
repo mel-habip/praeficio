@@ -15,8 +15,8 @@ import is_valid_email from '../utils/is_valid_email';
 
 import { CustomButton } from '../fields/CustomButton';
 import CustomizedDropdown from '../fields/CustomizedDropdown';
-
-import { Button, Modal, Spacer, Text, Badge, Tooltip, Input, Textarea, Loading, Progress, Card } from '@nextui-org/react';
+import { Badge } from "@nextui-org/badge";
+import { Button, Modal, Spacer, Text, Tooltip, Input, Textarea, Loading, Progress, Card } from '@nextui-org/react';
 
 import videoBg1 from '../media/sparkly_world_video.mp4';
 

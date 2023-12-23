@@ -9,7 +9,7 @@ import NavMenu from '../../components/NavMenu';
 import LoadingPage from '../LoadingPage';
 
 import { CustomButton } from '../../fields/CustomButton';
-import { Spacer, Text, Input, Tooltip, Row, Table, useAsyncList, useCollator, Loading, Badge, Checkbox, Modal, Button } from '@nextui-org/react';
+import { Spacer, Text, Input, Tooltip, Row, Table, useAsyncList, useCollator, Loading, Checkbox, Modal, Button } from '@nextui-org/react';
 import timestampFormatter from '../../utils/timestampFormatter';
 
 import { PieChart, Pie, ResponsiveContainer, Tooltip as ReChartsTooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
