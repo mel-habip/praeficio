@@ -66,16 +66,12 @@ plantRouter.get('/', async (req, res) => {
 // creates a single plant record
 plantRouter.post('/', upload.single('file'), async (req, res) => {
 
-    console.log('receivedBody', req.body);
-
     const scheduleDescription = {
         pattern: req.body.pattern,
     };
 
     try {
         scheduleDescription[req.body.pattern] = JSON.parse(req.body[req.body.pattern]);
-
-        console.log('scheduleDescription', scheduleDescription);
     } catch {
         return res.status(400).json({
             message: 'Could not read Schedule description'
@@ -88,6 +84,14 @@ plantRouter.post('/', upload.single('file'), async (req, res) => {
         message: 'Bad Schedule Description',
         validationResults,
     });
+
+    let active;
+
+    if (req.body.active === 'true') {
+        active = true;
+    } else if (req.body.active === 'false') {
+        active = false;
+    }
 
     const file = req.file;
 
@@ -103,7 +107,7 @@ plantRouter.post('/', upload.single('file'), async (req, res) => {
         user_id: req.user.id,
         file_name: uploadedFile?.name_used,
         schedule: JSON.stringify(scheduleDescription),
-        active: true,
+        active: active ?? true,
     });
 
     if (recordCreation.success) return res.status(200).json(recordCreation.details);
@@ -123,19 +127,21 @@ plantRouter.get(`/watering/`, async (req, res) => {
         if (!selectedDate) selectedDate = new Date();
     }
 
-    const recordCreation = await helper.fetch_by_user_id(req.user.id);
+    const recordsFetch = await helper.fetch_by_user_id(req.user.id);
 
-    if (!recordCreation?.success) return res.status(422).json({
+    if (!recordsFetch?.success) return res.status(422).json({
         message: `Failed to fetch.`
     });
 
-    const plantsThatNeedToBeWateredOnSelectedDate = recordCreation.details.filter(plant => {
+    const plantsThatNeedToBeWateredOnSelectedDate = recordsFetch.details.filter(plant => {
         if (!plant.active) return;
 
-        return shouldEventOccur({
+        let scheduleDescription = {
             ...plant.schedule,
-            createdAt: plant.createdAt
-        }, selectedDate);
+            created_on: plant.created_on
+        };
+
+        return shouldEventOccur(scheduleDescription, selectedDate);
     });
 
 
@@ -168,6 +174,28 @@ plantRouter.get(`/watering/`, async (req, res) => {
 });
 
 plantRouter.put('/:plant_id', upload.single('file'), async (req, res) => {
+
+    const scheduleDescription = req.body.pattern ? {
+        pattern: req.body.pattern,
+    } : null;
+
+    if (scheduleDescription) {
+        try {
+            scheduleDescription[req.body.pattern] = JSON.parse(req.body[req.body.pattern]);
+        } catch {
+            return res.status(400).json({
+                message: 'Could not read Schedule description'
+            });
+        }
+
+        const validationResults = validateScheduleDescription(scheduleDescription);
+    
+        if (validationResults.length) return res.status(400).json({
+            message: 'Bad Schedule Description',
+            validationResults,
+        });
+    }
+
     const requestedPlant = await helper.fetch_by_id(req.params.plant_id);
 
     if (!requestedPlant) return res.status(404).json({
@@ -182,6 +210,14 @@ plantRouter.put('/:plant_id', upload.single('file'), async (req, res) => {
 
     let uploadedFile;
 
+    let active;
+
+    if (req.body.active === 'true') {
+        active = true;
+    } else if (req.body.active === 'false') {
+        active = false;
+    }
+
     if (file) {
         uploadedFile = await uploadToS3(file.buffer, file.mimetype);
     }
@@ -189,10 +225,10 @@ plantRouter.put('/:plant_id', upload.single('file'), async (req, res) => {
     const update = await helper.update_single({
         name: req.body.name || requestedPlant.name,
         description: req.body.description || requestedPlant.description,
-        active: req.body.active ?? requestedPlant?.active ?? true,
+        active: active ?? requestedPlant?.active ?? true,
         file_name: uploadedFile || requestedPlant.file_name || null,
-        schedule: req.body.schedule || requestedPlant.schedule,
-    });
+        schedule: JSON.stringify(scheduleDescription || requestedPlant.schedule),
+    }, requestedPlant.plant_id);
 
     if (!update.success) return res.status(422).json({
         message: `Failed to update Plant #${req.params.plant_id}.`,
@@ -348,17 +384,14 @@ function validateScheduleDescription(scheduleDescription) {
  *      quantity: number,
  *      unit: 'day' | 'week'
  *  }
- *  createdAt: Date,
+ *  created_on: Date,
  * }} scheduleDescription 
  * @param {Date} date 
  * @returns 
  */
 function shouldEventOccur(scheduleDescription, date) {
-
     const day = date.getDate();
     const dayOfWeek = date.getDay();
-    const month = date.getMonth() + 1;
-    const year = date.getFullYear() + 1;
 
     if (scheduleDescription?.pattern === 'weekly') {
         return !!scheduleDescription?.weekly?. [daysOfTheWeek[dayOfWeek]];
@@ -369,11 +402,12 @@ function shouldEventOccur(scheduleDescription, date) {
     }
 
     if (scheduleDescription?.pattern === 'interval') {
-        if (typeof scheduleDescription?.createdAt === 'string') {
-            scheduleDescription.createdAt = new Date(scheduleDescription?.createdAt);
+        if (typeof scheduleDescription?.created_on === 'string') {
+            scheduleDescription.created_on = new Date(scheduleDescription?.created_on);
         }
 
-        const differenceInDays = Math.floor((date - scheduleDescription.createdAt) / (1000 * 60 * 60 * 24));
+        const differenceInDays = Math.floor((date - scheduleDescription.created_on) / (1000 * 60 * 60 * 24));
+
         return differenceInDays % (scheduleDescription?.interval?.quantity * convertUnitToDays(scheduleDescription?.interval?.unit)) === 0;
     }
 

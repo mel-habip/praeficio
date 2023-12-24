@@ -1,9 +1,15 @@
 import axios from "axios";
 import { useEffect, useState, useMemo } from "react";
 import NavMenu from "../components/NavMenu";
-import { Modal, Button, Grid, Text, Card, Input, Checkbox, Spacer, Row, Textarea } from "@nextui-org/react";
+import { Modal, Button, Grid, Text, Card, Input, Checkbox, Tooltip, Row, Textarea } from "@nextui-org/react";
 import CustomizedDropdown from '../fields/CustomizedDropdown';
 import NumberField from '../fields/NumberField.jsx';
+import CustomButton from "../fields/CustomButton";
+import niceLister from "../utils/niceLister.js";
+import nth from "../utils/nth.js";
+import DeletionModal from "../components/DeletionModal";
+
+const delay = 300;
 
 const listOptions = [
     {
@@ -66,12 +72,15 @@ export default function PlantWateringTrackerPage() {
     const [wateringList, setWateringList] = useState([]);
 
     const [creationModalOpen, setCreationModalOpen] = useState(false);
+    const [deletionModalOpen, setDeletionModalOpen] = useState(null);
 
     const [isLoading, setIsLoading] = useState(false);
 
     const [listType, setListType] = useState("watering");
 
-    const [plantDetails, setPlantDetails] = useState({});
+    const [plantDetails, setPlantDetails] = useState({
+        active: true,
+    });
     const [uploadedImage, setUploadedImage] = useState(null);
 
     const listToDisplay = useMemo(() => {
@@ -105,22 +114,41 @@ export default function PlantWateringTrackerPage() {
             axios.get(`/plants?includeInactive=true`).then(res => {
                 setAllPlants(res.data.data);
             }).catch(() => { });
+        } else {
+            setListType('all_plants');
         }
     }, [listType]);
 
-    const handleCreate = () => {
+    const handleCreateUpdate = () => {
         const toSend = new FormData();
         toSend.append('file', uploadedImage);
         toSend.append('name', plantDetails.name);
+        toSend.append('active', plantDetails.active);
         toSend.append('description', plantDetails.description);
         toSend.append('pattern', plantDetails.pattern);
         toSend.append(plantDetails.pattern, JSON.stringify(plantDetails[plantDetails.pattern]));
 
-        axios.post('/plants/', toSend).then((res) => {
+        const onSuccess = () => {
+            setActivePlants([]);
+            setAllPlants([]);
+            setWateringList([]);
+            setListType('temp');
             setCreationModalOpen(false);
-        }).catch(e => {
-            console.log(e?.response?.data?.message);
-        });
+        }
+
+        if (typeof creationModalOpen === 'boolean') {
+            axios.post('/plants/', toSend).then((res) => {
+                onSuccess();
+            }).catch(e => {
+                console.log(e?.response?.data?.message);
+            });
+        } else if (typeof creationModalOpen === 'number') {
+            axios.put(`/plants/${creationModalOpen}`, toSend).then((res) => {
+                onSuccess();
+            }).catch(e => {
+                console.log(e?.response?.data?.message);
+            });
+        }
     };
 
     return <>
@@ -133,16 +161,19 @@ export default function PlantWateringTrackerPage() {
             {listToDisplay.map((plant, index) =>
                 <PlantCard
                     {...plant}
+                    setCreationModalOpen={setCreationModalOpen}
+                    setPlantDetails={setPlantDetails}
+                    setDeletionModalOpen={setDeletionModalOpen}
                     key={`${index}-plant-card`} />
             )}
         </Grid.Container>
 
         <Button
-            onPress={() => setCreationModalOpen(true)}
+            onPress={() => setPlantDetails({ active: true }) || setCreationModalOpen(true)}
             shadow
         > Let's Create a Plant! &nbsp; <i class="fa-solid fa-seedling" /></Button>
 
-        <Modal scroll width="650px" open={creationModalOpen} onClose={() => setCreationModalOpen(false)} >
+        <Modal scroll width="650px" open={!!creationModalOpen} onClose={() => setCreationModalOpen(false)} >
             <Modal.Header>
                 <Text size={18} > Details of your new plant </Text>
             </Modal.Header>
@@ -175,10 +206,22 @@ export default function PlantWateringTrackerPage() {
                         if (file) setUploadedImage(file);
                     }}
                 />
-                <CustomizedDropdown optionsList={patternOptions} title="Interval" mountDirectly default_value="interval" outerUpdater={a => setPlantDetails(p => ({ ...p, pattern: a }))} />
+                <Checkbox.Group
+                    color="success"
+                    value={plantDetails.active ? ['active'] : []}
+                    onChange={val => setPlantDetails(p => ({
+                        ...p,
+                        active: !!val.length,
+                    }))}
+                >
+                    <Grid.Container >
+                        <Checkbox value="active">Active</Checkbox>
+                    </Grid.Container>
+                </Checkbox.Group>
+                <CustomizedDropdown optionsList={patternOptions} title="Interval" mountDirectly default_value={plantDetails?.pattern || "interval"} outerUpdater={a => setPlantDetails(p => ({ ...p, pattern: a }))} />
                 {plantDetails.pattern === 'interval' && <>
                     <Row gap="1rem" >
-                        <CustomizedDropdown optionsList={intervalUnitOptions} title="Unit" mountDirectly default_value="day" outerUpdater={a => setPlantDetails(p => ({
+                        <CustomizedDropdown optionsList={intervalUnitOptions} title="Unit" mountDirectly default_value={plantDetails?.interval?.unit || "day"} outerUpdater={a => setPlantDetails(p => ({
                             ...p,
                             interval: {
                                 ...(p.interval || {}),
@@ -186,7 +229,7 @@ export default function PlantWateringTrackerPage() {
                             }
                         }))} />
                         <NumberField
-                            default_value={1}
+                            default_value={plantDetails?.interval?.quantity || 1}
                             min={1}
                             max={50}
                             outer_updater={(v) => setPlantDetails(p => ({
@@ -231,27 +274,85 @@ export default function PlantWateringTrackerPage() {
                 </>}
             </Modal.Body>
             <Modal.Footer>
-                <Button onPress={handleCreate} color="success" shadow size="lg" css={{ marginRight: 'auto', marginLeft: 'auto' }} > Create &nbsp; <i class="fa-solid fa-seedling" /></Button>
+                <Button onPress={handleCreateUpdate} color="success" shadow size="lg" css={{ marginRight: 'auto', marginLeft: 'auto' }} > Create &nbsp; <i class="fa-solid fa-seedling" /></Button>
             </Modal.Footer>
         </Modal>
+
+        <DeletionModal
+            selfOpen={!!deletionModalOpen}
+            setSelfOpen={setDeletionModalOpen}
+            endPoint={`plants/${deletionModalOpen?.plant_id}`}
+            outerUpdater={() => {
+                setActivePlants(p => p.filter(plant => plant.plant_id !== deletionModalOpen?.plant_id));
+                setAllPlants(p => p.filter(plant => plant.plant_id !== deletionModalOpen?.plant_id));
+                setWateringList(p => p.filter(plant => plant.plant_id !== deletionModalOpen?.plant_id));
+            }}
+        />
     </>
 }
 
-function PlantCard({ name, description, url, active, schedule }) {
+function PlantCard({ plant_id, name, description, url, active, created_on, schedule, setCreationModalOpen, setPlantDetails, setDeletionModalOpen }) {
     return (
         <Grid xs={1.65}>
             <Card css={{ $$cardColor: active ? '$colors$primary' : 'grey' }}>
                 <Card.Body>
-                    <Text h3 color="white" css={{ mt: 0 }}>
-                        {name}
-                    </Text>
+                    <Row justify="space-around" >
+                        <Text h3 color="white" css={{ mt: 0 }}>
+                            #{plant_id}-{name}
+                        </Text>
+                        <Tooltip content="Modify" placement="top" shadow enterDelay={delay}>
+                            <CustomButton buttonStyle="btn--transparent" onClick={() => {
+                                setPlantDetails({
+                                    name,
+                                    description,
+                                    active,
+                                    ...schedule,
+                                }); setCreationModalOpen(plant_id);
+                            }} >
+                                <i className="fa-regular fa-pen-to-square" />
+                            </CustomButton>
+                        </Tooltip>
+                        <Tooltip content="Delete" placement="top" shadow enterDelay={delay}>
+                            <CustomButton buttonStyle="btn--transparent" onClick={() => {
+                                setDeletionModalOpen({
+                                    name,
+                                    description,
+                                    created_on,
+                                    plant_id,
+                                });
+                            }} >
+                                <i className="fa-regular fa-trash-can" />
+                            </CustomButton>
+                        </Tooltip>
+                    </Row>
                     <Text span color="white" css={{ mt: 0 }}>
                         {description}
                     </Text>
                     <Card.Divider />
                     {!!url && <img src={url} />}
+                    <Card.Divider />
+                    <Text span color="white" css={{ mt: 0 }}>
+                        {ScheduleToSentence(schedule)}
+                    </Text>
+                    <Text span color="white" css={{ mt: 0 }}>
+                        since: {new Date(created_on).toLocaleDateString('en-CA')}
+                    </Text>
                 </Card.Body>
             </Card>
-        </Grid>
+        </Grid >
     );
+}
+
+function ScheduleToSentence(schedule) {
+    if (schedule.pattern === 'weekly') {
+        const days = Object.entries(schedule.weekly).filter(([_, active]) => active).map(([day, _]) => day);
+        return `Every week on ${niceLister(days)}`;
+    } else if (schedule.pattern === 'monthly') {
+        const days = Object.entries(schedule.monthly).filter(([_, active]) => active).map(([day, _]) => parseInt(day)).map(nth);
+        return `Every month on the ${niceLister(days)}`;
+    } else if (schedule.pattern === 'interval') {
+        return `Every ${schedule.interval.quantity} ${schedule.interval.unit}${schedule.interval.quantity === 1 ? '' : 's'}`;
+    } else {
+        return `Unknown schedule.`
+    }
 }
