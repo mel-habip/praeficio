@@ -226,7 +226,7 @@ plantRouter.put('/:plant_id', upload.single('file'), async (req, res) => {
         name: req.body.name || requestedPlant.name,
         description: req.body.description || requestedPlant.description,
         active: active ?? requestedPlant?.active ?? true,
-        file_name: uploadedFile || requestedPlant.file_name || null,
+        file_name: uploadedFile?.name_used || requestedPlant?.file_name || null,
         schedule: JSON.stringify(scheduleDescription || requestedPlant.schedule),
     }, requestedPlant.plant_id);
 

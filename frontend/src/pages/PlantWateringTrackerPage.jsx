@@ -153,7 +153,7 @@ export default function PlantWateringTrackerPage() {
 
     return <>
         <NavMenu />
-        <h1>Welcome to the Plant Watering Tracker!</h1>
+        <h1 style={{ marginTop: '16px' }} >Welcome to the Plant Watering Tracker!</h1>
         <CustomizedDropdown optionsList={listOptions} title="Showing" mountDirectly default_value="watering" outerUpdater={a => setListType(a)} />
 
         {!listToDisplay.length && <h2>No plants yet! Go ahead and add some! 🌱🪴🌿 </h2>}
@@ -293,7 +293,7 @@ export default function PlantWateringTrackerPage() {
 
 function PlantCard({ plant_id, name, description, url, active, created_on, schedule, setCreationModalOpen, setPlantDetails, setDeletionModalOpen }) {
     return (
-        <Grid xs={1.65}>
+        <Grid css={{ width: "250px" }}>
             <Card css={{ $$cardColor: active ? '$colors$primary' : 'grey' }}>
                 <Card.Body>
                     <Row justify="space-around" >
