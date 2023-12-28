@@ -402,11 +402,13 @@ function shouldEventOccur(scheduleDescription, date) {
     }
 
     if (scheduleDescription?.pattern === 'interval') {
+        console.log('createdOn', scheduleDescription.created_on);
         if (typeof scheduleDescription?.created_on === 'string') {
             scheduleDescription.created_on = new Date(scheduleDescription?.created_on);
         }
 
-        const differenceInDays = Math.floor((date - scheduleDescription.created_on) / (1000 * 60 * 60 * 24));
+        const differenceInDays = Math.floor((date - scheduleDescription.created_on) / (1000 * 60 * 60 * 24)) + 1;
+        console.log('differenceInDays', differenceInDays);
 
         return differenceInDays % (scheduleDescription?.interval?.quantity * convertUnitToDays(scheduleDescription?.interval?.unit)) === 0;
     }
