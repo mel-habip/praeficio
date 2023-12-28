@@ -121,7 +121,7 @@ export default function PlantWateringTrackerPage() {
         } else {
             setListType('all_plants');
         }
-    }, [listType]);
+    }, [listType, selectedDate]);
 
     const handleCreateUpdate = () => {
         const toSend = new FormData();
