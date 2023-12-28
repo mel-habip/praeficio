@@ -100,11 +100,10 @@ export default function PlantWateringTrackerPage() {
 
     const today = new Date().toLocaleDateString('en-CA');
 
-    const [selectedDate, setSelectedDate] = useState(today);
+    const [selectedDate, setSelectedDate] = useState(() => today);
 
     useEffect(() => {
         if (listType === 'watering') {
-            if (wateringList.length) return;
             axios.get(`/plants/watering?selectedDate=${selectedDate}`).then(res => {
                 setWateringList(res.data.data);
             }).catch(() => { });

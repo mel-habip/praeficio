@@ -189,7 +189,7 @@ plantRouter.put('/:plant_id', upload.single('file'), async (req, res) => {
         }
 
         const validationResults = validateScheduleDescription(scheduleDescription);
-    
+
         if (validationResults.length) return res.status(400).json({
             message: 'Bad Schedule Description',
             validationResults,
@@ -427,11 +427,12 @@ function validateAndConvertDate(dateString) {
 
     if (!regex.test(dateString)) return null;
 
-    const date = new Date(dateString);
+    const parts = dateString.split('-').map(Number);
+    const [year, month, day] = parts;
+
+    const date = new Date(year, month - 1, day, 12, 0, 0, 0);
 
     if (!date.getTime() && date.getTime() !== 0) return null;
-
-    const [year, month, day] = dateString.split('-').map(Number);
 
     if (date.getFullYear() !== year || (date.getMonth() + 1) !== month || date.getDate() !== day) return null;
 
