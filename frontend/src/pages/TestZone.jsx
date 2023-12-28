@@ -4,7 +4,7 @@ import CurrencyInputField from '../fields/CurrencyInputField.jsx'
 
 import NumberField from '../fields/NumberField.jsx';
 
-import { Checkbox } from '@nextui-org/react';
+import { Checkbox, Input } from '@nextui-org/react';
 
 const daysOfTheWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const daysOfTheMonth = [];
@@ -16,8 +16,20 @@ export default function TestZone() {
 
     let [value, setValue] = useState([]);
 
+    const today = new Date().toLocaleDateString('en-CA');
+
+    const [selectedDate, setSelectedDate] = useState(today);
+
     return <>
         <NumberField />
+
+        <Input
+            underlined
+            initialValue={selectedDate}
+            color="primary"
+            label='Based On'
+            type="date" onChange={e => setSelectedDate(e.target.value)} />
+
 
         <Checkbox.Group
             color="secondary"

@@ -98,10 +98,14 @@ export default function PlantWateringTrackerPage() {
         return [];
     }, [allPlants, wateringList, activePlants, listType]);
 
+    const today = new Date().toLocaleDateString('en-CA');
+
+    const [selectedDate, setSelectedDate] = useState(today);
+
     useEffect(() => {
         if (listType === 'watering') {
             if (wateringList.length) return;
-            axios.get('/plants/watering').then(res => {
+            axios.get(`/plants/watering?selectedDate=${selectedDate}`).then(res => {
                 setWateringList(res.data.data);
             }).catch(() => { });
         } else if (listType === 'active_plants') {
@@ -155,7 +159,14 @@ export default function PlantWateringTrackerPage() {
         <NavMenu />
         <h1 style={{ marginTop: '16px' }} >Welcome to the Plant Watering Tracker!</h1>
         <CustomizedDropdown optionsList={listOptions} title="Showing" mountDirectly default_value="watering" outerUpdater={a => setListType(a)} />
-
+        {listType === 'watering' &&
+            <Input
+                underlined
+                initialValue={selectedDate}
+                color="primary"
+                label='Based On'
+                type="date" onChange={e => setSelectedDate(e.target.value)} />
+        }
         {!listToDisplay.length && <h2>No plants yet! Go ahead and add some! 🌱🪴🌿 </h2>}
         <Grid.Container gap={1} justify="center" >
             {listToDisplay.map((plant, index) =>
