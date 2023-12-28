@@ -66,6 +66,8 @@ for (let i = 1; i < 32; i++) {
 
 export default function PlantWateringTrackerPage() {
 
+    document.title = `Praeficio | Plants`;
+
     const [activePlants, setActivePlants] = useState([]);
     const [allPlants, setAllPlants] = useState([]);
 
