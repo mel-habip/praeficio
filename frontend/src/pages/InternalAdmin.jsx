@@ -1,12 +1,13 @@
 import { useState, useEffect, useContext, lazy, Suspense, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import validatePassword from '../utils/validatePassword.mjs';
 
 import IsLoggedInContext from '../contexts/IsLoggedInContext';
 
 import LoadingPage from './LoadingPage';
 
-import { Button, Modal, Spacer, Text, Input, Tooltip, Row, Table, Textarea, useAsyncList, useCollator, Loading } from '@nextui-org/react';
+import { Button, Modal, Spacer, Text, Checkbox, Input, Tooltip, Row, Table, Textarea, useAsyncList, useCollator, Loading } from '@nextui-org/react';
 
 import { CustomButton } from '../fields/CustomButton';
 import CustomizedDropdown from '../fields/CustomizedDropdown';
@@ -41,12 +42,14 @@ export default function InternalAdmin() {
     return (<>
         <NavMenu />
         <UsersTable usersList={listItems} />
+
     </>);
 }
 
 
 function UsersTable({ usersList = [] }) {
     const [selected, setSelected] = useState(null);
+    const [editModal, setEditModal] = useState(null);
 
     let load = async ({ filterText }) => ({ items: filterText ? usersList.filter(userRow => [userRow.first_name, userRow.last_name, userRow.created_on, userRow.updated_on, userRow.username, userRow.email, userRow.to_do_categories.join(',')].join('').toLowerCase().includes(filterText.toLowerCase().trim())) : usersList }); //this can normally be an async function that fetches the data, but already we hold the whole page off while it is loading
 
@@ -165,6 +168,12 @@ function UsersTable({ usersList = [] }) {
     const delay = 500; //half a second
 
     return (<>
+        {!!editModal &&
+            <UserModifyModal
+                isOpen={true}
+                setIsOpen={setEditModal}
+                user={editModal}
+                setUser={user => { }} />}
         <Row css={{ mb: '10px', 'ml': '30%' }} >
             <Input
                 bordered
@@ -203,7 +212,7 @@ function UsersTable({ usersList = [] }) {
             </Table.Header>
             <Table.Body items={list.items} css={{ 'text-align': 'left' }} loadingState={list.loadingState}>
                 {item => (
-                    <Table.Row key={item.user_id} className="position-table-row" css={{padding: '0px', margin: '0px'}}>
+                    <Table.Row key={item.user_id} className="position-table-row" css={{ padding: '0px', margin: '0px' }}>
                         {columnKey => {
                             if (columnKey === 'actions') {
                                 return <Table.Cell css={{ 'padding': '0px', wordWrap: 'break-word', margin: '0px' }} >
@@ -217,7 +226,7 @@ function UsersTable({ usersList = [] }) {
                                             <CustomButton buttonStyle="btn--transparent" onClick={false}><i className="fa-solid fa-server" /></CustomButton>
                                         </Tooltip>
                                         <Tooltip content="Modify" placement="top" shadow enterDelay={delay}>
-                                            <CustomButton buttonStyle="btn--transparent" onClick={false}><i className="fa-regular fa-pen-to-square" /></CustomButton>
+                                            <CustomButton buttonStyle="btn--transparent" onClick={() => setEditModal(item)}><i className="fa-regular fa-pen-to-square" /></CustomButton>
                                         </Tooltip>
                                         <Tooltip content="Regenerate Recovery Codes" placement="top" shadow enterDelay={delay}>
                                             <CustomButton buttonStyle="btn--transparent" onClick={false}><i className="fa-solid fa-key" /></CustomButton>
@@ -244,4 +253,140 @@ function UsersTable({ usersList = [] }) {
             <Table.Pagination shadow align="center" rowsPerPage={10} onPageChange={(page) => console.log({ page })} />
         </Table>
     </>);
+}
+
+
+function UserModifyModal({ isOpen, setIsOpen, user, setUser }) {
+    const [useBetaFeatures, setUseBetaFeatures] = useState(user.use_beta_features || false);
+    const [firstName, setFirstName] = useState(user.first_name || '');
+    const [lastName, setLastName] = useState(user.last_name || '');
+    const [username, setUsername] = useState(user.username);
+    const [password, setPassword] = useState(''); //this doesn't come from the BE and can only be reset, not edited
+    const [email, setEmail] = useState(user.email || '');
+    const [emailError, setEmailError] = useState('');
+    const [usernameError, setUsernameError] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+
+    return (
+        <Modal open={isOpen} onClose={() => setIsOpen(false)}>
+            <Modal.Header>
+                <Text h3 css={{ 'margin-top': '10px', 'border-bottom': '1px solid var(--text-primary)' }}>User Profile</Text>
+            </Modal.Header>
+            <Modal.Body>
+                <Spacer y={2} />
+                <Input
+                    rounded
+                    value={username}
+                    clearable
+                    css={{ 'width': '75%' }}
+                    type="text"
+                    bordered
+                    labelPlaceholder="Username*"
+                    color={usernameError ? "error" : "primary"}
+                    status={usernameError ? "error" : "default"}
+                    helperText={usernameError}
+                    helperColor={usernameError ? "error" : "primary"}
+                    onChange={(e) => setUsernameError('') || setUsername(e.target.value)} />
+                <Spacer y={2} />
+
+                <Input.Password
+                    rounded
+                    initialValue=""
+                    value={password}
+                    clearable
+                    css={{ 'width': '75%' }}
+                    required
+                    bordered
+                    labelPlaceholder="Password*"
+                    color={passwordError ? "error" : "primary"}
+                    status={passwordError ? "error" : "default"}
+                    helperText={passwordError}
+                    helperColor={passwordError ? "error" : "primary"}
+                    onChange={(e) => setPasswordError('') || setPassword(e.target.value)} />
+                <Spacer y={2} />
+                <Input
+                    clearable
+                    bordered
+                    value={firstName}
+                    css={{ 'width': '33%', 'margin-right': '10px' }}
+                    rounded
+                    labelPlaceholder="First Name"
+                    color="primary"
+                    onChange={(e) => setFirstName(e.target.value)} />
+                <Input
+                    clearable
+                    bordered
+                    value={lastName}
+                    css={{ 'width': '33%' }}
+                    rounded
+                    labelPlaceholder="Last Name"
+                    color="primary"
+                    onChange={(e) => setLastName(e.target.value)} />
+                <Spacer y={2} />
+                <Input
+                    rounded
+                    clearable
+                    value={email}
+                    type="email"
+                    css={{ 'width': '75%' }}
+                    bordered
+                    labelPlaceholder="Email"
+                    placeholder='you@domain.ca'
+                    color={emailError ? "error" : "primary"}
+                    status={emailError ? "error" : "default"}
+                    helperText={emailError}
+                    helperColor={emailError ? "error" : "primary"}
+                    onChange={(e) => setEmailError('') || setEmail(e.target.value)} />
+                <Spacer y={1} />
+
+                <Checkbox isSelected={useBetaFeatures} onChange={(e) => setUseBetaFeatures(e)}><Text>Use Beta Features &nbsp; <i className="fa-solid fa-flask"></i></Text></Checkbox>
+                <Spacer y={1} ></Spacer>
+                <Row justify='space-evenly' >
+                    <Button
+                        auto
+                        shadow color="inverse"
+                        onPress={() => {
+                            setUseBetaFeatures(user.use_beta_features);
+                            setFirstName(user.first_name || '');
+                            setLastName(user.last_name || '');
+                            setUsername(user.username);
+                            setEmail(user.email || '');
+                            setPassword('');
+                            setIsOpen(false);
+                        }}> Cancel&nbsp;<i className="fa-solid fa-person-walking-arrow-loop-left"></i>
+                    </Button>
+                    <Button
+                        auto
+                        disabled={(password && !validatePassword(password))}
+                        aria-label="user details save button"
+                        shadow
+                        color="success"
+                        onPress={() => {
+                            axios.put(`/users/${user.user_id}`, {
+                                first_name: firstName,
+                                last_name: lastName,
+                                email,
+                                username,
+                                use_beta_features: useBetaFeatures,
+                                password,
+                            }).then(response => {
+                                if (response.status === 200) {
+                                    setUser({
+                                        ...user,
+                                        first_name: firstName,
+                                        last_name: lastName,
+                                        email,
+                                        username,
+                                        use_beta_features: useBetaFeatures,
+                                    });
+                                } else {
+                                    console.log('response', response);
+                                }
+                            })
+                        }}> Save&nbsp;<i className="fa-solid fa-floppy-disk"></i>
+                    </Button>
+                </Row>
+            </Modal.Body>
+        </Modal>
+    );
 }

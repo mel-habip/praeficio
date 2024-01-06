@@ -548,6 +548,18 @@ userRouter.put('/:user_id', authenticateToken, async (req, res) => {
         }
     });
 
+    if (req.body.password) {
+        if (!validatePassword(req.body.password)) {
+            return res.status(401).json({
+                message: `Password not strong enough.`,
+                error_part: 'password'
+            });
+        }
+
+        const hashedPassword = await bcrypt.hash(req.body.password, 10); //default strength for salt creation is 10
+        changes.password = hashedPassword;
+    }
+
     if (changes.username) {
         if (!await isAvailableUsername(req.body.username)) {
             return res.status(401).send(`Username ${req.body.username} already in use`);
