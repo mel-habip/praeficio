@@ -27,7 +27,7 @@ export default function SearchableTable({ data = [], columns = [] }) {
     });
 
     let load = async ({ filterText }) => ({
-        items: filterText ? data.filter(row => (JSON.stringify(row)).includes(filterText.toLowerCase().trim())) : data
+        items: filterText ? data.filter(row => (JSON.stringify(row)).toLowerCase().includes(filterText.toLowerCase().trim())) : data
     }); //this can normally be an async function that fetches the data, but already we hold the whole page off while it is loading
 
     //This section is what supports sorting
