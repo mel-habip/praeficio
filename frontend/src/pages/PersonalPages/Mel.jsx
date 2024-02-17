@@ -36,17 +36,6 @@ export default function MelPage() {
         return () => clearTimeout(timer);
     }, []);
 
-    useEffect(() => {
-        if (typeof downloadSuccessful === 'boolean') {
-            const timer = setTimeout(() => {
-                setDownloadSuccessful(null);
-            }, 2500);
-
-            // Clean up the timer on component unmount
-            return () => clearTimeout(timer);
-        }
-    }, [downloadSuccessful]);
-
     const handleDownload = async () => {
         try {
             const response = await axios.get('/api/mel-cv', { responseType: 'blob' });
@@ -66,6 +55,10 @@ export default function MelPage() {
             // Clean up the object URL after the download is triggered
             URL.revokeObjectURL(downloadUrl);
             setDownloadSuccessful(true);
+            const timer = setTimeout(() => {
+                setDownloadSuccessful(null);
+            }, 2500);
+
         } catch (error) {
             setDownloadSuccessful(false);
             console.error('Error downloading file:', error);
@@ -109,14 +102,12 @@ export default function MelPage() {
                 {downloadSuccessful === false && <i className="fa-regular fa-thumbs-down red" />}
                 {downloadSuccessful && <i className="fa-regular fa-thumbs-up green" />}
                 <Button
-                    css={{ width: '4rem', marginRight: '1rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white' }}
-                    onClick={handleDownload}
-                    href="https://github.com/mel-habip"
+                    css={{ padding: '1rem', width: '4rem', marginRight: '1rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white' }}
+                    onClick={() => window.open('https://github.com/mel-habip', '__blank')}
                 >Mel <i className="fa-brands fa-github" /></Button>
                 <Button
-                    css={{ width: '4rem', marginRight: '1rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white' }}
-                    onClick={handleDownload}
-                    href="https://github.com/mel-habip/praeficio"
+                    css={{ padding: '1rem', width: '4rem', marginRight: '1rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white' }}
+                    onClick={() => window.open('https://github.com/mel-habip/praeficio', '__blank')}
                 >This site <i className="fa-brands fa-github" /></Button>
 
             </div>
@@ -158,6 +149,29 @@ export default function MelPage() {
                                 Experience
                             </em>
                         </h2>
+                        <div>
+                            <span>
+                                <h3><strong>Monarch Wealth Corporation</strong> &#183; <em>VP of IT</em> &#183; Missisauga (remote), ON</h3>
+                                <h4>October 2023 - <em>present</em></h4>
+                            </span>
+                        </div>
+                        <ul>
+                            <li><p>Drive digital transformation initiatives, leveraging emerging technologies to drive innovation and stay ahead of the industry.</p></li>
+                            <li><p>Identify opportunities to optimize business processes through technology and oversee the implementation of in-house software development.</p></li>
+                            <li><p>Provide strategic leadership and direction for the IT department, aligning technology initiatives with the company's overall objectives.</p></li>
+                            <li><p>Serve as a strategic advisor to senior leadership, providing insights and recommendations on technology trends, risks, and opportunities.</p></li>
+                        </ul>
+                        <div>
+                            <span>
+                                <h3><strong>MorfedTech</strong> &#183; <em>Co-founder & Head of Technology</em> &#183; Canada/remote</h3>
+                                <h4>August 2023 - October 2023</h4>
+                            </span>
+                            <ul>
+                                <li><p>Co-founded the startup and played a pivotal role in shaping its technological vision, strategy, and roadmap from inception to launch.</p></li>
+                                <li><p>Spearheaded end-to-end technological development and management of the startup's proprietary product, overseeing frontend and backend development, DevOps, architecture, database modeling, product planning, design, quality assurance, and other technical aspects.</p></li>
+                                <li><p>Established partnerships and alliances with key stakeholders, including vendors, customers, and industry partners, to enhance the startup's product offering and market presence.</p></li>
+                            </ul>
+                        </div>
                         <div >
                             <span>
                                 <h3><strong>Mako Fintech</strong> &#183; <em>Engineering Lead, Customer Success</em> &#183; Montreal (remote), QC</h3>
