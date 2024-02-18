@@ -101,15 +101,18 @@ export default function MelPage() {
                 </Tooltip>
                 {downloadSuccessful === false && <i className="fa-regular fa-thumbs-down red" />}
                 {downloadSuccessful && <i className="fa-regular fa-thumbs-up green" />}
-                <Button
-                    css={{ padding: '1rem', width: '4rem', marginRight: '1rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white' }}
-                    onClick={() => window.open('https://github.com/mel-habip', '__blank')}
-                >Mel <i className="fa-brands fa-github" /></Button>
-                <Button
-                    css={{ padding: '1rem', width: '4rem', marginRight: '1rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white' }}
-                    onClick={() => window.open('https://github.com/mel-habip/praeficio', '__blank')}
-                >This site <i className="fa-brands fa-github" /></Button>
-
+                <Tooltip content="Mel's Profile" placement="bottom" >
+                    <Button
+                        css={{ padding: '1rem', width: '4rem', marginRight: '1rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white' }}
+                        onClick={() => window.open('https://github.com/mel-habip', '__blank')}
+                    ><i className="fa-brands fa-github" style={{ color: 'black' }} /></Button>
+                </Tooltip>
+                <Tooltip content="This site" placement="bottom" >
+                    <Button
+                        css={{ padding: '1rem', width: '4rem', marginRight: '1rem', minWidth: '1rem', background: isDark ? 'lightgray' : 'black', color: isDark ? 'black' : 'white' }}
+                        onClick={() => window.open('https://github.com/mel-habip/praeficio', '__blank')}
+                    ><i className="fa-brands fa-github" style={{ color: 'black' }} /></Button>
+                </Tooltip>
             </div>
             <div className='mel-page-container' >
                 <header className={`header ${showHeader ? "show" : ""}`}>
@@ -154,13 +157,13 @@ export default function MelPage() {
                                 <h3><strong>Monarch Wealth Corporation</strong> &#183; <em>VP of IT</em> &#183; Missisauga (remote), ON</h3>
                                 <h4>October 2023 - <em>present</em></h4>
                             </span>
+                            <ul>
+                                <li><p>Drive digital transformation initiatives, leveraging emerging technologies to drive innovation and stay ahead of the industry.</p></li>
+                                <li><p>Identify opportunities to optimize business processes through technology and oversee the implementation of in-house software development.</p></li>
+                                <li><p>Provide strategic leadership and direction for the IT department, aligning technology initiatives with the company's overall objectives.</p></li>
+                                <li><p>Serve as a strategic advisor to senior leadership, providing insights and recommendations on technology trends, risks, and opportunities.</p></li>
+                            </ul>
                         </div>
-                        <ul>
-                            <li><p>Drive digital transformation initiatives, leveraging emerging technologies to drive innovation and stay ahead of the industry.</p></li>
-                            <li><p>Identify opportunities to optimize business processes through technology and oversee the implementation of in-house software development.</p></li>
-                            <li><p>Provide strategic leadership and direction for the IT department, aligning technology initiatives with the company's overall objectives.</p></li>
-                            <li><p>Serve as a strategic advisor to senior leadership, providing insights and recommendations on technology trends, risks, and opportunities.</p></li>
-                        </ul>
                         <div>
                             <span>
                                 <h3><strong>MorfedTech</strong> &#183; <em>Co-founder & Head of Technology</em> &#183; Canada/remote</h3>
