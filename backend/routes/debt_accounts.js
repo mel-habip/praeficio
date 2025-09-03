@@ -5,6 +5,8 @@ import authenticateToken from '../jobs/authenticateToken.js';
 import DebtAccountService from '../modules/DebtAccountService.mjs';
 import query from '../utils/db_connection.js';
 import validateAndSanitizeBodyParts from '../jobs/validateAndSanitizeBodyParts.js';
+import papa from 'papaparse';
+import fs from 'fs';
 
 const helper = new DebtAccountService();
 
@@ -39,6 +41,15 @@ debtAccountRouter.get('/:debt_account_id', async (req, res) => {
 
     if ([details.borrower_id, details.lender_id].includes(req.user.id) || req.user.is_total || req.user.permissions.startsWith('dev_')) {
         const statistics = helper.statistics(details.transactions);
+
+        const unparsed = papa.unparse(details.transactions);
+        fs.writeFileSync('testFile.csv', unparsed, {
+            encoding: 'utf8'
+        });
+        fs.writeFileSync('testFile.json', JSON.stringify(details.transactions, null, 2), {
+            encoding: 'utf-8'
+        });
+
         return res.status(200).json({
             ...details,
             statistics
